@@ -1046,7 +1046,8 @@ class Interface:
             # --- Update, monitor and output the fluid solution before the next time step  ---#
             FluidSolver.Update()
             FluidSolver.Monitor(TimeIter)
-            FluidSolver.Output(TimeIter)
+            if TimeIter == NbTimeIter:
+               FluidSolver.Output(TimeIter)
             self.MPIBarrier()
 
             # --- Surface fluid loads interpolation and communication --- #
@@ -1073,10 +1074,10 @@ class Interface:
                 #new_name_surf = "./Output/surface_flow_" + str(TimeIter).zfill(5) + ".vtk"
                 #shutil.move("flow_" + str(0).zfill(5) + ".vtk", new_name_flow)
                 #shutil.move("surface_flow_" + str(0).zfill(5) + ".vtk", new_name_surf)
-                os.remove("surface_flow_" + str(TimeIter).zfill(5) + ".vtk")
-                os.remove("flow_" + str(TimeIter).zfill(5) + ".vtk")
-                if TimeIter != NbTimeIter:
-                    os.remove("zrestart_flow_" + str(TimeIter).zfill(5) + ".dat")
+                #os.remove("surface_flow_" + str(TimeIter).zfill(5) + ".vtk")
+                #os.remove("flow_" + str(TimeIter).zfill(5) + ".vtk")
+                #if TimeIter != NbTimeIter:
+                #    os.remove("zrestart_flow_" + str(TimeIter).zfill(5) + ".dat")
                 '''
                 cd_file = open("history_CD.dat", "a")
                 cd_file.write(str(FluidSolver.Get_DragCoeff()) + "\n")

@@ -1,0 +1,7 @@
+SU2_CFD/src/solver_direct_mean.cpp
+
+# works approx line 7842
++    if (false) {. # this has to be false: old boundary conditions
+      /*--- Call the equivalent symmetry plane boundary condition. ---*/
+      BC_Sym_Plane(geometry, solver_container, conv_numerics, visc_numerics, config, val_marker);
+# If false new bugged boundary conditions
