@@ -85,7 +85,7 @@ void CSinglezoneDriver::StartSolver() {
 
     /*--- Perform some preprocessing before starting the time-step simulation. ---*/
 
-    Preprocess(TimeIter);
+    Preprocess(TimeIter, 1);
 
     /*--- Run a time-step iteration of the single-zone problem. ---*/
 
@@ -117,7 +117,7 @@ void CSinglezoneDriver::StartSolver() {
 
 }
 
-void CSinglezoneDriver::Preprocess(unsigned long TimeIter) {
+void CSinglezoneDriver::Preprocess(unsigned long TimeIter, unsigned long DoMeshDeform) {
     
   /*--- Set runtime option ---*/
   
@@ -159,7 +159,11 @@ void CSinglezoneDriver::Preprocess(unsigned long TimeIter) {
   /*--- For the Disc.Adj. of a case with (rigidly) moving grid, the appropriate
           mesh cordinates are read from the restart files. ---*/
   if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint()))
-    DynamicMeshUpdate(TimeIter);
+      
+      if (DoMeshDeform == 0){ }
+      else {
+      DynamicMeshUpdate(TimeIter);
+      }
 
 }
 

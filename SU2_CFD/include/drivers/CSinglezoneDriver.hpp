@@ -75,7 +75,7 @@ public:
   /*!
    * \brief Preprocess the single-zone iteration
    */
-  virtual void Preprocess(unsigned long TimeIter);
+  virtual void Preprocess(unsigned long TimeIter, unsigned long DoMeshDeform);
 
   /*!
    * \brief Run the iteration for ZONE_0.

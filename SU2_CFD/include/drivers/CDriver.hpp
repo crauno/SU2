@@ -373,7 +373,7 @@ public:
   /*!
    * \brief Perform some pre-processing before an iteration of the physics.
    */
-  virtual void Preprocess(unsigned long TimeIter){ }
+  virtual void Preprocess(unsigned long TimeIter, unsigned long DoMeshDeform){ }
 
   /*!
    * \brief Monitor the computation.

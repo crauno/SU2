@@ -872,7 +872,7 @@ class Interface:
 
 
         FluidSolver.ResetConvergence()  # Make sure the solver starts convergence from 0
-        FluidSolver.Preprocess(0)  # Time iteration pre-processing
+        FluidSolver.Preprocess(0,0)  # Time iteration pre-processing
         FluidSolver.Run()  # Run one time-step (static: one simulation)
         FluidSolver.Postprocess()
         FluidSolver.Update()  # Update the solver for the next time iteration
@@ -913,7 +913,6 @@ class Interface:
         self.MPIPrint('*  End FSI computation  *')
         self.MPIPrint('*************************')
         self.MPIPrint(' ')
-        self.MPIPrint(' IKES!!')
 
     def UnsteadyFSI(self, FSI_config, FluidSolver, SolidSolver, MLS_Spline):
         """
@@ -942,6 +941,7 @@ class Interface:
 
 
         # --- Set some general variables for the unsteady computation --- #
+        DoMeshDeform = 0  # flag for mesh deform initialization
         deltaT = FSI_config['UNST_TIMESTEP']  # physical time step
         totTime = FSI_config['UNST_TIME']  # physical simulation time
         TimeIterTreshold = 0  # time iteration from which we allow the solid to deform
@@ -977,8 +977,8 @@ class Interface:
                 self.comm.barrier()
             #self.transferStructuralDisplacements( FluidSolver, SolidSolver)
             #self.getSolidInterfaceDisplacement(SolidSolver)
-            if self.have_MPI == True:
-                self.comm.barrier()
+            #if self.have_MPI == True:
+            #    self.comm.barrier()
                 # if myid == self.rootProcess:
                 # SolidSolver.updateSolution()
         # If no restart
@@ -989,12 +989,12 @@ class Interface:
                 SolidSolver.setInitialDisplacements(FSI_config, MLS_Spline)
             if self.have_MPI == True:
                 self.comm.barrier()
-            self.transferStructuralDisplacements(FluidSolver, SolidSolver)
-            #self.interpolateSolidPositionOnFluidMesh(FSI_config) #OLD VERSION
-            #self.setFluidInterfaceVarCoord(FluidSolver)
-            FluidSolver.Preprocess(0)  # if there is an initial deformation in the solid, it has to be communicated to the fluid solver
-            self.MPIPrint('\nFSI initial conditions are set')
-            self.MPIPrint('Beginning time integration\n')
+        self.transferStructuralDisplacements(FluidSolver, SolidSolver)
+        #self.interpolateSolidPositionOnFluidMesh(FSI_config) #OLD VERSION
+        #self.setFluidInterfaceVarCoord(FluidSolver)
+        FluidSolver.Preprocess(0,1)  # if there is an initial deformation in the solid, it has to be communicated to the fluid solver
+        self.MPIPrint('\nFSI initial conditions are set')
+        self.MPIPrint('Beginning time integration\n')
 
 
         # --- External temporal loop --- #
@@ -1030,9 +1030,19 @@ class Interface:
             '''
             
             # --- Mesh morphing step (displacements interpolation, displacements communication, and mesh morpher call) --- #
+            if TimeIter != 0:
+               if FSI_config['MOTION_TYPE'] == 'BLENDED_STEP':
+                  if time <= FSI_config['START_MOTION_TIME'] + blended_step_lenght and time >= FSI_config['START_MOTION_TIME']:
+                     DoMeshDeform = 1
+                  else:
+                     DoMeshDeform = 0
+               else:      
+                  DoMeshDeform = 1 
+                  
             self.transferStructuralDisplacements(FluidSolver, SolidSolver)
-            self.MPIPrint('\nPerforming dynamic mesh deformation (ALE)...\n')
-            FluidSolver.Preprocess(TimeIter)
+            if DoMeshDeform ==1: 
+               self.MPIPrint('\nPerforming dynamic mesh deformation (ALE)...\n')
+            FluidSolver.Preprocess(TimeIter,DoMeshDeform)
 
             #self.printMeshCoord_bis(FluidSolver, TimeIter)
             # --- Fluid solver call for FSI subiteration --- #
