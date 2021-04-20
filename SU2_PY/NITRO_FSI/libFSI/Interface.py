@@ -990,8 +990,7 @@ class Interface:
             if self.have_MPI == True:
                 self.comm.barrier()
         self.transferStructuralDisplacements(FluidSolver, SolidSolver)
-        #self.interpolateSolidPositionOnFluidMesh(FSI_config) #OLD VERSION
-        #self.setFluidInterfaceVarCoord(FluidSolver)
+        # test ALE temporarily commented for the second simulation in the blended step
         FluidSolver.Preprocess(0,1)  # if there is an initial deformation in the solid, it has to be communicated to the fluid solver
         self.MPIPrint('\nFSI initial conditions are set')
         self.MPIPrint('Beginning time integration\n')
@@ -1032,7 +1031,7 @@ class Interface:
             # --- Mesh morphing step (displacements interpolation, displacements communication, and mesh morpher call) --- #
             if TimeIter != 0:
                if FSI_config['MOTION_TYPE'] == 'BLENDED_STEP':
-                  if time <= FSI_config['START_MOTION_TIME'] + blended_step_lenght and time >= FSI_config['START_MOTION_TIME']:
+                  if time <= FSI_config['START_MOTION_TIME'] + blended_step_lenght + 2*deltaT and time >= FSI_config['START_MOTION_TIME']:
                      DoMeshDeform = 1
                   else:
                      DoMeshDeform = 0
@@ -1056,8 +1055,8 @@ class Interface:
             # --- Update, monitor and output the fluid solution before the next time step  ---#
             FluidSolver.Update()
             FluidSolver.Monitor(TimeIter)
-            if TimeIter == NbTimeIter:
-               FluidSolver.Output(TimeIter)
+            #if TimeIter == NbTimeIter:
+            FluidSolver.Output(TimeIter)
             self.MPIBarrier()
 
             # --- Surface fluid loads interpolation and communication --- #
