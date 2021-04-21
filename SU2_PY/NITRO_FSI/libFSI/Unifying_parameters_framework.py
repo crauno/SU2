@@ -70,7 +70,7 @@ def UnifyingParameters_framework(FSI_config,confFile,myid ):
           
     if (FSI_config['CSD_SOLVER'] == 'NITRO_FRAMEWORK' or FSI_config['CSD_SOLVER'] == 'NITRO') and FSI_config['MOTION_TYPE'] == 'BLENDED_STEP' and FSI_config['UNSTEADY_SIMULATION'] == 'YES':
        # Unsteady timestep suggestion (BLENDED_STEP type)    
-       t_q = 3.14*FSI_config['L_REF']/ FSI_config['V_INF']/(FSI_config['K_MAX']/2)
+       t_q = pi*FSI_config['L_REF']/ FSI_config['V_INF']/(FSI_config['K_MAX']/2)
        FSI_config['BLE_STEP_LENGTH'] = t_q
        #if myid == rootProcess: print("FSI_config['BLE_STEP_LENGTH'] = {}".format(FSI_config['BLE_STEP_LENGTH']))
        if FSI_config['UNST_NR'] == 1:

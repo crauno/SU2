@@ -1031,7 +1031,7 @@ class Interface:
             # --- Mesh morphing step (displacements interpolation, displacements communication, and mesh morpher call) --- #
             if TimeIter != 0:
                if FSI_config['MOTION_TYPE'] == 'BLENDED_STEP':
-                  if time <= FSI_config['START_MOTION_TIME'] + blended_step_lenght + 2*deltaT and time >= FSI_config['START_MOTION_TIME']:
+                  if time <= FSI_config['START_MOTION_TIME'] + blended_step_lenght + 10*deltaT and time >= FSI_config['START_MOTION_TIME']:
                      DoMeshDeform = 1
                   else:
                      DoMeshDeform = 0
@@ -1056,7 +1056,8 @@ class Interface:
             FluidSolver.Update()
             FluidSolver.Monitor(TimeIter)
             #if TimeIter == NbTimeIter:
-            FluidSolver.Output(TimeIter)
+            if (TimeIter == 1) or (TimeIter == 5000) or (TimeIter == 5001) or (TimeIter == 5020) or (TimeIter == 600) or (TimeIter == 601):
+               FluidSolver.Output(TimeIter)
             self.MPIBarrier()
 
             # --- Surface fluid loads interpolation and communication --- #
