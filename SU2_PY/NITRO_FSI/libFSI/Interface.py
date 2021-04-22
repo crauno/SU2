@@ -414,6 +414,7 @@ class Interface:
             self.globalFluidCoordinates0Z = np.zeros(self.nFluidInterfacePhysicalNodes)
 
             for i in range(0, self.nFluidInterfacePhysicalNodes):
+                GlobalIndex = int(self.globalFluidIndex[i])
                 self.globalFluidCoordinates0[GlobalIndex][0] = self.globalFluidInterfaceXcoor0[i]
                 self.globalFluidCoordinates0X[GlobalIndex]   = self.globalFluidInterfaceXcoor0[i]
 
