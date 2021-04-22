@@ -349,6 +349,7 @@ class Interface:
         localFluidInterface_array_X_init = np.zeros(self.nLocalFluidInterfacePhysicalNodes)
         localFluidInterface_array_Y_init = np.zeros(self.nLocalFluidInterfacePhysicalNodes)
         localFluidInterface_array_Z_init = np.zeros(self.nLocalFluidInterfacePhysicalNodes)
+        localGlobalIndex_array           = np.zeros(self.nLocalFluidInterfacePhysicalNodes)
 
         for iVertex in range(self.nLocalFluidInterfaceNodes):
             GlobalIndex = FluidSolver.GetVertexGlobalIndex(self.fluidInterfaceIdentifier, iVertex)
