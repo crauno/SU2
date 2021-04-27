@@ -2021,7 +2021,7 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
     auto iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
 
     /*--- Set and enforce solution at current and previous time-step ---*/
-    nodes->SetSolution(iPoint, *zero);
+    nodes->SetSolution(iPoint, &zero);
 
     if (dynamic) {
       nodes->SetSolution_Vel(iPoint,vary, zero);
