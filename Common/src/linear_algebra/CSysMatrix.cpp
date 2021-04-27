@@ -1326,7 +1326,7 @@ void CSysMatrix<ScalarType>::EnforceSolutionAtNode(const unsigned long node_i, c
 
 template<class ScalarType>
 template<class OtherType>
-void CSysMatrix<ScalarType>::EnforceDoFSolutionAtNode(const unsigned long node_i, const short var, const OtherType *x_i, CSysVector<OtherType> & b) { }
+void CSysMatrix<ScalarType>::EnforceDoFSolutionAtNode(const unsigned long node_i, const unsigned short var, const OtherType *x_i, CSysVector<OtherType> & b) { }
 
 template<class ScalarType>
 void CSysMatrix<ScalarType>::BuildPastixPreconditioner(CGeometry *geometry, CConfig *config,
