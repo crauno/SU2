@@ -671,7 +671,7 @@ inline void CSolver::BC_Euler_Wall(CGeometry      *geometry,
 
 inline void CSolver::BC_Clamped(CGeometry *geometry, CNumerics *numerics, CConfig *config, unsigned short val_marker) { }
 
-inline void CSolver::BC_BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig *config, unsigned short val_marker) { }
+inline void CSolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig *config, unsigned short val_marker) { }
 
 inline void CSolver::BC_DispDir(CGeometry *geometry, CNumerics *numerics, CConfig *config, unsigned short val_marker) { }
 
