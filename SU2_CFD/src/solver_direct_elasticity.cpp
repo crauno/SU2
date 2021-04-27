@@ -2036,7 +2036,7 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
 
     LinSysSol.SetBlock(iPoint,vary, zero);
     LinSysReact.SetBlock(iPoint,vary, zero);
-    Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, zero, LinSysRes);
+    Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, &zero, LinSysRes);
 
   }
 
