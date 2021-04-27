@@ -2012,7 +2012,9 @@ void CFEASolver::BC_Clamped(CGeometry *geometry, CNumerics *numerics, CConfig *c
 
 void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig *config, unsigned short val_marker) { 
 
-  const bool dynamic = config->GetTime_Domain();
+  unsigned long iPoint, iVertex;
+  
+  bool dynamic = config->GetTime_Domain();
   su2double zero= 0.0;
   unsigned short vary = 1;
   for ( iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
