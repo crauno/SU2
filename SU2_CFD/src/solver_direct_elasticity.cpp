@@ -2015,10 +2015,10 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
   const bool dynamic = config->GetTime_Domain();
   su2double zero= 0.0;
   unsigned short vary = 1;
-  for (auto iVertex = 0ul; iVertex < geometry->nVertex[val_marker]; iVertex++) {
+  for ( iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
 
     /*--- Get node index ---*/
-    auto iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
+    iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
 
     /*--- Set and enforce solution at current and previous time-step ---*/
     nodes->SetSolution(iPoint, &zero);
