@@ -2025,11 +2025,11 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
     nodes->SetSolution(iPoint, zero);
 
     if (dynamic) {
-      nodes->SetSolution_Vel(iPoint,vary, zero);
-      nodes->SetSolution_Accel(iPoint,vary, zero); 
-      nodes->Set_Solution_time_n(iPoint,vary, zero);
-      nodes->SetSolution_Vel_time_n(iPoint,vary, zero);
-      nodes->SetSolution_Accel_time_n(iPoint,vary, zero);  
+      nodes->SetSolution_Vel(iPoint,vary, zero[0]);
+      nodes->SetSolution_Accel(iPoint,vary, zero[0]); 
+      nodes->Set_Solution_time_n(iPoint,vary, zero[0]);
+      nodes->SetSolution_Vel_time_n(iPoint,vary, zero[0]);
+      nodes->SetSolution_Accel_time_n(iPoint,vary, zero[0]);  
     }
 
     /*--- Set and enforce 0 solution for mesh deformation ---*/
