@@ -564,6 +564,16 @@ public:
   template<class OtherType>
   void EnforceSolutionAtNode(const unsigned long node_i, const OtherType *x_i, CSysVector<OtherType> & b);
 
+    /*!
+   * \brief Modifies this matrix (A) and a rhs vector (b) such that (A^-1 * b)_i = x_i.
+   * \param[in] node_i - Index of the node for which to enforce the solution of one DOF's.
+   * \param[in] var - DOF to enforce.
+   * \param[in] x_i - Value to enforce (1 sized).
+   * \param[in,out] b - The rhs vector (b := b - A_{*,i} * x_i;  b_i = x_i).
+   */
+  template<class OtherType>
+  void EnforceDoFSolutionAtNode(const unsigned long node_i,const unsigned long var, const OtherType *x_i, CSysVector<OtherType> & b);  
+
   /*!
    * \brief Performs the product of a sparse matrix by a CSysVector.
    * \param[in] vec - CSysVector to be multiplied by the sparse matrix A.
