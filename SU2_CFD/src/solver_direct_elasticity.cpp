@@ -2033,10 +2033,10 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
     }
 
     /*--- Set and enforce 0 solution for mesh deformation ---*/
-    nodes->SetBound_Disp(iPoint,vary, zero);
+    nodes->SetBound_Disp(iPoint,vary, zero[0]);
 
-    LinSysSol.SetBlock(iPoint,vary, zero);
-    LinSysReact.SetBlock(iPoint,vary, zero);
+    LinSysSol.SetBlock(iPoint,vary, zero[0]);
+    LinSysReact.SetBlock(iPoint,vary, zero[0]);
     //Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, zero, LinSysRes);
 
   }
