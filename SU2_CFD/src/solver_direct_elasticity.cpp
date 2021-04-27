@@ -2012,6 +2012,11 @@ void CFEASolver::BC_Clamped(CGeometry *geometry, CNumerics *numerics, CConfig *c
 
 void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig *config, unsigned short val_marker) { 
 
+  // Temporary
+  Solution[0] = 0.0;
+  Solution[1] = 0.0;
+  if (nDim==3) Solution[2] = 0.0;
+    
   unsigned long iPoint, iVertex;
   
   bool dynamic = config->GetTime_Domain();
@@ -2038,8 +2043,8 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
 
     LinSysSol.SetBlock(iPoint,vary, zero);
     LinSysReact.SetBlock(iPoint,vary, zero);
-    Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, zero, LinSysRes);
-
+    //Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, zero, LinSysRes);
+    Jacobian.EnforceSolutionAtNode_bis(iPoint, Solution, LinSysRes);
   }
 
 }

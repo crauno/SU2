@@ -1324,6 +1324,12 @@ void CSysMatrix<ScalarType>::EnforceSolutionAtNode(const unsigned long node_i, c
 
 }
 
+
+template<class ScalarType>
+template<class OtherType>
+void CSysMatrix<ScalarType>::EnforceSolutionAtNode_bis(const unsigned long node_i, const OtherType *x_i, CSysVector<OtherType> & b) {}
+
+    
 template<class ScalarType>
 template<class OtherType>
 void CSysMatrix<ScalarType>::EnforceDoFSolutionAtNode(const unsigned long node_i, const unsigned short var, const su2double x_i, CSysVector<OtherType> & b) { };

@@ -566,6 +566,16 @@ public:
 
     /*!
    * \brief Modifies this matrix (A) and a rhs vector (b) such that (A^-1 * b)_i = x_i.
+   * \param[in] node_i - Index of the node for which to enforce the solution of all DOF's.
+   * \param[in] x_i - Values to enforce (nVar sized).
+   * \param[in,out] b - The rhs vector (b := b - A_{*,i} * x_i;  b_i = x_i).
+   */
+  template<class OtherType>
+  void EnforceSolutionAtNode_bis(const unsigned long node_i, const OtherType *x_i, CSysVector<OtherType> & b);
+
+  
+    /*!
+   * \brief Modifies this matrix (A) and a rhs vector (b) such that (A^-1 * b)_i = x_i.
    * \param[in] node_i - Index of the node for which to enforce the solution of one DOF's.
    * \param[in] var - DOF to enforce.
    * \param[in] x_i - Value to enforce (1 sized).
