@@ -572,7 +572,7 @@ public:
    * \param[in,out] b - The rhs vector (b := b - A_{*,i} * x_i;  b_i = x_i).
    */
   template<class OtherType>
-  void EnforceDoFSolutionAtNode(const unsigned long node_i, const unsigned short var, const OtherType *x_i, CSysVector<OtherType> & b);  
+  void EnforceDoFSolutionAtNode(const unsigned long node_i, const unsigned short var, const su2double x_i, CSysVector<OtherType> & b);  
 
   /*!
    * \brief Performs the product of a sparse matrix by a CSysVector.
