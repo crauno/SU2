@@ -2013,8 +2013,7 @@ void CFEASolver::BC_Clamped(CGeometry *geometry, CNumerics *numerics, CConfig *c
 void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig *config, unsigned short val_marker) { 
 
   const bool dynamic = config->GetTime_Domain();
-  su2double *zero;
-  zero[0]= 0.0;
+  su2double zero= 0.0;
   unsigned short vary = 1;
   for (auto iVertex = 0ul; iVertex < geometry->nVertex[val_marker]; iVertex++) {
 
@@ -2025,18 +2024,18 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
     nodes->SetSolution(iPoint, zero);
 
     if (dynamic) {
-      nodes->SetSolution_Vel(iPoint,vary, zero[0]);
-      nodes->SetSolution_Accel(iPoint,vary, zero[0]); 
-      nodes->Set_Solution_time_n(iPoint,vary, zero[0]);
-      nodes->SetSolution_Vel_time_n(iPoint,vary, zero[0]);
-      nodes->SetSolution_Accel_time_n(iPoint,vary, zero[0]);  
+      nodes->SetSolution_Vel(iPoint,vary, zero);
+      nodes->SetSolution_Accel(iPoint,vary, zero); 
+      nodes->Set_Solution_time_n(iPoint,vary, zero);
+      nodes->SetSolution_Vel_time_n(iPoint,vary, zero);
+      nodes->SetSolution_Accel_time_n(iPoint,vary, zero);  
     }
 
     /*--- Set and enforce 0 solution for mesh deformation ---*/
-    nodes->SetBound_Disp(iPoint,vary, zero[0]);
+    nodes->SetBound_Disp(iPoint,vary, zero);
 
-    LinSysSol.SetBlock(iPoint,vary, zero[0]);
-    LinSysReact.SetBlock(iPoint,vary, zero[0]);
+    LinSysSol.SetBlock(iPoint,vary, zero);
+    LinSysReact.SetBlock(iPoint,vary, zero);
     //Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, zero, LinSysRes);
 
   }
