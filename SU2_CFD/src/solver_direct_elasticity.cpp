@@ -2041,21 +2041,12 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
     }
     cout << "iVertex = " << iVertex << "\n" << endl;
     /*--- Set and enforce 0 solution for mesh deformation ---*/
-    nodes->SetBound_Disp(iPoint,vary, zero);
-    
-    ////////////
-    LinSysSol.SetBlock(iPoint, Solution);
-    LinSysReact.SetBlock(iPoint, Solution);
-    ////////////
-    
-    //cout << "LinSysSol" <<  LinSysSol.GetBlock(iPoint,vary); << endl;
-    //LinSysSol.SetBlock_Zero(iPoint,vary);
-    //cout << "LinSysReact" <<  LinSysReact.GetBlock(iPoint,vary); << endl;
-    cout << "DEBUG 5" << endl;
-    LinSysReact.SetBlock_Zero(iPoint,vary);
-    //cout << "DEBUG 6" << endl;
-    //Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, zero, LinSysRes);
-    //cout << "DEBUG 7" << endl;
+    nodes->SetBound_Disp(iPoint,vary, zero);   
+    LinSysSol.SetBlock_Zero(iPoint,vary);
+    //LinSysReact.SetBlock_Zero(iPoint,0);
+    cout << "DEBUG 6" << endl;
+    Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, zero, LinSysRes);
+    cout << "DEBUG 7" << endl;
 
   }
 
