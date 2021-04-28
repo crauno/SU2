@@ -2005,7 +2005,7 @@ void CFEASolver::BC_Clamped(CGeometry *geometry, CNumerics *numerics, CConfig *c
     LinSysSol.SetBlock(iPoint, Solution);
     LinSysReact.SetBlock(iPoint, Solution);
     Jacobian.EnforceSolutionAtNode(iPoint, Solution, LinSysRes);
-
+    Jacobian.EnforceSolutionAtNode_bis(iPoint, Solution, LinSysRes); 
   }
 
 }
@@ -2044,7 +2044,7 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
     LinSysSol.SetBlock(iPoint,vary, zero);
     LinSysReact.SetBlock(iPoint,vary, zero);
     //Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, zero, LinSysRes);
-    Jacobian.EnforceSolutionAtNode_bis(iPoint, Solution, LinSysRes);
+    Jacobian.EnforceSolutionAtNode_bis(iPoint, Solution, LinSysRes);   
   }
 
 }
