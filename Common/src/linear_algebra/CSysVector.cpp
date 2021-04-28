@@ -405,11 +405,8 @@ void CSysVector<ScalarType>::SetBlock(unsigned long val_ipoint, ScalarType *val_
 
 template<class ScalarType>
 void CSysVector<ScalarType>::SetBlock(unsigned long val_ipoint, unsigned short val_var, ScalarType val_residual) {
-  char buf[100];
-  SPRINTF(buf, "input: val_ipoint, val_var = %lu, %u", val_ipoint, val_var );
-  vec_val[val_ipoint*nVar+val_var] = val_residual;
-    SPRINTF(buf, "Error");
 
+  vec_val[val_ipoint*nVar+val_var] = val_residual;
 }
 
 template<class ScalarType>
