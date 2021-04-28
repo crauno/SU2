@@ -422,6 +422,7 @@ void CSysVector<ScalarType>::SetBlock_Zero(unsigned long val_ipoint) {
 
 template<class ScalarType>
 void CSysVector<ScalarType>::SetBlock_Zero(unsigned long val_ipoint, unsigned short val_var) {
+    cout << 'DEBUG inside' << endl;
     cout << 'nVar =' << nVar << endl;
     vec_val[val_ipoint*nVar+val_var] = 0.0;
 }
