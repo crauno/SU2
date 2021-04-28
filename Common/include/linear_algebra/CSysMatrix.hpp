@@ -570,8 +570,9 @@ public:
    * \param[in] x_i - Values to enforce (nVar sized).
    * \param[in,out] b - The rhs vector (b := b - A_{*,i} * x_i;  b_i = x_i).
    */
-
-  inline void EnforceSolutionAtNode2(const unsigned long node_i, const OtherType *x_i, CSysVector<OtherType> & b);
+    
+   template<class OtherType>
+   void EnforceSolutionAtNode2(const unsigned long node_i, const OtherType *x_i, CSysVector<OtherType> & b);
 
     /*!
    * \brief Modifies this matrix (A) and a rhs vector (b) such that (A^-1 * b)_i = x_i.
@@ -580,7 +581,7 @@ public:
    * \param[in] x_i - Value to enforce (1 sized).
    * \param[in,out] b - The rhs vector (b := b - A_{*,i} * x_i;  b_i = x_i).
    */
-
+  template<class OtherType>
   void EnforceDoFSolutionAtNode(const unsigned long node_i, const unsigned short var, const su2double x_i, CSysVector<OtherType> & b);  
 
   /*!
