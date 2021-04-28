@@ -402,7 +402,6 @@ template<class ScalarType>
 void CSysVector<ScalarType>::SetBlock(unsigned long val_ipoint, ScalarType *val_residual) {
   unsigned short iVar;
     cout << "nVar = " << nVar << "\n" << endl;
-    cout << "val_var = " << val_var << "\n" << endl;
     cout << "val_ipoint = " << val_ipoint << "\n" << endl;
   for (iVar = 0; iVar < nVar; iVar++)
     vec_val[val_ipoint*nVar+iVar] = val_residual[iVar];
