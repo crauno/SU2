@@ -2044,9 +2044,9 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
     nodes->SetBound_Disp(iPoint,vary, zero);   
     LinSysSol.SetBlock_Zero(iPoint,vary);
     //LinSysReact.SetBlock_Zero(iPoint,0);
-    cout << "DEBUG 6" << endl;
+    //cout << "DEBUG 6" << endl;
     Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, zero, LinSysRes);
-    cout << "DEBUG 7" << endl;
+    //cout << "DEBUG 7" << endl;
 
   }
 
