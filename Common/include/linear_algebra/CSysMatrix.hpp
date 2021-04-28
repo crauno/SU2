@@ -566,23 +566,47 @@ public:
 
     /*!
    * \brief Modifies this matrix (A) and a rhs vector (b) such that (A^-1 * b)_i = x_i.
-   * \param[in] node_i - Index of the node for which to enforce the solution of all DOF's.
-   * \param[in] x_i - Values to enforce (nVar sized).
-   * \param[in,out] b - The rhs vector (b := b - A_{*,i} * x_i;  b_i = x_i).
-   */
-    
-   template<class OtherType>
-   void EnforceSolutionAtNode2(const unsigned long node_i, const OtherType *x_i, CSysVector<OtherType> & b);
-
-    /*!
-   * \brief Modifies this matrix (A) and a rhs vector (b) such that (A^-1 * b)_i = x_i.
    * \param[in] node_i - Index of the node for which to enforce the solution of one DOF's.
    * \param[in] var - DOF to enforce.
    * \param[in] x_i - Value to enforce (1 sized).
    * \param[in,out] b - The rhs vector (b := b - A_{*,i} * x_i;  b_i = x_i).
    */
   template<class OtherType>
-  void EnforceDoFSolutionAtNode(const unsigned long node_i, const unsigned short var, const su2double x_i, CSysVector<OtherType> & b);  
+  inline void EnforceDoFSolutionAtNode(const unsigned long node_i, const unsigned short var, const su2double x_i, CSysVector<OtherType> & b) {
+      
+  /*--- Both row and column associated with node i are eliminated (Block_ii = I and all else 0) to preserve eventual symmetry. ---*/
+  /*--- The vector is updated with the product of column i by the known (enforced) solution at node i. ---*/
+
+  unsigned long iPoint, iVar, jVar, index, mat_begin;
+
+  /*--- Delete whole row first. ---*/
+  index = row_ptr[node_i]*nVar*nVar + var;
+  matrix[index] = 0.0;
+
+  /*--- Update b with the column product and delete column. ---*/
+  for (iPoint = 0; iPoint < nPoint; ++iPoint) {
+    for (index = row_ptr[iPoint]; index < row_ptr[iPoint+1]; ++index) {
+      if (col_ind[index] == node_i)
+      {
+        mat_begin = index*nVar*nVar;
+
+        
+        b[iPoint*nVar+var] -= matrix[mat_begin+var*nVar+var] * x_i[var];
+
+        /*--- If on diagonal, set diagonal of block to 1, else delete block. ---*/
+        if (iPoint == node_i)
+           matrix[mat_begin+var*(nVar+1)] = 1.0;
+        else
+           matrix[mat_begin+var] = 0.0;
+      }
+    }
+  }
+
+  /*--- Set know solution in rhs vector. ---*/
+  b[node_i*nVar+var] = x_i[var];      
+      
+  
+  };  
 
   /*!
    * \brief Performs the product of a sparse matrix by a CSysVector.
