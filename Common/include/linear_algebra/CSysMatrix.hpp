@@ -591,7 +591,7 @@ public:
         mat_begin = index*nVar*nVar;
 
         
-        b[iPoint*nVar+var] -= matrix[mat_begin+var*nVar+var] * x_i[var];
+        b[iPoint*nVar+var] -= matrix[mat_begin+var*nVar+var] * x_i;
 
         /*--- If on diagonal, set diagonal of block to 1, else delete block. ---*/
         if (iPoint == node_i)
@@ -603,7 +603,7 @@ public:
   }
 
   /*--- Set know solution in rhs vector. ---*/
-  b[node_i*nVar+var] = x_i[var];      
+  b[node_i*nVar+var] = x_i;      
       
   
   };  
