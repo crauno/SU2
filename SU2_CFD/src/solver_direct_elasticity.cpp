@@ -2018,7 +2018,7 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
   bool dynamic = config->GetTime_Domain();
   su2double zero= 0.0;
   unsigned short vary = 1;
-  cout << "DEBUG 1" << endl;
+  
   for ( iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
 
     /*--- Get node index ---*/
@@ -2026,21 +2026,20 @@ void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig
 
     /*--- Set and enforce solution at current and previous time-step ---*/
     nodes->SetSolution(iPoint, &zero);
-    cout << "DEBUG 2" << endl;
+    
     if (dynamic) {
       nodes->SetSolution_Vel(iPoint,vary, zero);
       nodes->SetSolution_Accel(iPoint,vary, zero); 
       nodes->Set_Solution_time_n(iPoint,vary, zero);
       nodes->SetSolution_Vel_time_n(iPoint,vary, zero);
       nodes->SetSolution_Accel_time_n(iPoint,vary, zero);  
-      cout << "DEBUG 3" << endl;
+      
     }
 
     /*--- Set and enforce 0 solution for mesh deformation ---*/
     nodes->SetBound_Disp(iPoint,vary, zero);
-    cout << "DEBUG 4" << endl;
     LinSysSol.SetBlock(iPoint,vary, zero);
-    cout << "DEBUG 5" << endl;
+
     LinSysReact.SetBlock(iPoint,vary, zero);
     cout << "DEBUG 6" << endl;
     Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, zero, LinSysRes);
