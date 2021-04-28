@@ -571,7 +571,7 @@ public:
    * \param[in,out] b - The rhs vector (b := b - A_{*,i} * x_i;  b_i = x_i).
    */
   template<class OtherType>
-  void EnforceSolutionAtNode_bis(const unsigned long node_i, const OtherType *x_i, CSysVector<OtherType> & b);
+  void EnforceSolutionAtNode2(const unsigned long node_i, const OtherType *x_i, CSysVector<OtherType> & b);
 
   
     /*!

@@ -1327,7 +1327,7 @@ void CSysMatrix<ScalarType>::EnforceSolutionAtNode(const unsigned long node_i, c
 
 template<class ScalarType>
 template<class OtherType>
-void CSysMatrix<ScalarType>::EnforceSolutionAtNode_bis(const unsigned long node_i, const OtherType *x_i, CSysVector<OtherType> & b) {  /*--- Both row and column associated with node i are eliminated (Block_ii = I and all else 0) to preserve eventual symmetry. ---*/
+void CSysMatrix<ScalarType>::EnforceSolutionAtNode2(const unsigned long node_i, const OtherType *x_i, CSysVector<OtherType> & b) {  /*--- Both row and column associated with node i are eliminated (Block_ii = I and all else 0) to preserve eventual symmetry. ---*/
   /*--- The vector is updated with the product of column i by the known (enforced) solution at node i. ---*/
 
   unsigned long iPoint, iVar, jVar, index, mat_begin;
