@@ -37,6 +37,9 @@
 
 #include "../../include/linear_algebra/CSysVector.hpp"
 
+#include <iostream>
+using namespace std;
+
 template<class ScalarType>
 CSysVector<ScalarType>::CSysVector(void) {
 
@@ -419,6 +422,7 @@ void CSysVector<ScalarType>::SetBlock_Zero(unsigned long val_ipoint) {
 
 template<class ScalarType>
 void CSysVector<ScalarType>::SetBlock_Zero(unsigned long val_ipoint, unsigned short val_var) {
+    cout << 'nVar =' << nVar << endl;
     vec_val[val_ipoint*nVar+val_var] = 0.0;
 }
 
