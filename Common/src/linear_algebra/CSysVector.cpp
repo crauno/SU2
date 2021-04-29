@@ -37,9 +37,6 @@
 
 #include "../../include/linear_algebra/CSysVector.hpp"
 
-#include <iostream>
-using namespace std;
-
 template<class ScalarType>
 CSysVector<ScalarType>::CSysVector(void) {
 
@@ -401,8 +398,7 @@ void CSysVector<ScalarType>::SubtractBlock(unsigned long val_ipoint, ScalarType 
 template<class ScalarType>
 void CSysVector<ScalarType>::SetBlock(unsigned long val_ipoint, ScalarType *val_residual) {
   unsigned short iVar;
-    //cout << "nVar = " << nVar << "\n" << endl;
-    //cout << "val_ipoint = " << val_ipoint << "\n" << endl;
+
   for (iVar = 0; iVar < nVar; iVar++)
     vec_val[val_ipoint*nVar+iVar] = val_residual[iVar];
 }
@@ -423,9 +419,6 @@ void CSysVector<ScalarType>::SetBlock_Zero(unsigned long val_ipoint) {
 
 template<class ScalarType>
 void CSysVector<ScalarType>::SetBlock_Zero(unsigned long val_ipoint, unsigned short val_var) {
-    //cout << "nVar = " << nVar << "\n" << endl;
-    //cout << "val_var = " << val_var << "\n" << endl;
-    //cout << "val_ipoint = " << val_ipoint << "\n" << endl;
     vec_val[val_ipoint*nVar+val_var] = 0.0;
 }
 
