@@ -640,12 +640,13 @@ void CMeshSolver::SetBoundaryDisplacements(CGeometry *geometry, CNumerics *numer
     }
   }
 
-  /*--- Symmetry plane is, for now, clamped. ---*/
+  /*--- Symmetry plane is, now constrained along y (assumed plane xz). ---*/
   for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
     if ((config->GetMarker_All_Deform_Mesh(iMarker) == NO) &&
         (config->GetMarker_All_KindBC(iMarker) == SYMMETRY_PLANE)) {
-
-         BC_Clamped(geometry, numerics, config, iMarker);
+         
+        BC_Symmetry_y(geometry, numerics, config, iMarker);
+         //BC_Clamped(geometry, numerics, config, iMarker);
 
     }
   }

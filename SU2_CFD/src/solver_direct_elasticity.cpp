@@ -1982,7 +1982,7 @@ void CFEASolver::BC_Clamped(CGeometry *geometry, CNumerics *numerics, CConfig *c
   Solution[0] = 0.0;
   Solution[1] = 0.0;
   if (nDim==3) Solution[2] = 0.0;
-
+  
   for (iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
 
     /*--- Get node index ---*/
@@ -2005,10 +2005,50 @@ void CFEASolver::BC_Clamped(CGeometry *geometry, CNumerics *numerics, CConfig *c
     LinSysSol.SetBlock(iPoint, Solution);
     LinSysReact.SetBlock(iPoint, Solution);
     Jacobian.EnforceSolutionAtNode(iPoint, Solution, LinSysRes);
+    
+  }
+
+}
+
+void CFEASolver::BC_Symmetry_y(CGeometry *geometry, CNumerics *numerics, CConfig *config, unsigned short val_marker) { 
+
+  // Temporary 
+  Solution[0] = 0.0;
+  Solution[1] = 0.0;
+  if (nDim==3) Solution[2] = 0.0;
+  
+  unsigned long iPoint, iVertex;
+  
+  bool dynamic = config->GetTime_Domain();
+  su2double zero= 0.0;
+  unsigned short vary = 1;
+  
+  for ( iVertex = 0; iVertex < geometry->nVertex[val_marker]; iVertex++) {
+
+    /*--- Get node index ---*/
+    iPoint = geometry->vertex[val_marker][iVertex]->GetNode();
+
+    /*--- Set and enforce solution at current and previous time-step ---*/
+    nodes->SetSolution(iPoint, &zero);
+    
+    if (dynamic) {
+      nodes->SetSolution_Vel(iPoint,vary, zero);
+      nodes->SetSolution_Accel(iPoint,vary, zero); 
+      nodes->Set_Solution_time_n(iPoint,vary, zero);
+      nodes->SetSolution_Vel_time_n(iPoint,vary, zero);
+      nodes->SetSolution_Accel_time_n(iPoint,vary, zero);  
+      
+    }
+    /*--- Set and enforce 0 solution for mesh deformation ---*/
+    nodes->SetBound_Disp(iPoint,vary, zero);   
+    LinSysSol.SetBlock_Zero(iPoint,vary);
+    //LinSysReact.SetBlock_Zero(iPoint,0);
+    Jacobian.EnforceDoFSolutionAtNode(iPoint,vary, zero, LinSysRes);
 
   }
 
 }
+
 
 void CFEASolver::BC_Clamped_Post(CGeometry *geometry, CNumerics *numerics, CConfig *config, unsigned short val_marker) {
   
