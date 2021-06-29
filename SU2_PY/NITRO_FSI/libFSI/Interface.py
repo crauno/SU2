@@ -1099,7 +1099,7 @@ class Interface:
             FluidSolver.Update()
             FluidSolver.Monitor(TimeIter)
             #if TimeIter == NbTimeIter:
-            if (TimeIter == 1) or (TimeIter == 5000) or (TimeIter == 5001) or (TimeIter == 5020) or (TimeIter == 600) or (TimeIter == 601):
+            if (TimeIter == 1) or (TimeIter == 5000) or (TimeIter == 5001) or (TimeIter == 5020) or (TimeIter == 600) or (TimeIter == 601) or (TimeIter == NbTimeIter):
                FluidSolver.Output(TimeIter)
             self.MPIBarrier()
 
