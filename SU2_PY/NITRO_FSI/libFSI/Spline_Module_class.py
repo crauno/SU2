@@ -55,6 +55,38 @@ np.set_printoptions(threshold=sys.maxsize)
 #  MLS_Spline Interface Class
 # ----------------------------------------------------------------------
 
+class Fluid_mode:
+
+    def __init__(self, MLS_Config_File, nDim, AeroNodes, FSI_config):
+
+        # AeroPoint is numpy matrix nAeropoint*3 (AeroPoint[markers[FSI_marker])
+        # BoundElem is an object. here we need the function .GetNodes() or something similar
+        # The MLS configurations parameters are stored from the MLS input file
+        print("Storing MLS parameters from input file ")
+        MLS_conf = io.pyMLSConfig(MLS_Config_File)
+
+        # Storing structural modes from relative input file
+        print("Storing structural modes from the input file ")
+        #print("NB: Remember we want structural modes to be mass normalized!")
+        self.Modes = []; # It's an object and further elements will be "appended"
+        Mode_file = FSI_config['STRUCTURAL_MODES_FILE_NAME']
+        print("Mode_file = {}".format(Mode_file))
+        FORMAT_MODES = FSI_config['FORMAT_MODES']
+        self.nModes = []
+        ReadModes(self.Modes, Mode_file, FORMAT_MODES, self.nModes)
+        self.nModes = int(self.nModes[0])
+
+        self.nAeroNodes = np.shape(AeroNodes)[0]
+        lenAeroNodes = self.nAeroNodes * 3
+
+        print("For this case we don't have a structural mesh and the modes are imposed on the fluid nodes")
+        Mesh_file = MLS_conf['STRUCTURAL_NODES_FILE_NAME']
+        Mesh_format = MLS_conf['FORMAT_SRUCT_NODES']
+        self.nStructNodes = self.nAeroNodes
+        StructNodes = AeroNodes
+        # --- No need for interpolation matrix here ------------------
+        self.interpolation_matrix = identity(self.nAeroNodes)
+
 class MLS_Spline:
 
     """

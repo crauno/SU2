@@ -941,6 +941,9 @@ class Interface:
                 new_name_surf = "./Output/surface_flow_00000" + ".vtk"
                 shutil.move("flow.vtk", new_name_flow)
                 shutil.move("surface_flow.vtk", new_name_surf)
+                # renaming the csv
+                new_name_surf_csv = "./Output/surface_flow_00000" + ".csv"
+                shutil.move("surface_flow.csv", new_name_surf)
 
                 cd_file = open("history_CD.dat", "a")
                 cd_file.write(str(FluidSolver.Get_DragCoeff()) + "\n")
@@ -996,6 +999,10 @@ class Interface:
             NbTimeIter = ((totTime) / deltaT)
             time = startTime
             TimeIter = FSI_config['RESTART_ITER']
+            # If this is simulation unsteady number 2 the original timestep number has to be retrieved
+            if FSI_config['UNST_NR'] == 2:
+                # remember that by default the first simulation lasts 3 times the BS time
+               Sequential_TimeIter = FSI_config['BS_TIMESTEP_1']*3 - 1
         else:
             NbTimeIter = (totTime / deltaT)   # number of time iterations
             time = 0.0  # initial time
@@ -1048,29 +1055,6 @@ class Interface:
 
             #self.MPIPrint("\n>>>> Time iteration {} / FSI iteration {} <<<<".format(TimeIter, self.FSIIter))
 
-            # Old probably not working anymore with current mesh deforming approach (Version 7.0)
-            '''
-            if TimeIter != 0:
-                if FSI_config['MOTION_TYPE'] == 'BLENDED_STEP':
-                    if time <= FSI_config['START_MOTION_TIME'] + blended_step_lenght and time >= FSI_config[
-                        'START_MOTION_TIME']:
-                        # --- Mesh morphing step (displacements interpolation, displacements communication, and mesh morpher call) --- #
-                        self.transferStructuralDisplacements( FluidSolver, SolidSolver)
-                        #self.interpolateSolidPositionOnFluidMesh(FSI_config) #OLD VERSION
-                        self.MPIPrint('\nPerforming dynamic mesh deformation (ALE)...\n')
-                        #self.setFluidInterfaceVarCoord(FluidSolver)
-                        #FluidSolver.DynamicMeshUpdate(TimeIter)
-                        FluidSolver.Preprocess(TimeIter)
-                else:
-                    # --- Mesh morphing step (displacements interpolation, displacements communication, and mesh morpher call) --- #
-                    self.transferStructuralDisplacements(FluidSolver, SolidSolver)
-                    #self.interpolateSolidPositionOnFluidMesh(FSI_config) #OLD VERSION
-                    self.MPIPrint('\nPerforming dynamic mesh deformation (ALE)...\n')
-                    #self.setFluidInterfaceVarCoord(FluidSolver)
-                    #FluidSolver.DynamicMeshUpdate(TimeIter)
-                    FluidSolver.Preprocess(TimeIter)
-            '''
-            
             # --- Mesh morphing step (displacements interpolation, displacements communication, and mesh morpher call) --- #
             if TimeIter != 0:
                if FSI_config['MOTION_TYPE'] == 'BLENDED_STEP':
@@ -1099,9 +1083,14 @@ class Interface:
             FluidSolver.Update()
             FluidSolver.Monitor(TimeIter)
             #if TimeIter == NbTimeIter:
-            if (TimeIter == 1) or (TimeIter == 5000) or (TimeIter == 5001) or (TimeIter == 5020) or (TimeIter == 600) or (TimeIter == 601) or (TimeIter == NbTimeIter):
-               FluidSolver.Output(TimeIter)
+            # Printing outputs for all time steps
+            FluidSolver.Output(TimeIter)
             self.MPIBarrier()
+            # In case the unsteady simulation is number 2 it is important to keep numbering the files in sequence
+            if FSI_config['UNST_NR'] == 2:
+                old_name_surf_csv = "surface_flow_" + str(int(TimeIter).zfill(5)) + ".csv"
+                new_name_surf_csv = "./Output/surface_flow_" + str(int(Sequential_TimeIter).zfill(5)) + ".csv"
+                shutil.move(old_name_surf_csv, new_name_surf_csv)
 
             # --- Surface fluid loads interpolation and communication --- #
             self.MPIPrint('\nProcessing interface fluid loads...\n')
@@ -1140,6 +1129,8 @@ class Interface:
                 cl_file.close()
                 '''
             TimeIter += 1
+            if FSI_config['UNST_NR'] == 2:
+               Sequential_TimeIter += 1
             time += deltaT
 
             ## --- Solid solver call for FSI subiteration --- #

@@ -161,7 +161,10 @@ def main():
     if myid == rootProcess:  # we perform this calculation on the root core
         print('\n***************************** Initializing MLS Interpolation *************************')
         try:
-            MLS = Spline_Module.MLS_Spline(MLS_confFile, FSIInterface.nDim,
+            #MLS = Spline_Module.MLS_Spline(MLS_confFile, FSIInterface.nDim,
+            #                              SolidSolver.GlobalCoordinates0,
+            #                              FSI_config)
+            MLS = Spline_Module.Fluid_mode(MLS_confFile, FSIInterface.nDim,
                                           SolidSolver.GlobalCoordinates0,
                                           FSI_config)
         except TypeError as exception:
