@@ -85,7 +85,7 @@ class Fluid_mode:
         self.nStructNodes = self.nAeroNodes
         StructNodes = AeroNodes
         # --- No need for interpolation matrix here ------------------
-        self.interpolation_matrix = identity(self.nAeroNodes)
+        self.interpolation_matrix = np.identity(self.nAeroNodes)
 
 class MLS_Spline:
 
