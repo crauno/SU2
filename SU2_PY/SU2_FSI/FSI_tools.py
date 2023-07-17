@@ -183,9 +183,10 @@ def FSIPrimal(primal_folder, config):
     '''   
     
     # going to ./Primal folder
-    os.chdir(primal_folder)    
-    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' pyBeamFSI_opt.py -f ' + config['CONFIG_PRIMAL']
-    #print (command)
+    os.chdir(primal_folder)       
+    #command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' pyBeamFSI_opt.py -f ' + config['CONFIG_PRIMAL']
+    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' /home/lukes94/Trial/SU2/SU2_PY/pyBeamFSI_opt.py -f ' + config['CONFIG_PRIMAL']
+    print ("command: " + command)
     # Compose local output file
     Output_file =  'Output_primal.out'
 
@@ -205,7 +206,7 @@ def FSIAdjoint(adj_folder, config):
 
     # going to ./Primal folder
     os.chdir(adj_folder)    
-    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' pyBeamFSI_AD_opt.py -f ' + config['CONFIG_ADJOINT']
+    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' /home/lukes94/Trial/SU2/SU2_PY/pyBeamFSI_AD_opt.py -f ' + config['CONFIG_ADJOINT']
     #print (command)
     # Compose local output file
     Output_file =  'Output_adjoint.out'   
@@ -359,7 +360,7 @@ def ReadGeoConstraintGradients( geo_folder,ConsList,n_dv, sign ):
     
     return gradient
     
-def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyBeamMesh, pyBeamProp):
+def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyBeamMesh, pyBeamProp, pyAugustoMesh, pyAugustoSmdao):
        # pulling primal files
        command = []
        # 1
@@ -372,6 +373,8 @@ def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyBeamMesh, pyBeamPr
        config = configOpt['FOLDER'] + '/' + configFSI['MLS_CONFIG_FILE_NAME']
        command.append('cp ' + config + ' ' + folder + '/')
        # 4
+       config = configOpt['FOLDER'] + '/' + configFSI['AUGUSTO_CONFIG']
+       command.append('cp ' + config + ' ' + folder + '/')
        # creating a symbolic link to numpy spline matric which doesn't change
        spline = configOpt['FOLDER'] + '/' + 'Spline.npy'
        command.append('ln -s ' + spline + ' ' + folder + '/' + 'Spline.npy')      
@@ -385,7 +388,13 @@ def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyBeamMesh, pyBeamPr
        command.append('cp ' + config + ' ' + folder + '/')
        # 2
        config = configOpt['FOLDER'] + '/' + pyBeamProp
-       command.append('cp ' + config + ' ' + folder + '/')       
+       command.append('cp ' + config + ' ' + folder + '/')
+       # 3
+       config = configOpt['FOLDER'] + '/' + pyAugustoMesh
+       command.append('cp ' + config + ' ' + folder + '/') 
+       # 4
+       config = configOpt['FOLDER'] + '/' + pyAugustoSmdao
+       command.append('cp ' + config + ' ' + folder + '/')        
        for i in range(len(command)):
           run_command(command[i], 'Pulling primal pyBeam file ' + str(i) , False)        
           

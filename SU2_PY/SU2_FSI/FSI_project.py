@@ -32,7 +32,7 @@
 import copy
 import numpy as np
 from math import pow, factorial
-import time, os
+import time, os, sys
 from SU2_FSI.FSI_config import FSIConfig as FSIConfig
 from SU2_FSI import FSI_design
 from SU2_FSI.FSI_tools import run_command, readConfig, PullingPrimalAdjointFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP
@@ -117,6 +117,10 @@ class Project:
         self.pyBeamMesh = readConfig(self.configFSIPrimal['PYBEAM_CONFIG'], 'MESH_FILE')
         # locate pyBeam properties
         self.pyBeamProp = readConfig(self.configFSIPrimal['PYBEAM_CONFIG'], 'PROPERTY_FILE')
+        # locate AUGUSTO meshfile
+        self.pyAugustoMesh = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG'], 'INPUT_FILENAME')
+        # locate AUGUSTO smdao
+        self.pyAugustoSmdao = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG'], 'SMDAO_FILENAME')
 
     def obj_f(self,dvs):
         print('Project obj_f') 
@@ -363,8 +367,7 @@ class Project:
        command = 'cp ' + config_input + ' ' + self.primal_folder + '/'
        run_command(command, 'Pulling primal config', False) 
        
-       PullingPrimalAdjointFiles(self.config, self.primal_folder, self.configFSIPrimal, self.pyBeamMesh, self.pyBeamProp)
-       
+       PullingPrimalAdjointFiles(self.config, self.primal_folder, self.configFSIPrimal, self.pyBeamMesh, self.pyBeamProp, self.pyAugustoMesh, self.pyAugustoSmdao)
        # pulling mesh file 
        self.SetMesh(self.primal_folder)  
        
@@ -387,7 +390,7 @@ class Project:
        run_command(command, 'Pulling Adjoint config', False)        
        
        
-       PullingPrimalAdjointFiles(self.config, self.adjoint_folder, self.configFSIAdjoint, self.pyBeamMesh, self.pyBeamProp)
+       PullingPrimalAdjointFiles(self.config, self.adjoint_folder, self.configFSIAdjoint, self.pyBeamMesh, self.pyBeamProp, self.pyAugustoMesh, self.pyAugustoSmdao)
 
        # pulling mesh file 
        self.SetMesh(self.adjoint_folder)         

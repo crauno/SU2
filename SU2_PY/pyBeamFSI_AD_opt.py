@@ -38,12 +38,13 @@ from optparse import OptionParser  # use a parser for configuration
 from SU2_FSI.FSI_config import FSIConfig as io       # imports FSI config tools
 from SU2_FSI import AdjointInterface as FSI # imports FSI python tools
 import pyBeamInterface as pyBeamInterface
+import pyAugustoInterface as pyAugustoInterface
 import pyMLSInterface as Spline_Module
 
 # imports the CFD (SU2) module for FSI computation
 import pysu2ad as pysu2
 import pyBeam
-
+import pyAugusto
 
 # -------------------------------------------------------------------
 #  Main
@@ -89,6 +90,7 @@ def main():
     FSI_config = io(confFile)  # FSI configuration file
     CFD_ConFile = FSI_config['SU2_CONFIG']  # CFD configuration file
     CSD_ConFile = FSI_config['PYBEAM_CONFIG']  # CSD configuration file
+    AUG_ConFile = FSI_config['AUGUSTO_CONFIG']  # AUGUSTO  configuration file
     MLS_confFile = FSI_config['MLS_CONFIG_FILE_NAME']  # MLS configuration file
 
     if have_MPI:
@@ -113,12 +115,14 @@ def main():
     # --- Initialize the solid solver: pyBeam --- #
     if myid == rootProcess:
         print('\n***************************** Initializing pyBeam ************************************')
-        try:
-            SolidSolver = pyBeamInterface.pyBeamADSolver(CSD_ConFile)
-        except TypeError as exception:
+    try:
+            #SolidSolver = pyBeamInterface.pyBeamADSolver(CSD_ConFile)
+            SolidSolver = pyAugustoInterface.pyAugustoADSolver(AUG_ConFile)
+            print("---> P"+ str(myid) +": | SolidSolver.nPoint:" + str(SolidSolver.nPoint) + ": | SolidSolver.nPointLocal:" + str(SolidSolver.nPointLocal))
+    except TypeError as exception:
             print('ERROR building the Solid Solver: ', exception)
-    else:
-        SolidSolver = None
+    #else:
+    #    SolidSolver = None
 
     if have_MPI:
         comm.barrier()
@@ -147,7 +151,7 @@ def main():
 
     if myid == rootProcess:  # we perform this calculation on the root core
         print('\n***************************** Initializing MLS Interpolation *************************')
-        try:
+    try:
             MLS = Spline_Module.pyMLSInterface(MLS_confFile, FSIInterface.globalFluidCoordinates, 
                                                FSIInterface.globalSolidCoordinates)                                               
             # Save spline matrix
@@ -159,11 +163,11 @@ def main():
             MLS.interpolation_matrix = None
             MLS.interpolation_matrix = np.load('./Spline.npy')         
             
-        except TypeError as exception:
+    except TypeError as exception:
             print('ERROR building the MLS Interpolation: ', exception)
 
-    else:
-        MLS = None
+    #else:
+    #    MLS = None
 
     if have_MPI:
         comm.barrier()

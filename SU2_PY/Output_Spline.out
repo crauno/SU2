@@ -1,0 +1,485 @@
+--------------------------------------------------------------------------
+[[39349,1],8]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
+
+Module: OpenFabrics (openib)
+  Host: majorana
+
+Another transport will be used instead, although this may result in
+lower performance.
+--------------------------------------------------------------------------
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+Working directory is set to /home/lukes94/Trial/SU2/SU2_PY
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+AUGUSTO_CONFIG is an invalid option !
+
+***************************** Initializing SU2 **************************************
+
+Parsing config file for zone 0
+
+----------------- Physical Case Definition ( Zone 0 ) -------------------
+Compressible Euler equations.
+Mach number: 0.85.
+Angle of attack (AoA): 0 deg, and angle of sideslip (AoS): 0 deg.
+Fixed CL mode, target value: 0.5.
+No restart solution, use the values at infinity (freestream).
+Dimensional simulation.
+The reference area will be computed using y(2D) or z(3D) projection.
+The semi-span will be computed using the max y(3D) value.
+The reference length is 1 m.
+Reference origin for moment evaluation is (0.25, 0, 0).
+Surface(s) where the force coefficients are evaluated: WING.
+
+Surface(s) where the objective function is evaluated: WING.
+Surface(s) plotted in the output file: WING.
+Input mesh file name: mesh_FFD.su2
+
+--------------- Space Numerical Integration ( Zone 0 ) ------------------
+Jameson-Schmidt-Turkel scheme (2nd order in space) for the flow inviscid terms.
+JST viscous coefficients (2nd & 4th): 0.5, 0.02.
+The method includes a grid stretching correction (p = 0.3).
+Gradient for upwind reconstruction: inverse-distance weighted Least-Squares.
+Gradient for viscous and source terms: inverse-distance weighted Least-Squares.
+
+--------------- Time Numerical Integration  ( Zone 0 ) ------------------
+Local time stepping (steady state simulation).
+Euler implicit method for the flow equations.
+FGMRES is used for solving the linear system.
+Using a LU-SGS preconditioning.
+Convergence criteria of the linear solver: 1e-06.
+Max number of linear iterations: 2.
+W Multigrid Cycle, with 3 multigrid levels.
+Damping factor for the residual restriction: 0.9.
+Damping factor for the correction prolongation: 0.9.
+No CFL adaptation.
++-------------------------------------------+
+|  MG Level| Presmooth|PostSmooth|CorrectSmo|
++-------------------------------------------+
+|         0|         1|         0|         0|
+|         1|         2|         0|         0|
+|         2|         3|         0|         0|
+|         3|         3|         0|         0|
++-------------------------------------------+
+Courant-Friedrichs-Lewy number:       10
+
+------------------ Convergence Criteria  ( Zone 0 ) ---------------------
+Maximum number of solver subiterations: 3000.
+Begin convergence monitoring at iteration 25.
+Residual minimum value: 1e-10.
+Cauchy series min. value: 1e-06.
+Number of Cauchy elements: 100.
+Begin windowed time average at iteration 15.
+
+-------------------- Output Information ( Zone 0 ) ----------------------
+Writing solution files every 250 iterations.
+Writing the convergence history file every 1 inner iterations.
+Writing the screen convergence history every 1 inner iterations.
+The tabular file format is CSV (.csv).
+Convergence history file name: history.
+Forces breakdown file name: forces_breakdown.dat.
+Surface file name: surface_flow.
+Volume file name: flow.
+Restart file name: restart_flow.dat.
+
+------------- Config File Boundary Information ( Zone 0 ) ---------------
++-----------------------------------------------------------------------+
+|                        Marker Type|                        Marker Name|
++-----------------------------------------------------------------------+
+|                         Euler wall|                               WING|
++-----------------------------------------------------------------------+
+|                          Far-field|                           FARFIELD|
++-----------------------------------------------------------------------+
+|                     Symmetry plane|                           SYMMETRY|
++-----------------------------------------------------------------------+
+|           Deformable mesh boundary|                               WING|
++-----------------------------------------------------------------------+
+|               Fluid loads boundary|                               WING|
++-----------------------------------------------------------------------+
+
+-------------------- Output Preprocessing ( Zone 0 ) --------------------
+  Fixed CL: Adding LIFT as Convergence Field to ensure convergence to target CL
+Screen output fields: INNER_ITER, RMS_DENSITY, RMS_MOMENTUM-X, RMS_MOMENTUM-Y, RMS_ENERGY
+History output group(s): ITER, RMS_RES
+Warning: No (valid) fields chosen for convergence monitoring. Convergence monitoring inactive.
+Warning: No (valid) fields chosen for time convergence monitoring. Time convergence monitoring inactive.
+Volume output fields: COORDINATES, SOLUTION, PRIMITIVE
+
+------------------- Geometry Preprocessing ( Zone 0 ) -------------------
+Three dimensional problem.
+274779 grid points before partitioning.
+1529927 volume elements before partitioning.
+3 surface markers.
+71998 boundary elements in index 0 (Marker = WING).
+3876 boundary elements in index 1 (Marker = SYMMETRY).
+354 boundary elements in index 2 (Marker = FARFIELD).
+Executing the partitioning functions.
+Building the graph adjacency structure.
+Calling ParMETIS... graph partitioning complete (113501 edge cuts).
+Distributing ParMETIS coloring.
+Rebalancing vertices.
+Rebalancing volume element connectivity.
+Rebalancing markers and surface elements.
+341825 vertices including ghost points. 
+1704957 interior elements including halo cells. 
+1704957 tetrahedra.
+Establishing MPI communication patterns.
+Setting point connectivity.
+Renumbering points (Reverse Cuthill McKee Ordering).
+Recomputing point connectivity.
+Setting element connectivity.
+Checking the numerical grid orientation.
+There has been a re-orientation of the TRIANGLE surface elements.
+Identifying edges and vertices.
+Computing centers of gravity.
+Setting the control volume structure.
+Volume of the computational grid: 6.64949e+07.
+Searching for the closest normal neighbors to the surfaces.
+Storing a mapping from global to local point index.
+Compute the surface curvature.
+Max K: 435.272. Mean K: 17.7911. Standard deviation K: 41.4967.
+Checking for periodicity.
+Computing mesh quality statistics for the dual control volumes.
++--------------------------------------------------------------+
+|           Mesh Quality Metric|        Minimum|        Maximum|
++--------------------------------------------------------------+
+|    Orthogonality Angle (deg.)|        49.1605|        86.3872|
+|     CV Face Area Aspect Ratio|         1.0205|        89.0008|
+|           CV Sub-Volume Ratio|        1.00947|        38.5052|
++--------------------------------------------------------------+
+Setting the multigrid structure.
++-------------------------------------------+
+|  MG Level|       CVs|Aggl. Rate|       CFL|
++-------------------------------------------+
+|         0|    341825|    1/1.00|        10|
+|         1|     80217|    1/4.26|   9.25221|
+Finding max control volume width.
+Communicating number of neighbors.
+Reference area = 205.948 m^2.
+Semi-span length = 29.4601 m.
+Wetted area = 426.064 m^2.
+Area projection in the x-plane = 26.3686 m^2, y-plane = 19.8375 m^2, z-plane = 205.948 m^2.
+Max. coordinate in the x-direction = 24.9691 m, y-direction = 29.4601 m, z-direction = 2.89582 m.
+Min. coordinate in the x-direction = -0.00462583 m, y-direction = -6.12157e-07 m, z-direction = -1.74624 m.
+Checking if Euler & Symmetry markers are straight/plane:
+Boundary marker WING is NOT a single plane.
+Boundary marker SYMMETRY is NOT a single plane.
+Boundary marker WING is NOT a single plane.
+
+-------------------- Solver Preprocessing ( Zone 0 ) --------------------
+Inviscid flow: Computing density based on free-stream
+temperature and pressure using the ideal gas law.
+Force coefficients computed using free-stream values.
+
+-- Models:
++------------------------------------------------------------------------------+
+|          Viscosity Model|        Conductivity Model|              Fluid Model|
++------------------------------------------------------------------------------+
+|                        -|                         -|             STANDARD_AIR|
++------------------------------------------------------------------------------+
+-- Fluid properties:
++------------------------------------------------------------------------------+
+|                  Name|    Dim. value|    Ref. value|      Unit|Non-dim. value|
++------------------------------------------------------------------------------+
+|          Gas Constant|       287.058|             1|  N.m/kg.K|       287.058|
+|      Spec. Heat Ratio|             -|             -|         -|           1.4|
++------------------------------------------------------------------------------+
+-- Initial and free-stream conditions:
++------------------------------------------------------------------------------+
+|                  Name|    Dim. value|    Ref. value|      Unit|Non-dim. value|
++------------------------------------------------------------------------------+
+|       Static Pressure|        101325|             1|        Pa|        101325|
+|               Density|       1.22498|             1|    kg/m^3|       1.22498|
+|           Temperature|        288.15|             1|         K|        288.15|
+|          Total Energy|        248623|             1|   m^2/s^2|        248623|
+|            Velocity-X|       289.252|             1|       m/s|       289.252|
+|            Velocity-Y|             0|             1|       m/s|             0|
+|            Velocity-Z|             0|             1|       m/s|             0|
+|    Velocity Magnitude|       289.252|             1|       m/s|       289.252|
++------------------------------------------------------------------------------+
+|           Mach Number|             -|             -|         -|          0.85|
++------------------------------------------------------------------------------+
+Initialize Jacobian structure (Euler). MG level: 0.
+Initialize Jacobian structure (Euler). MG level: 1.
+
+------------------- Numerics Preprocessing ( Zone 0 ) -------------------
+
+----------------- Integration Preprocessing ( Zone 0 ) ------------------
+
+------------------- Iteration Preprocessing ( Zone 0 ) ------------------
+Euler/Navier-Stokes/RANS fluid iteration.
+
+***************************** Initializing pyBeam ************************************
+
+----------- Configuring the primal solver in pyBeam ----------------
+
+---------------------------------------------------------------------------
+|                                                                         |
+| pyBeam, a Beam Solver - Release 0.1 (beta)                              |
+|                       - https://github.com/pyBeam/pyBeam               |
+|                                                                         |
+---------------------------------------------------------------------------
+|                                                                         |
+| Copyright 2018-2019 Rocco Bombardieri (Carlos III University Madrid)    |
+|                     Rauno Cavallaro (Carlos III University Madrid)      |
+|                     Ruben Sanchez (SciComp, TU Kaiserslautern)          |
+|                     Tim Albring (SciComp, TU Kaiserslautern)            |
+|                                                                         |
+| pyBeam is free software: you can redistribute it and/or                 |
+| modify it under the terms of the GNU Affero General Public License      |
+| as published by the Free Software Foundation, either version 3 of the   |
+| License, or (at your option) any later version.                         |
+|                                                                         |
+| pyBeam is distributed in the hope that it will be useful,               |
+| but WITHOUT ANY WARRANTY; without even the implied warranty             |
+| of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 |
+| See the GNU Affero General Public License for more details.             |
+|                                                                         |
+| You should have received a copy of the GNU Affero                       |
+| General Public License along with pyBeam.                               |
+| If not, see <http://www.gnu.org/licenses/>.                             |
+|                                                                         |
+---------------------------------------------------------------------------
+
+--> Reading mesh file: /home/lukes94/Trial/SU2/SU2_PY/mesh_str_fine1.msh.
+--> Reading property file: /home/lukes94/Trial/SU2/SU2_PY/property_n.prt.
+--> Initialization successful
+--> Node Structure Initialization... ok!
+--> Finite Element Initialization... ok!
+--> RBE2 initialization... ok!
+--> Warning: the code works if slave nodes are not connected to beams! 
+--> Remember to add a check about this...
+-->  Setting the Initial Coordinates 
+--> Setting RBE2 for Rigid Constraints
+--> Initialization successful
+
+---------------------------------------------------------------------------
+
+
+***************************** Initializing FSI interface *****************************
+Fluid solver : SU2_CFD
+Solid solver : pyBeam
+Steady coupled simulation
+Matching fluid-solid interface using Moving Least Squares method
+Maximum number of FSI iterations : 10
+FSI tolerance : 1e-07
+Static under-relaxation with constant parameter 0.3
+FSI interface is set
+Fluid solver is initialized on process 43
+Number of interface fluid nodes (halo nodes included) on proccess 43 and marker WING: 602
+Fluid solver is initialized on process 60
+Number of interface fluid nodes (halo nodes included) on proccess 60 and marker WING: 753
+Fluid solver is initialized on process 44
+Number of interface fluid nodes (halo nodes included) on proccess 44 and marker WING: 599
+Fluid solver is initialized on process 22
+Number of interface fluid nodes (halo nodes included) on proccess 22 and marker WING: 625
+
+***************************** Connect fluid and solid solvers *****************************
+Fluid solver is initialized on process 0
+Number of interface fluid nodes (halo nodes included) on proccess 0 and marker WING: 966
+Solid solver is initialized on process 0
+Fluid solver is initialized on process 49
+Number of interface fluid nodes (halo nodes included) on proccess 49 and marker WING: 549
+Fluid solver is initialized on process 63
+Number of interface fluid nodes (halo nodes included) on proccess 63 and marker WING: 744
+Fluid solver is initialized on process 53
+Fluid solver is initialized on process 52
+Number of interface fluid nodes (halo nodes included) on proccess 52 and marker WING: 230
+Fluid solver is initialized on process 54
+Number of interface fluid nodes (halo nodes included) on proccess 54 and marker WING: 480
+Fluid solver is initialized on process 64
+Fluid solver is initialized on process 51
+Number of interface fluid nodes (halo nodes included) on proccess 51 and marker WING: 538
+Fluid solver is initialized on process 56
+Number of interface fluid nodes (halo nodes included) on proccess 56 and marker WING: 764
+Fluid solver is initialized on process 61
+Number of interface fluid nodes (halo nodes included) on proccess 61 and marker WING: 675
+Fluid solver is initialized on process 62
+Number of interface fluid nodes (halo nodes included) on proccess 62 and marker WING: 725
+Fluid solver is initialized on process 55
+Number of interface fluid nodes (halo nodes included) on proccess 55 and marker WING: 241
+Fluid solver is initialized on process 57
+Number of interface fluid nodes (halo nodes included) on proccess 57 and marker WING: 799
+Fluid solver is initialized on process 1
+Number of interface fluid nodes (halo nodes included) on proccess 1 and marker WING: 866
+Fluid solver is initialized on process 3
+Number of interface fluid nodes (halo nodes included) on proccess 3 and marker WING: 976
+Fluid solver is initialized on process 4
+Number of interface fluid nodes (halo nodes included) on proccess 4 and marker WING: 703
+Fluid solver is initialized on process 7
+Number of interface fluid nodes (halo nodes included) on proccess 7 and marker WING: 681
+Fluid solver is initialized on process 8
+Number of interface fluid nodes (halo nodes included) on proccess 8 and marker WING: 856
+Fluid solver is initialized on process 11
+Number of interface fluid nodes (halo nodes included) on proccess 11 and marker WING: 688
+Fluid solver is initialized on process 12
+Number of interface fluid nodes (halo nodes included) on proccess 12 and marker WING: 705
+Fluid solver is initialized on process 13
+Number of interface fluid nodes (halo nodes included) on proccess 13 and marker WING: 685
+Fluid solver is initialized on process 14
+Number of interface fluid nodes (halo nodes included) on proccess 14 and marker WING: 626
+Fluid solver is initialized on process 2
+Number of interface fluid nodes (halo nodes included) on proccess 2 and marker WING: 899
+Fluid solver is initialized on process 50
+Number of interface fluid nodes (halo nodes included) on proccess 50 and marker WING: 562
+Fluid solver is initialized on process 19
+Number of interface fluid nodes (halo nodes included) on proccess 19 and marker WING: 527
+Fluid solver is initialized on process 24
+Number of interface fluid nodes (halo nodes included) on proccess 24 and marker WING: 673
+Fluid solver is initialized on process 32
+Number of interface fluid nodes (halo nodes included) on proccess 32 and marker WING: 708
+Fluid solver is initialized on process 17
+Number of interface fluid nodes (halo nodes included) on proccess 17 and marker WING: 603
+Fluid solver is initialized on process 34
+Number of interface fluid nodes (halo nodes included) on proccess 34 and marker WING: 668
+Fluid solver is initialized on process 18
+Number of interface fluid nodes (halo nodes included) on proccess 18 and marker WING: 633
+Fluid solver is initialized on process 21
+Number of interface fluid nodes (halo nodes included) on proccess 21 and marker WING: 594
+Fluid solver is initialized on process 28
+Number of interface fluid nodes (halo nodes included) on proccess 28 and marker WING: 563
+Fluid solver is initialized on process 27
+Number of interface fluid nodes (halo nodes included) on proccess 27 and marker WING: 702
+Fluid solver is initialized on process 20
+Number of interface fluid nodes (halo nodes included) on proccess 20 and marker WING: 681
+Fluid solver is initialized on process 31
+Number of interface fluid nodes (halo nodes included) on proccess 31 and marker WING: 582
+Fluid solver is initialized on process 30
+Number of interface fluid nodes (halo nodes included) on proccess 30 and marker WING: 558
+Fluid solver is initialized on process 29
+Number of interface fluid nodes (halo nodes included) on proccess 29 and marker WING: 670
+Fluid solver is initialized on process 36
+Number of interface fluid nodes (halo nodes included) on proccess 36 and marker WING: 671
+Fluid solver is initialized on process 45
+Number of interface fluid nodes (halo nodes included) on proccess 45 and marker WING: 697
+Fluid solver is initialized on process 33
+Number of interface fluid nodes (halo nodes included) on proccess 33 and marker WING: 573
+Fluid solver is initialized on process 35
+Number of interface fluid nodes (halo nodes included) on proccess 35 and marker WING: 626
+Fluid solver is initialized on process 5
+Number of interface fluid nodes (halo nodes included) on proccess 5 and marker WING: 976
+Fluid solver is initialized on process 6
+Number of interface fluid nodes (halo nodes included) on proccess 6 and marker WING: 849
+Fluid solver is initialized on process 23
+Number of interface fluid nodes (halo nodes included) on proccess 23 and marker WING: 689
+Fluid solver is initialized on process 59
+Fluid solver is initialized on process 9
+Fluid solver is initialized on process 10
+Fluid solver is initialized on process 58
+Number of interface fluid nodes (halo nodes included) on proccess 9 and marker WING: 691
+Number of interface fluid nodes (halo nodes included) on proccess 10 and marker WING: 618
+Number of interface fluid nodes (halo nodes included) on proccess 58 and marker WING: 675
+Number of interface fluid nodes (halo nodes included) on proccess 59 and marker WING: 744
+Fluid solver is initialized on process 40
+Fluid solver is initialized on process 39
+Number of interface fluid nodes (halo nodes included) on proccess 40 and marker WING: 674
+Number of interface fluid nodes (halo nodes included) on proccess 39 and marker WING: 600
+Fluid solver is initialized on process 25
+Fluid solver is initialized on process 26
+Number of interface fluid nodes (halo nodes included) on proccess 25 and marker WING: 671
+Number of interface fluid nodes (halo nodes included) on proccess 26 and marker WING: 646
+Fluid solver is initialized on process 37
+Fluid solver is initialized on process 38
+Number of interface fluid nodes (halo nodes included) on proccess 38 and marker WING: 573
+Number of interface fluid nodes (halo nodes included) on proccess 37 and marker WING: 512
+Fluid solver is initialized on process 46
+Number of interface fluid nodes (halo nodes included) on proccess 46 and marker WING: 344
+Fluid solver is initialized on process 48
+Number of interface fluid nodes (halo nodes included) on proccess 48 and marker WING: 586
+Fluid solver is initialized on process 47
+Fluid solver is initialized on process 15
+Fluid solver is initialized on process 16
+Number of interface fluid nodes (halo nodes included) on proccess 16 and marker WING: 704
+Number of interface fluid nodes (halo nodes included) on proccess 47 and marker WING: 569
+Number of interface fluid nodes (halo nodes included) on proccess 15 and marker WING: 865
+Fluid solver is initialized on process 42
+Number of interface fluid nodes (halo nodes included) on proccess 42 and marker WING: 605
+Fluid solver is initialized on process 41
+Number of interface fluid nodes (halo nodes included) on proccess 41 and marker WING: 459
+Total number of fluid interface nodes (halo nodes included) : 41316
+Total number of physical fluid interface nodes : 36082
+Total number of beam interface nodes : 324
+Total number of fluid interface nodes : 36082
+Total number of solid interface nodes : 324
+sendCounts: [881 758 769 850 622 850 701 604 743 603 538 611 637 601 544 714 611 540
+ 559 451 584 509 534 643 609 579 577 606 498 595 482 486 635 523 605 553
+ 599 448 469 530 603 378 499 534 532 588 286 495 485 477 481 454 170   0
+ 412 199 701 712 603 668 643 613 624 674   0], total: 36082
+(36082, 3)
+(324, 3)
+
+***************************** Initializing MLS Interpolation *************************
+Storing MLS parameters from input file 
+Performing the Meshless Method
+
+Solving a 3D problem.
+Total number of aerodynamic nodes: 36082.
+Total number of structural nodes (base mesh): 324.
+Using 280 structural nodes for the search.
+*(norm_err + 0) : 0.000000
+*(norm_err + 1) : 0.000000
+*(norm_err + 2) : 0.000000
+*(norm_err + 3) : 0.000000
+Splining: norm of interpolation error over nodes position = 4.8400004897499803e-08
+Saving spline matrix
