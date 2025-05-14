@@ -1,10 +1,10 @@
 [options]
-prefix = /home/lukes94/Trial/SU2
-enable-autodiff = true
 with-mpi = enabled
-enable-tecio = false
+enable-autodiff = true
 enable-pywrapper = true
 enable-pybeam = true
+enable-tecio = false
+prefix = /home/lukes94/SU2
 
 [properties]
 

@@ -1,81 +1,81 @@
-Build started at 2023-05-29T16:20:35.058196
-Main binary: /usr/bin/python3.5
-Build Options: -Dprefix=/home/lukes94/Trial/SU2 -Denable-autodiff=true -Dwith-mpi=enabled -Denable-tecio=false -Denable-pywrapper=true -Denable-pybeam=true
+Build started at 2025-04-30T13:40:27.031234
+Main binary: /usr/bin/python3
+Build Options: -Dwith-mpi=enabled -Denable-autodiff=true -Denable-pywrapper=true -Denable-pybeam=true -Denable-tecio=false -Dprefix=/home/lukes94/SU2
 Python system: Linux
 The Meson build system
 Version: 0.52.999
-Source dir: /home/lukes94/Trial/SU2
-Build dir: /home/lukes94/Trial/SU2/build
+Source dir: /home/lukes94/SU2
+Build dir: /home/lukes94/SU2/build
 Build type: native build
 Project name: SU2
 Project version: 7.0.2 "Blackbird"
-No CFLAGS in the environment, not changing global flags.
-No LDFLAGS in the environment, not changing global flags.
+Appending CFLAGS from environment: '-I/usr/include/python3.10'
+Appending LDFLAGS from environment: ['-L/usr/lib/x86_64-linux-gnu', '-lpython3.10']
 No CPPFLAGS in the environment, not changing global flags.
 Sanity testing C compiler: cc
 Is cross compiler: False.
-Sanity check compiler command line: cc /home/lukes94/Trial/SU2/build/meson-private/sanitycheckc.c -o /home/lukes94/Trial/SU2/build/meson-private/sanitycheckc.exe -pipe -D_FILE_OFFSET_BITS=64
+Sanity check compiler command line: cc /home/lukes94/SU2/build/meson-private/sanitycheckc.c -o /home/lukes94/SU2/build/meson-private/sanitycheckc.exe -I/usr/include/python3.10 -pipe -D_FILE_OFFSET_BITS=64 -L/usr/lib/x86_64-linux-gnu -lpython3.10
 Sanity check compile stdout:
 
 -----
 Sanity check compile stderr:
 
 -----
-Running test binary command: /home/lukes94/Trial/SU2/build/meson-private/sanitycheckc.exe
-C compiler for the build machine: cc (gcc 5.4.0 "cc (Ubuntu 5.4.0-6ubuntu1~16.04.12) 5.4.0 20160609")
-C linker for the build machine: GNU ld.bfd 2.26.1
+Running test binary command: /home/lukes94/SU2/build/meson-private/sanitycheckc.exe
+C compiler for the build machine: cc (gcc 11.4.0 "cc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0")
+C linker for the build machine: GNU ld.bfd 2.38
 No CXXFLAGS in the environment, not changing global flags.
-No LDFLAGS in the environment, not changing global flags.
+Appending LDFLAGS from environment: ['-L/usr/lib/x86_64-linux-gnu', '-lpython3.10']
 No CPPFLAGS in the environment, not changing global flags.
 Sanity testing C++ compiler: c++
 Is cross compiler: False.
-Sanity check compiler command line: c++ /home/lukes94/Trial/SU2/build/meson-private/sanitycheckcpp.cc -o /home/lukes94/Trial/SU2/build/meson-private/sanitycheckcpp.exe -pipe -D_FILE_OFFSET_BITS=64
+Sanity check compiler command line: c++ /home/lukes94/SU2/build/meson-private/sanitycheckcpp.cc -o /home/lukes94/SU2/build/meson-private/sanitycheckcpp.exe -pipe -D_FILE_OFFSET_BITS=64 -L/usr/lib/x86_64-linux-gnu -lpython3.10
 Sanity check compile stdout:
 
 -----
 Sanity check compile stderr:
 
 -----
-Running test binary command: /home/lukes94/Trial/SU2/build/meson-private/sanitycheckcpp.exe
-C++ compiler for the build machine: c++ (gcc 5.4.0 "c++ (Ubuntu 5.4.0-6ubuntu1~16.04.12) 5.4.0 20160609")
-C++ linker for the build machine: GNU ld.bfd 2.26.1
-No CFLAGS in the environment, not changing global flags.
-No LDFLAGS in the environment, not changing global flags.
+Running test binary command: /home/lukes94/SU2/build/meson-private/sanitycheckcpp.exe
+C++ compiler for the build machine: c++ (gcc 11.4.0 "c++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0")
+C++ linker for the build machine: GNU ld.bfd 2.38
+Appending CFLAGS from environment: '-I/usr/include/python3.10'
+Appending LDFLAGS from environment: ['-L/usr/lib/x86_64-linux-gnu', '-lpython3.10']
 No CPPFLAGS in the environment, not changing global flags.
 Sanity testing C compiler: cc
 Is cross compiler: False.
-Sanity check compiler command line: cc /home/lukes94/Trial/SU2/build/meson-private/sanitycheckc.c -o /home/lukes94/Trial/SU2/build/meson-private/sanitycheckc.exe -pipe -D_FILE_OFFSET_BITS=64
+Sanity check compiler command line: cc /home/lukes94/SU2/build/meson-private/sanitycheckc.c -o /home/lukes94/SU2/build/meson-private/sanitycheckc.exe -I/usr/include/python3.10 -pipe -D_FILE_OFFSET_BITS=64 -L/usr/lib/x86_64-linux-gnu -lpython3.10
 Sanity check compile stdout:
 
 -----
 Sanity check compile stderr:
 
 -----
-Running test binary command: /home/lukes94/Trial/SU2/build/meson-private/sanitycheckc.exe
-C compiler for the host machine: cc (gcc 5.4.0 "cc (Ubuntu 5.4.0-6ubuntu1~16.04.12) 5.4.0 20160609")
-C linker for the host machine: GNU ld.bfd 2.26.1
+Running test binary command: /home/lukes94/SU2/build/meson-private/sanitycheckc.exe
+C compiler for the host machine: cc (gcc 11.4.0 "cc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0")
+C linker for the host machine: GNU ld.bfd 2.38
 No CXXFLAGS in the environment, not changing global flags.
-No LDFLAGS in the environment, not changing global flags.
+Appending LDFLAGS from environment: ['-L/usr/lib/x86_64-linux-gnu', '-lpython3.10']
 No CPPFLAGS in the environment, not changing global flags.
 Sanity testing C++ compiler: c++
 Is cross compiler: False.
-Sanity check compiler command line: c++ /home/lukes94/Trial/SU2/build/meson-private/sanitycheckcpp.cc -o /home/lukes94/Trial/SU2/build/meson-private/sanitycheckcpp.exe -pipe -D_FILE_OFFSET_BITS=64
+Sanity check compiler command line: c++ /home/lukes94/SU2/build/meson-private/sanitycheckcpp.cc -o /home/lukes94/SU2/build/meson-private/sanitycheckcpp.exe -pipe -D_FILE_OFFSET_BITS=64 -L/usr/lib/x86_64-linux-gnu -lpython3.10
 Sanity check compile stdout:
 
 -----
 Sanity check compile stderr:
 
 -----
-Running test binary command: /home/lukes94/Trial/SU2/build/meson-private/sanitycheckcpp.exe
-C++ compiler for the host machine: c++ (gcc 5.4.0 "c++ (Ubuntu 5.4.0-6ubuntu1~16.04.12) 5.4.0 20160609")
-C++ linker for the host machine: GNU ld.bfd 2.26.1
+Running test binary command: /home/lukes94/SU2/build/meson-private/sanitycheckcpp.exe
+C++ compiler for the host machine: c++ (gcc 11.4.0 "c++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0")
+C++ linker for the host machine: GNU ld.bfd 2.38
 Build machine cpu family: x86_64
 Build machine cpu: x86_64
 Host machine cpu family: x86_64
 Host machine cpu: x86_64
 Target machine cpu family: x86_64
 Target machine cpu: x86_64
-Program python3 found: YES (/usr/bin/python3.5)
+Program python3 found: YES (/usr/bin/python3)
 Pkg-config binary for MachineChoice.HOST is not cached.
 Pkg-config binary missing from cross or native file, or env var undefined.
 Trying a default pkg-config fallback at pkg-config
@@ -83,19 +83,19 @@ Trying pkg-config binary pkg-config for machine MachineChoice.HOST at ['/usr/bin
 Determining dependency 'ompi-c' with pkg-config executable '/usr/bin/pkg-config'
 PKG_CONFIG_PATH: 
 Called `/usr/bin/pkg-config --modversion ompi-c` -> 0
-1.10.2
+4.1.2
 PKG_CONFIG_PATH: 
 Called `/usr/bin/pkg-config --cflags ompi-c` -> 0
--pthread -I/usr/lib/openmpi/include -I/usr/lib/openmpi/include/openmpi -I/usr/lib/openmpi/include/openmpi/opal/mca/event/libevent2021/libevent -I/usr/lib/openmpi/include/openmpi/opal/mca/event/libevent2021/libevent/include
+-I/usr/lib/x86_64-linux-gnu/openmpi/include -I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi
 PKG_CONFIG_PATH: 
 Called `/usr/bin/pkg-config ompi-c --libs` -> 0
--L/usr/lib/openmpi/lib -Wl,-rpath -Wl,/usr/lib/openmpi/lib -Wl,--enable-new-dtags -lmpi
+-L/usr/lib/x86_64-linux-gnu/openmpi/lib -lmpi
 PKG_CONFIG_PATH: 
 Called `/usr/bin/pkg-config ompi-c --libs` -> 0
--L/usr/lib/openmpi/lib -Wl,-rpath -Wl,/usr/lib/openmpi/lib -Wl,--enable-new-dtags -lmpi
+-L/usr/lib/x86_64-linux-gnu/openmpi/lib -lmpi
 Running compile:
-Working directory:  /home/lukes94/Trial/SU2/build/meson-private/tmpdi6u0kul
-Command line:  cc /home/lukes94/Trial/SU2/build/meson-private/tmpdi6u0kul/testfile.c -o /home/lukes94/Trial/SU2/build/meson-private/tmpdi6u0kul/output.exe -pipe -D_FILE_OFFSET_BITS=64 -O0 
+Working directory:  /home/lukes94/SU2/build/meson-private/tmpgxdrf5tg
+Command line:  cc -L/usr/lib/x86_64-linux-gnu -I/usr/include/python3.10 /home/lukes94/SU2/build/meson-private/tmpgxdrf5tg/testfile.c -o /home/lukes94/SU2/build/meson-private/tmpgxdrf5tg/output.exe -pipe -D_FILE_OFFSET_BITS=64 -O0 -Wl,--start-group -lpython3.10 -Wl,--end-group 
 
 Code:
  #include<stdio.h>
@@ -116,36 +116,36 @@ Program stderr:
 
 
 Running compile:
-Working directory:  /home/lukes94/Trial/SU2/build/meson-private/tmpbljoh1tv
-Command line:  cc /home/lukes94/Trial/SU2/build/meson-private/tmpbljoh1tv/testfile.c -o /home/lukes94/Trial/SU2/build/meson-private/tmpbljoh1tv/output.obj -pipe -c -D_FILE_OFFSET_BITS=64 -O0 --print-search-dirs 
+Working directory:  /home/lukes94/SU2/build/meson-private/tmp73o5f08y
+Command line:  cc -I/usr/include/python3.10 /home/lukes94/SU2/build/meson-private/tmp73o5f08y/testfile.c -o /home/lukes94/SU2/build/meson-private/tmp73o5f08y/output.obj -pipe -c -D_FILE_OFFSET_BITS=64 -O0 --print-search-dirs 
 
 Code:
  
 Compiler stdout:
- install: /usr/lib/gcc/x86_64-linux-gnu/5/
-programs: =/usr/lib/gcc/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/bin/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/bin/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/bin/
-libraries: =/usr/lib/gcc/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../lib/:/lib/x86_64-linux-gnu/5/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/5/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/lib/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../:/lib/:/usr/lib/
+ install: /usr/lib/gcc/x86_64-linux-gnu/11/
+programs: =/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/bin/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/bin/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/bin/
+libraries: =/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib/:/lib/x86_64-linux-gnu/11/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/11/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../:/lib/:/usr/lib/
 
 Compiler stderr:
  
-Run-time dependency MPI for c found: YES 1.10.2
+Run-time dependency MPI for c found: YES 4.1.2
 Pkg-config binary for MachineChoice.HOST is cached.
 Determining dependency 'ompi-cxx' with pkg-config executable '/usr/bin/pkg-config'
 PKG_CONFIG_PATH: 
 Called `/usr/bin/pkg-config --modversion ompi-cxx` -> 0
-1.10.2
+4.1.2
 PKG_CONFIG_PATH: 
 Called `/usr/bin/pkg-config --cflags ompi-cxx` -> 0
--pthread -I/usr/lib/openmpi/include -I/usr/lib/openmpi/include/openmpi -I/usr/lib/openmpi/include/openmpi/opal/mca/event/libevent2021/libevent -I/usr/lib/openmpi/include/openmpi/opal/mca/event/libevent2021/libevent/include
+-I/usr/lib/x86_64-linux-gnu/openmpi/include -I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi
 PKG_CONFIG_PATH: 
 Called `/usr/bin/pkg-config ompi-cxx --libs` -> 0
--L/usr/lib/openmpi/lib -Wl,-rpath -Wl,/usr/lib/openmpi/lib -Wl,--enable-new-dtags -lmpi_cxx -lmpi
+-L/usr/lib/x86_64-linux-gnu/openmpi/lib -lmpi_cxx -lmpi
 PKG_CONFIG_PATH: 
 Called `/usr/bin/pkg-config ompi-cxx --libs` -> 0
--L/usr/lib/openmpi/lib -Wl,-rpath -Wl,/usr/lib/openmpi/lib -Wl,--enable-new-dtags -lmpi_cxx -lmpi
+-L/usr/lib/x86_64-linux-gnu/openmpi/lib -lmpi_cxx -lmpi
 Running compile:
-Working directory:  /home/lukes94/Trial/SU2/build/meson-private/tmp48ib91pk
-Command line:  c++ /home/lukes94/Trial/SU2/build/meson-private/tmp48ib91pk/testfile.cpp -o /home/lukes94/Trial/SU2/build/meson-private/tmp48ib91pk/output.exe -pipe -D_FILE_OFFSET_BITS=64 -O0 -fpermissive 
+Working directory:  /home/lukes94/SU2/build/meson-private/tmp7jzyncbf
+Command line:  c++ -L/usr/lib/x86_64-linux-gnu /home/lukes94/SU2/build/meson-private/tmp7jzyncbf/testfile.cpp -o /home/lukes94/SU2/build/meson-private/tmp7jzyncbf/output.exe -pipe -D_FILE_OFFSET_BITS=64 -O0 -fpermissive -Wl,--start-group -lpython3.10 -Wl,--end-group 
 
 Code:
  #include<stdio.h>
@@ -166,21 +166,21 @@ Program stderr:
 
 
 Running compile:
-Working directory:  /home/lukes94/Trial/SU2/build/meson-private/tmpjolyftmv
-Command line:  c++ /home/lukes94/Trial/SU2/build/meson-private/tmpjolyftmv/testfile.cpp -o /home/lukes94/Trial/SU2/build/meson-private/tmpjolyftmv/output.obj -pipe -c -D_FILE_OFFSET_BITS=64 -O0 -fpermissive --print-search-dirs 
+Working directory:  /home/lukes94/SU2/build/meson-private/tmpgs9ibf31
+Command line:  c++ /home/lukes94/SU2/build/meson-private/tmpgs9ibf31/testfile.cpp -o /home/lukes94/SU2/build/meson-private/tmpgs9ibf31/output.obj -pipe -c -D_FILE_OFFSET_BITS=64 -O0 -fpermissive --print-search-dirs 
 
 Code:
  
 Compiler stdout:
- install: /usr/lib/gcc/x86_64-linux-gnu/5/
-programs: =/usr/lib/gcc/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/bin/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/bin/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/bin/
-libraries: =/usr/lib/gcc/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../x86_64-linux-gnu/5/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../lib/:/lib/x86_64-linux-gnu/5/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/5/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../../x86_64-linux-gnu/lib/:/usr/lib/gcc/x86_64-linux-gnu/5/../../../:/lib/:/usr/lib/
+ install: /usr/lib/gcc/x86_64-linux-gnu/11/
+programs: =/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/bin/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/bin/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/bin/
+libraries: =/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/lib/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib/:/lib/x86_64-linux-gnu/11/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/11/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../x86_64-linux-gnu/lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../:/lib/:/usr/lib/
 
 Compiler stderr:
  
-Run-time dependency MPI for cpp found: YES 1.10.2
-Program swig found: YES (/usr/local/bin/swig)
-Running command: /usr/bin/python3.5 -c import mpi4py; print(mpi4py.get_include())
+Run-time dependency MPI for cpp found: YES 4.1.2
+Program swig found: YES (/usr/bin/swig)
+Running command: /usr/bin/python3 -c import mpi4py; print(mpi4py.get_include())
 --- stdout ---
 /usr/lib/python3/dist-packages/mpi4py/include
 
@@ -192,42 +192,32 @@ Pkg-config binary for MachineChoice.HOST is cached.
 Determining dependency 'python3' with pkg-config executable '/usr/bin/pkg-config'
 PKG_CONFIG_PATH: 
 Called `/usr/bin/pkg-config --modversion python3` -> 0
-3.5
+3.10
 PKG_CONFIG_PATH: 
 Called `/usr/bin/pkg-config --cflags python3` -> 0
--I/usr/include/python3.5m -I/usr/include/x86_64-linux-gnu/python3.5m
+-I/usr/include/python3.10 -I/usr/include/x86_64-linux-gnu/python3.10
 PKG_CONFIG_PATH: 
 Called `/usr/bin/pkg-config python3 --libs` -> 0
--lpython3.5m
-PKG_CONFIG_PATH: 
-Called `/usr/bin/pkg-config python3 --libs` -> 0
--lpython3.5m
-Running compile:
-Working directory:  /home/lukes94/Trial/SU2/build/meson-private/tmpay5n2mc6
-Command line:  c++ /home/lukes94/Trial/SU2/build/meson-private/tmpay5n2mc6/testfile.cpp -o /home/lukes94/Trial/SU2/build/meson-private/tmpay5n2mc6/output.exe -pipe -D_FILE_OFFSET_BITS=64 -O0 -fpermissive -Wl,--start-group -lpython3.5m -Wl,--end-group -Wl,--allow-shlib-undefined 
 
-Code:
- int main() { return 0; }
-Compiler stdout:
- 
-Compiler stderr:
- 
-Run-time dependency python3 found: YES 3.5
-Program install.sh found: YES (/bin/sh /home/lukes94/Trial/SU2/SU2_PY/pySU2/install.sh)
+PKG_CONFIG_PATH: 
+Called `/usr/bin/pkg-config python3 --libs` -> 0
+
+Run-time dependency python3 found: YES 3.10
+Program install.sh found: YES (/bin/sh /home/lukes94/SU2/SU2_PY/pySU2/install.sh)
 
 Executing subproject pyBeam method meson 
 
 Project name: pyBeam
 Project version: 0.1.0
-C++ compiler for the build machine: c++ (gcc 5.4.0 "c++ (Ubuntu 5.4.0-6ubuntu1~16.04.12) 5.4.0 20160609")
-C++ linker for the build machine: GNU ld.bfd 2.26.1
-C++ compiler for the host machine: c++ (gcc 5.4.0 "c++ (Ubuntu 5.4.0-6ubuntu1~16.04.12) 5.4.0 20160609")
-C++ linker for the host machine: GNU ld.bfd 2.26.1
-Program python3 found: YES (/usr/bin/python3.5)
-Dependency python3 found: YES 3.5 (cached)
-Program swig found: YES (/usr/local/bin/swig)
-Program /home/lukes94/Trial/SU2/subprojects/pyBeam/install.sh found: YES (/bin/sh /home/lukes94/Trial/SU2/subprojects/pyBeam/install.sh)
-Program /home/lukes94/Trial/SU2/subprojects/pyBeam/install.sh found: YES (/bin/sh /home/lukes94/Trial/SU2/subprojects/pyBeam/install.sh)
+C++ compiler for the build machine: c++ (gcc 11.4.0 "c++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0")
+C++ linker for the build machine: GNU ld.bfd 2.38
+C++ compiler for the host machine: c++ (gcc 11.4.0 "c++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0")
+C++ linker for the host machine: GNU ld.bfd 2.38
+Program python3 found: YES (/usr/bin/python3)
+Dependency python3 found: YES 3.10 (cached)
+Program swig found: YES (/usr/bin/swig)
+Program /home/lukes94/SU2/subprojects/pyBeam/install.sh found: YES (/bin/sh /home/lukes94/SU2/subprojects/pyBeam/install.sh)
+Program /home/lukes94/SU2/subprojects/pyBeam/install.sh found: YES (/bin/sh /home/lukes94/SU2/subprojects/pyBeam/install.sh)
 Build targets in project: 22
 Subproject pyBeam finished.
 
@@ -256,18 +246,18 @@ Message: -----------------------------------------------------------------------
 
          Based on the input to this configuration, add these lines to your .bashrc file:
 
-         export SU2_RUN=/home/lukes94/Trial/SU2/bin
-         export SU2_HOME=/home/lukes94/Trial/SU2
+         export SU2_RUN=/home/lukes94/SU2/bin
+         export SU2_HOME=/home/lukes94/SU2
          export PATH=$PATH:$SU2_RUN
          export PYTHONPATH=$PYTHONPATH:$SU2_RUN
 
          Use './ninja -C true install' to compile and install SU2
 
 Build targets in project: 22
-Found ninja-1.9.0.git at /home/lukes94/Trial/SU2/ninja
+Found ninja-1.9.0.git at /home/lukes94/SU2/ninja
 Running compile:
-Working directory:  /tmp/tmpb5llcf2t
-Command line:  c++ /tmp/tmpb5llcf2t/testfile.cpp -o /tmp/tmpb5llcf2t/output.obj -pipe -D_FILE_OFFSET_BITS=64 -c -std=c++11 
+Working directory:  /tmp/tmpuqu3gifp
+Command line:  c++ /tmp/tmpuqu3gifp/testfile.cpp -o /tmp/tmpuqu3gifp/output.obj -pipe -D_FILE_OFFSET_BITS=64 -c -std=c++11 
 
 Code:
  int i = static_cast<int>(0);
