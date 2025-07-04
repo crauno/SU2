@@ -86,3 +86,6 @@ Mercurial
 
 # Ignore build folder
 ./build/
+
+# ignore spline matrix
+SU2_PY/Spline.mat
