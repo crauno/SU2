@@ -115,12 +115,14 @@ class Project:
         self.configFSIAdjoint = FSIConfig(self.config['CONFIG_ADJOINT'])
         # Locate pyBeam mesh file
         self.pyBeamMesh = readConfig(self.configFSIPrimal['PYBEAM_CONFIG'], 'MESH_FILE')
-        # locate pyBeam properties
+        # Locate pyBeam properties
         self.pyBeamProp = readConfig(self.configFSIPrimal['PYBEAM_CONFIG'], 'PROPERTY_FILE')
-        # locate AUGUSTO meshfile
+        # Locate AUGUSTO meshfile
         self.pyAugustoMesh = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG'], 'INPUT_FILENAME')
-        # locate AUGUSTO smdao
+        # Locate AUGUSTO smdao
         self.pyAugustoSmdao = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG'], 'SMDAO_FILENAME')
+        # Locate file with interface nodes
+        self.pyInterfaceFile = readConfig(self.config['CONFIG_PRIMAL'], 'INTERFACE_NODES_FILE')
 
     def obj_f(self,dvs):
         print('Project obj_f') 
@@ -367,7 +369,7 @@ class Project:
        command = 'cp ' + config_input + ' ' + self.primal_folder + '/'
        run_command(command, 'Pulling primal config', False) 
        
-       PullingPrimalAdjointFiles(self.config, self.primal_folder, self.configFSIPrimal, self.pyBeamMesh, self.pyBeamProp, self.pyAugustoMesh, self.pyAugustoSmdao)
+       PullingPrimalAdjointFiles(self.config, self.primal_folder, self.configFSIPrimal, self.pyBeamMesh, self.pyBeamProp, self.pyAugustoMesh, self.pyAugustoSmdao, self.pyInterfaceFile)
        # pulling mesh file 
        self.SetMesh(self.primal_folder)  
        
@@ -390,7 +392,7 @@ class Project:
        run_command(command, 'Pulling Adjoint config', False)        
        
        
-       PullingPrimalAdjointFiles(self.config, self.adjoint_folder, self.configFSIAdjoint, self.pyBeamMesh, self.pyBeamProp, self.pyAugustoMesh, self.pyAugustoSmdao)
+       PullingPrimalAdjointFiles(self.config, self.adjoint_folder, self.configFSIAdjoint, self.pyBeamMesh, self.pyBeamProp, self.pyAugustoMesh, self.pyAugustoSmdao, self.pyInterfaceFile)
 
        # pulling mesh file 
        self.SetMesh(self.adjoint_folder)         

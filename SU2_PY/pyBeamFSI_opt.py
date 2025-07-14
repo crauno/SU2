@@ -94,6 +94,7 @@ def main():
     CSD_ConFile = FSI_config['PYBEAM_CONFIG']  # CSD configuration file
     AUG_ConFile = FSI_config['AUGUSTO_CONFIG']  # AUGUSTO  configuration file
     MLS_confFile = FSI_config['MLS_CONFIG_FILE_NAME']  # MLS configuration file
+    INTERF_file = FSI_config['INTERFACE_NODES_FILE'] 
 
     if have_MPI:
         comm.barrier()
@@ -119,7 +120,7 @@ def main():
         print('\n***************************** Initializing pyBeam ************************************')
     try:
         #SolidSolver = pyBeamInterface.pyBeamSolver(CSD_ConFile)
-        SolidSolver = pyAugustoInterface.pyAugustoSolver(AUG_ConFile)
+        SolidSolver = pyAugustoInterface.pyAugustoSolver(AUG_ConFile, INTERF_file)
         print("---> P"+ str(myid) +": | SolidSolver.nPoint:" + str(SolidSolver.nPoint) + ": | SolidSolver.nPointLocal:" + str(SolidSolver.nPointLocal))
     except TypeError as exception:
             print('ERROR building the Solid Solver: ', exception)

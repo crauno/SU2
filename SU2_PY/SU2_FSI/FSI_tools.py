@@ -360,7 +360,7 @@ def ReadGeoConstraintGradients( geo_folder,ConsList,n_dv, sign ):
     
     return gradient
     
-def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyBeamMesh, pyBeamProp, pyAugustoMesh, pyAugustoSmdao):
+def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyBeamMesh, pyBeamProp, pyAugustoMesh, pyAugustoSmdao, pyInterfaceFile):
        # pulling primal files
        command = []
        # 1
@@ -394,6 +394,9 @@ def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyBeamMesh, pyBeamPr
        command.append('cp ' + config + ' ' + folder + '/') 
        # 4
        config = configOpt['FOLDER'] + '/' + pyAugustoSmdao
+       command.append('cp ' + config + ' ' + folder + '/')
+       # 5
+       config = configOpt['FOLDER'] + '/' + pyInterfaceFile
        command.append('cp ' + config + ' ' + folder + '/')        
        for i in range(len(command)):
           run_command(command[i], 'Pulling primal pyBeam file ' + str(i) , False)        
