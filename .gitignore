@@ -89,3 +89,4 @@ Mercurial
 
 # ignore spline matrix
 SU2_PY/Spline.mat
+SU2_PY/Spline.npy
