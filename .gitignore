@@ -10,7 +10,7 @@
 *.log
 *.status
 autom4te.cache
-*.in
+#*.in
 compile
 config.guess
 config.sub

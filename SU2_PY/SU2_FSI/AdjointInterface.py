@@ -278,11 +278,11 @@ class AdjointInterface:
             self.haveSolidSolver = True
             self.nSolidInterfaceNodes = SolidSolver.nPoint
             self.nSolidInterfacePhysicalNodes = SolidSolver.nPoint
-            self.nLocalSolidInterfaceNodes = SolidSolver.nPoint
             self.nLocalSolidInterfaceNodes = SolidSolver.nPointLocal
             self.globalSolidCoordinates = np.zeros((SolidSolver.nPoint, 3))
             for iPoint in range(0, SolidSolver.nPoint):
-                coordX, coordY, coordZ = SolidSolver.GetInitialCoordinates( iPoint + 1 )
+                idPoint = SolidSolver.InterfaceNodes[iPoint]
+                coordX, coordY, coordZ = SolidSolver.GetInitialCoordinates(idPoint)
                 self.globalSolidCoordinates[iPoint, 0] = coordX
                 self.globalSolidCoordinates[iPoint, 1] = coordY
                 self.globalSolidCoordinates[iPoint, 2] = coordZ
@@ -616,8 +616,11 @@ class AdjointInterface:
         if self.haveSolidSolver:
             # For the vertices that belong to the interface
             for iVertex in range(0, self.nSolidInterfaceNodes):
+
+                idPoint = SolidSolver.InterfaceNodes[iVertex]
+
                 # Store them in the solid solver directly
-                SolidSolver.SetLoads(iVertex + 1, self.globalSolidLoadX[iVertex],
+                SolidSolver.SetLoads(idPoint, self.globalSolidLoadX[iVertex],
                                               self.globalSolidLoadY[iVertex],
                                               self.globalSolidLoadZ[iVertex])
 
@@ -748,7 +751,9 @@ class AdjointInterface:
                 #self.MPIPrint( "*** adding adj of disp " + str(iVertex + 1) + " ||| " + str( localDispSolidAdjointX[iVertex] ) + "  " + str( localDispSolidAdjointY[iVertex] ) + "   " + str( localDispSolidAdjointZ[iVertex]))
                 #self.MPIBarrier()                        
                 # Store them in the solid solver directly
-                SolidSolver.SetDisplacementAdjoint(iVertex + 1, localDispSolidAdjointX[iVertex],
+                idPoint = SolidSolver.InterfaceNodes[iVertex]
+
+                SolidSolver.SetDisplacementAdjoint(idPoint, localDispSolidAdjointX[iVertex],
                                                             localDispSolidAdjointY[iVertex],
                                                             localDispSolidAdjointZ[iVertex])
                 ######################################################################################################
@@ -789,8 +794,10 @@ class AdjointInterface:
             # For the vertices that belong to the interface
             for iVertex in range(0, self.nSolidInterfaceNodes):
 
+                idPoint = SolidSolver.InterfaceNodes[iVertex]
+
                 # Store the new displacements in the global load array directly
-                sensX, sensY, sensZ = SolidSolver.GetLoadAdjoint(iVertex)
+                sensX, sensY, sensZ = SolidSolver.GetLoadAdjoint(idPoint)
                 self.globalSolidLoadSensX[iVertex] = sensX
                 self.globalSolidLoadSensY[iVertex] = sensY
                 self.globalSolidLoadSensZ[iVertex] = sensZ

@@ -264,7 +264,8 @@ class Interface:
             self.nLocalSolidInterfaceNodes = SolidSolver.nPointLocal
             self.globalSolidCoordinates = np.zeros((SolidSolver.nPoint, 3))
             for iPoint in range(0, SolidSolver.nPoint):
-                coordX, coordY, coordZ = SolidSolver.GetInitialCoordinates( iPoint + 1 )
+                idPoint = SolidSolver.InterfaceNodes[iPoint]
+                coordX, coordY, coordZ = SolidSolver.GetInitialCoordinates(idPoint)
                 self.globalSolidCoordinates[iPoint, 0] = coordX
                 self.globalSolidCoordinates[iPoint, 1] = coordY
                 self.globalSolidCoordinates[iPoint, 2] = coordZ
@@ -610,8 +611,11 @@ class Interface:
         if self.haveSolidSolver:
             # For the vertices that belong to the interface
             for iVertex in range(0, self.nSolidInterfaceNodes):
+
+                idPoint = SolidSolver.InterfaceNodes[iVertex]
+
                 # Store them in the solid solver directly
-                SolidSolver.SetLoads(iVertex + 1, self.globalSolidLoadX[iVertex],
+                SolidSolver.SetLoads(idPoint, self.globalSolidLoadX[iVertex],
                                               self.globalSolidLoadY[iVertex],
                                               self.globalSolidLoadZ[iVertex])
 
@@ -619,7 +623,8 @@ class Interface:
             # beam.SetLoads(107 , 0 , 0 ,350000.)
             load_file = open("Solid_load_"+str(FSI_iter)+".dat", "w")
             for iVertex in range(0, self.nSolidInterfaceNodes):
-               load_file.write("beam.SetLoads( " + str(iVertex) + " , " + str(self.globalSolidLoadX[iVertex]) + " , " + str(self.globalSolidLoadY[iVertex]) + " , " + str(self.globalSolidLoadZ[iVertex]) + " )\n")
+               idPoint = SolidSolver.InterfaceNodes[iVertex]
+               load_file.write("beam.SetLoads( " + str(idPoint) + " , " + str(self.globalSolidLoadX[iVertex]) + " , " + str(self.globalSolidLoadY[iVertex]) + " , " + str(self.globalSolidLoadZ[iVertex]) + " )\n")
             load_file.close()
 
     def transferStructuralDisplacements(self, FSIConfig, FluidSolver, SolidSolver, MLSSolver):
@@ -655,9 +660,11 @@ class Interface:
 
             # For the vertices that belong to the interface
             for iVertex in range(0, self.nSolidInterfaceNodes):
+                
+                idPoint = SolidSolver.InterfaceNodes[iVertex]
 
                 # Store the new displacements in the global load array directly
-                dispX, dispY, dispZ = SolidSolver.ExtractDisplacements(iVertex + 1)
+                dispX, dispY, dispZ = SolidSolver.ExtractDisplacements(idPoint)
                 self.globalSolidDispX[iVertex] = dispX
                 self.globalSolidDispY[iVertex] = dispY
                 self.globalSolidDispZ[iVertex] = dispZ
