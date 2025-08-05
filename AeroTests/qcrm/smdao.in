@@ -22,9 +22,9 @@
 
 
 $INIDV
-1    SING  1     70.0
-2    SING  2     0.3
-3    SING  3     0.005
+1    SING  1     589500000000.0
+2    SING  2     0.31279
+3    SING  3     2700.0
 $ENDDV
 
 %========   SUBDVS ================
@@ -43,7 +43,7 @@ $ENDDV
 $INISUBDV
 1    MAT   1  YOUNG
 2    MAT   1  POISSON
-3    PROP  1  THICKNESS
+3    MAT   1  RHO
 $ENDSUBDV
 
 
@@ -61,7 +61,7 @@ $ENDSUBDV
 % Available options depend on the TAG
 
 $INISUBRESP
-1  STRESS   1465   VM CENTROID TOP                      
+1   DISP   108  MAGU                       
 $ENDSUBRESP
 
 
