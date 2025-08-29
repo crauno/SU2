@@ -1,0 +1,94 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                              %
+% AUGUSTO configuration file                                                   %
+% Case description: _________________________________________________________  %
+% Author: ___________________________________________________________________  %
+% Institution: ______________________________________________________________  %
+% Date: __________                                                             %
+% File Version 0.1                                                             %
+%                                                                              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Respect the format.
+
+
+% Format for DV
+% ID   MOD   IDSUBDV   
+
+
+% Format for SUBDV
+% ID TAG  IDTAG  SUBTAG  VAL 
+
+% Format for SUBRESP
+% ID TAG  IDTAG  SUBTAG 
+
+% Format for RESP
+% ID MOD    AGGREG/TYPE    IDSUBRESPGROUP(if MOD is MULT)    %EXTRAVALS (if AGGREG is KS) 
+
+
+
+%========   DVS ================
+
+% ID   MOD   IDSUBDV   Value
+
+% --- ID
+%  id of the DV
+% --- MOD
+% Could be SING / MULT   
+% --- IDSUBDV
+% If MOD is SING, it si the ID of the subdv. If MOD=MULTI, then is the ID of the group of subdvs
+
+
+% Example
+$INIDV
+1     SING   1      0.00635
+2     SING   2     0.005334
+3     SING   3     0.004572
+4     SING   4     0.003302
+5     SING   5      0.00254
+6     SING   6     0.001651
+7     SING   7      0.01905
+8     SING   8      0.01524
+9     SING   9       0.0127
+10    SING  10     0.009525
+11    SING  11      0.00508
+12    SING  12      0.00254
+$ENDDV
+
+
+
+
+$INISUBDV
+1     PROP   1  THICKNESS
+2     PROP   2  THICKNESS
+3     PROP   3  THICKNESS
+4     PROP   4  THICKNESS
+5     PROP   5  THICKNESS
+6     PROP   6  THICKNESS
+7     PROP   7  THICKNESS
+8     PROP   8  THICKNESS
+9     PROP   9  THICKNESS
+10    PROP  10  THICKNESS
+11    PROP  11  THICKNESS
+12    PROP  12  THICKNESS
+$ENDSUBDV
+
+
+
+
+$INISUBRESP
+1  STRESS     1  VM   CENTROID   TOP                      
+$ENDSUBRESP
+
+
+$INIRESP
+1     MULT      1   KS     50.0     
+$ENDRESP
+
+
+
+$INISET
+SET    1   20262   THROUGH  20267 +
++          20550   THROUGH  20564 +
++          20847   THROUGH  20855 
+$ENDSET

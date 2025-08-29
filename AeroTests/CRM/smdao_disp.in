@@ -1,0 +1,142 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                              %
+% AUGUSTO configuration file                                                   %
+% Case description: _________________________________________________________  %
+% Author: ___________________________________________________________________  %
+% Institution: ______________________________________________________________  %
+% Date: __________                                                             %
+% File Version 0.1                                                             %
+%                                                                              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Respect the format.
+
+
+% Format for DV
+% ID   MOD   IDSUBDV   
+
+
+% Format for SUBDV
+% ID TAG  IDTAG  SUBTAG  VAL 
+
+% Format for SUBRESP
+% ID TAG  IDTAG  SUBTAG 
+
+% Format for RESP
+% ID MOD    AGGREG/TYPE    IDSUBRESPGROUP(if MOD is MULT)    %EXTRAVALS (if AGGREG is KS) 
+
+
+
+%========   DVS ================
+
+% ID   MOD   IDSUBDV   Value
+
+% --- ID
+%  id of the DV
+% --- MOD
+% Could be SING / MULT   
+% --- IDSUBDV
+% If MOD is SING, it si the ID of the subdv. If MOD=MULTI, then is the ID of the group of subdvs
+
+
+% Example
+$INIDV
+1     SING   1      0.00635
+2     SING   2     0.005334
+3     SING   3     0.004572
+4     SING   4     0.003302
+5     SING   5      0.00254
+6     SING   6     0.001651
+7     SING   7      0.01905
+8     SING   8      0.01524
+9     SING   9       0.0127
+10    SING  10     0.009525
+11    SING  11      0.00508
+12    SING  12      0.00254
+$ENDDV
+
+%========   SUBDVS ================
+%
+%  ID   TAG IDTAG   SUBTAG
+%
+% ID
+% id of the subdv
+% TAG 
+% is the category of the DV. Could be PROP / MAT / GRID / EXTFORCE 
+% IDTAG
+% is the ID specific entity to which  the subdv refers
+% subTAG  
+% is the category of the subDV. Available options depend on the TAG
+
+% Example
+$INISUBDV
+1     PROP   1  THICKNESS
+2     PROP   2  THICKNESS
+3     PROP   3  THICKNESS
+4     PROP   4  THICKNESS
+5     PROP   5  THICKNESS
+6     PROP   6  THICKNESS
+7     PROP   7  THICKNESS
+8     PROP   8  THICKNESS
+9     PROP   9  THICKNESS
+10    PROP  10  THICKNESS
+11    PROP  11  THICKNESS
+12    PROP  12  THICKNESS
+$ENDSUBDV
+
+
+
+%========  SUBRESP  ================
+% ID TAG  IDTAG  SUBTAG 
+%
+% ID
+% ID of the subresponse
+
+% TAG 
+% is the category of the SUBRESP. Could be related to  DISP / GENDEF / GENFORCE / STRAIN / STRESS / WEIGHT / FREQUENCY / MODE 
+
+% IDTAG
+% If the response mode is SING it is the ID specific entity to which  the DV refers. 
+% If the response mode is MULT it is the ID of a SET of entities to be aggregated
+% subTAG  
+%  Available options depend on the TAG   ( three fields SUBTAG1, SUBTAG2, SUBTAG3 )
+%
+% SUBTAG1: ( if TAG = DISP ) : UX, UY, UZ, RX, RY, RZ, MAGU, MAGR 
+%          ( if TAG = GENDEF    and IDTAG refers to a CPlate  ):  EPS01, EPS02, GAMMA012, K11, K22, K12, GAMMA1, GAMMA2 
+%          ( if TAG = GENDEF    and IDTAG refers to a CBar    ):  EPS0, K2, K3, GAMMA2, GAMMA3, BETA
+%          ( if TAG = GENFORCE  and IDTAG refers to a CPlate  ):  N11, N22, N12, M11, M22, M12, V1, V2
+%          ( if TAG = GENFORCE  and IDTAG refers to a CBar    ):  N, M2, M3, T2, T3, MT
+%          ( if TAG = STRESS    and IDTAG refers to a CPlate  ):  XX, YY, XY, XZ, YZ, VM
+%
+% SUBTAG2: (  IDTAG refers to a CPlate  ):  GP0, GP1, GP2, GP3, CENTROID, N0, N1, N2, N3 
+%          (  IDTAG refers to a CBar  ):    GP0, GP1, CENTROID, N0, N1
+%
+% SUBTAG3: ( if TAG = STRESS  and IDTAG refers to a CPlate  ):  TOP, MID, BOTTOM 
+% 
+% Example
+
+
+$INISUBRESP
+1   DISP   8545  MAGU                       
+$ENDSUBRESP
+
+
+%========  RESP
+
+% ID   MOD   IDSUBRESP(if MOD is MULT)  AGGREGMODE  %EXTRA1 (if AGGREG is KS) 
+%
+% ID
+% is the ID of the response
+% MOD
+% Could be SING or MULT.   If is SING it refers directly to only one subresponse. IF MULT, it refers to a group of Subresponses
+% IDSUBRESP
+% id of the subresponse (if MOD=SING) or group (if MOD=MULT)
+% AGGREGMODE  (only for MOD= MULT)
+% Is the way the group of subresponses are aggregated. Could be  SUM, L1, AVG,  L2, KS , KSadv
+% EXTRA1   (only for MOD= MULT)
+% Are double values to calibrate the KSadv method 
+
+
+$INIRESP
+1     SING      1
+$ENDRESP
