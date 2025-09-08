@@ -115,7 +115,7 @@ def Sens(options, dvID, perturbed_DV):
     try:
 
         SolidSolver = pyAugustoInterface.pyAugustoSolver(AUG_ConFile, INTERF_file)
-        
+
         # update the design variable with the perturbed value
         SolidSolver.UpdateDesignVariable(dvID, perturbed_DV)
         
@@ -174,6 +174,8 @@ def Sens(options, dvID, perturbed_DV):
 
     cl, cd = FSIInterface.SteadyFSI(FSI_config, FluidSolver, SolidSolver, MLS, None)
     
+    Js = SolidSolver.GetObjFunction() 
+
     if myid == rootProcess:
        print('DRAG COEFFICIENT: ', cd)
 
@@ -184,7 +186,7 @@ def Sens(options, dvID, perturbed_DV):
         del FluidSolver
 
 
-    return cd
+    return cd, Js
 
 
 # -------------------------------------------------------------------
@@ -212,6 +214,7 @@ def main():
    file.write("DV value = {}\n".format(DV_values))
    file.write("\n")
    file.write("\n")
+   file.write("\n")
    file.flush()
 
 
@@ -222,23 +225,29 @@ def main():
 
       # --- Set Parameter for surface sensitivity --- #
    
-      file.write("Delta used = {}\n".format(delta_used)) 
+      file.write("Delta used = {}\n".format(delta_used))
+      file.write("\n") 
       file.flush()
 
       perturbed_DV_plus = (1.0 + delta_used) * DV_values
       file.write("DV_plus = {:16.12f}\n".format(perturbed_DV_plus))
-      drag_plus = Sens(options, DV_ids, perturbed_DV_plus)
+      drag_plus, Js_plus = Sens(options, DV_ids, perturbed_DV_plus)
       file.write("drag_plus = {:16.12f}\n".format(drag_plus))
+      file.write("Js_plus = {:16.12f}\n".format(Js_plus))
       file.flush()
 
       perturbed_DV_minus = (1.0 - delta_used) * DV_values
       file.write("DV_minus = {:16.12f}\n".format(perturbed_DV_minus))
-      drag_minus = Sens(options, DV_ids, perturbed_DV_minus)   
+      drag_minus, Js_minus = Sens(options, DV_ids, perturbed_DV_minus)   
       file.write("drag_minus = {:16.12f}\n".format(drag_minus))
+      file.write("Js_minus = {:16.12f}\n".format(Js_minus))
       file.flush()
 
-      Sensitivity = (drag_plus - drag_minus) / (2 * delta_used * DV_values)
-      file.write("Sensitivity = {:16.12f}\n".format(Sensitivity))
+      Cd_sens = (drag_plus - drag_minus) / (2 * delta_used * DV_values)
+      Js_sens = (Js_plus - Js_minus) / (2 * delta_used * DV_values)
+
+      file.write("Sensitivity Cd = {:16.12f}\n".format(Cd_sens))
+      file.write("Sensitivity Js = {:16.12f}\n".format(Js_sens))
       file.flush()
       file.write("\n")
       file.write("\n")
