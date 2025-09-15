@@ -31,6 +31,15 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with SU2. If not, see <http://www.gnu.org/licenses/>.
 
+
+
+#############################    run with    mpirun -n 64 python3 pyAugustoFSI_Struct_Sens_FD.py -f config_primal.cfg
+
+
+
+
+
+
 # ----------------------------------------------------------------------
 #  Imports
 # ----------------------------------------------------------------------
@@ -203,11 +212,17 @@ def main():
    (options, args) = parser.parse_args()
 
 
+   from mpi4py import MPI
+   comm = MPI.COMM_WORLD
+   myid = comm.Get_rank()
 
    # --- This is only accessed if running from command prompt --- #
-   delta = [5.0e-2, 1.0e-2, 5.0e-3, 1.0e-03, 5.0e-4, 1.0e-4, 5.0e-5, 1.0e-5, 5.0e-6, 1.0e-06, 5.0e-7, 1.0e-7, 5.0e-8, 1.0e-8]
-   DV_ids = 7
-   DV_values = 0.01905
+   delta = [5.00000000e-02, 1.23019153e-02, 3.02674238e-03, 7.44694566e-04,
+ 1.83223389e-04, 4.50799721e-05, 1.10913999e-05, 2.72890924e-06,
+ 6.71416206e-07, 1.65194105e-07, 4.06440777e-08, 1.00000000e-08]
+
+   DV_ids = 1
+   DV_values = 589500000000.0
    
    file = open("Sensitivity_FD_node_DV_" + str(DV_ids) + "_centered.txt", "w")
    file.write("DV id = {}\n".format(DV_ids))
@@ -236,18 +251,25 @@ def main():
       file.write("Js_plus = {:16.12f}\n".format(Js_plus))
       file.flush()
 
+      if myid == 0:
+         os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_plus.dat")
+      
+
       perturbed_DV_minus = (1.0 - delta_used) * DV_values
       file.write("DV_minus = {:16.12f}\n".format(perturbed_DV_minus))
       drag_minus, Js_minus = Sens(options, DV_ids, perturbed_DV_minus)   
       file.write("drag_minus = {:16.12f}\n".format(drag_minus))
       file.write("Js_minus = {:16.12f}\n".format(Js_minus))
       file.flush()
-
+      
+      if myid == 0:
+         os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_minus.dat")
+      
       Cd_sens = (drag_plus - drag_minus) / (2 * delta_used * DV_values)
       Js_sens = (Js_plus - Js_minus) / (2 * delta_used * DV_values)
 
-      file.write("Sensitivity Cd = {:16.12f}\n".format(Cd_sens))
-      file.write("Sensitivity Js = {:16.12f}\n".format(Js_sens))
+      file.write("Sensitivity Cd = {:25.22f}\n".format(Cd_sens))
+      file.write("Sensitivity Js = {:25.22f}\n".format(Js_sens))
       file.flush()
       file.write("\n")
       file.write("\n")
