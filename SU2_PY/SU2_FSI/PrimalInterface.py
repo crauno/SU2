@@ -868,7 +868,7 @@ class Interface:
                self.MPIPrint('\n##### Launching solid solver for a static computation\n')
                self.MPIBarrier()
                if self.haveSolidSolver:
-                   pyBeam_success = SolidSolver.run()
+                   pyBeam_success = SolidSolver.run(self.FSIIter)
             else:
                # writing an empty restart just to allow optimization framework to run adjoint 
                hist_file = open("restart.pyBeam", "w")       
