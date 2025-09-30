@@ -371,113 +371,113 @@ $ENDGRID
 
 
 $INICONN                      
-NLBEAM               1           1           2           1
-NLBEAM               2           2           3           2
-NLBEAM               3           3           4           3
-NLBEAM               4           4           5           4
-NLBEAM               5           5           6           5
-NLBEAM               6           6           7           6
-NLBEAM               7           7           8           7
-NLBEAM               8           8           9           8
-NLBEAM               9           9          10           9
-NLBEAM              10          10          11          10
-NLBEAM              11          11          12          11
-NLBEAM              12          12          13          12
-NLBEAM              13          13          14          13
-NLBEAM              14          14          15          14
-NLBEAM              15          15          16          15
-NLBEAM              16          16          17          16
-NLBEAM              17          17          18          17
-NLBEAM              18          18          19          18
-NLBEAM              19          19          20          19
-NLBEAM              20          20          21          20
-NLBEAM              21          21          22          21
-NLBEAM              22          22          23          22
-NLBEAM              23          23          24          23
-NLBEAM              24          24          25          24
-NLBEAM              25          25          26          25
-NLBEAM              26          26          27          26
-NLBEAM              27          27          28          27
-NLBEAM              28          28          29          28
-NLBEAM              29          29          30          29
-NLBEAM              30          30          31          30
-NLBEAM              31          31          32          31
-NLBEAM              32          32          33          32
-NLBEAM              33          33          34          33
-NLBEAM              34          34          35          34
-NLBEAM              35          35          36          35
-NLBEAM              36          36          37          36
-NLBEAM              37          37          38          37
-NLBEAM              38          38          39          38
-NLBEAM              39          39          40          39
-NLBEAM              40          40          41          40
-NLBEAM              41          41          42          41
-NLBEAM              42          42          43          42
-NLBEAM              43          43          44          43
-NLBEAM              44          44          45          44
-NLBEAM              45          45          46          45
-NLBEAM              46          46          47          46
-NLBEAM              47          47          48          47
-NLBEAM              48          48          49          48
-NLBEAM              49          49          50          49
-NLBEAM              50          50          51          50
-NLBEAM              51          51          52          51
-NLBEAM              52          52          53          52
-NLBEAM              53          53          54          53
-NLBEAM              54          54          55          54
-NLBEAM              55          55          56          55
-NLBEAM              56          56          57          56
-NLBEAM              57          57          58          57
-NLBEAM              58          58          59          58
-NLBEAM              59          59          60          59
-NLBEAM              60          60          61          60
-NLBEAM              61          61          62          61
-NLBEAM              62          62          63          62
-NLBEAM              63          63          64          63
-NLBEAM              64          64          65          64
-NLBEAM              65          65          66          65
-NLBEAM              66          66          67          66
-NLBEAM              67          67          68          67
-NLBEAM              68          68          69          68
-NLBEAM              69          69          70          69
-NLBEAM              70          70          71          70
-NLBEAM              71          71          72          71
-NLBEAM              72          72          73          72
-NLBEAM              73          73          74          73
-NLBEAM              74          74          75          74
-NLBEAM              75          75          76          75
-NLBEAM              76          76          77          76
-NLBEAM              77          77          78          77
-NLBEAM              78          78          79          78
-NLBEAM              79          79          80          79
-NLBEAM              80          80          81          80
-NLBEAM              81          81          82          81
-NLBEAM              82          82          83          82
-NLBEAM              83          83          84          83
-NLBEAM              84          84          85          84
-NLBEAM              85          85          86          85
-NLBEAM              86          86          87          86
-NLBEAM              87          87          88          87
-NLBEAM              88          88          89          88
-NLBEAM              89          89          90          89
-NLBEAM              90          90          91          90
-NLBEAM              91          91          92          91
-NLBEAM              92          92          93          92
-NLBEAM              93          93          94          93
-NLBEAM              94          94          95          94
-NLBEAM              95          95          96          95
-NLBEAM              96          96          97          96
-NLBEAM              97          97          98          97
-NLBEAM              98          98          99          98
-NLBEAM              99          99         100          99
-NLBEAM             100         100         101         100
-NLBEAM             101         101         102         101
-NLBEAM             102         102         103         102
-NLBEAM             103         103         104         103
-NLBEAM             104         104         105         104
-NLBEAM             105         105         106         104
-NLBEAM             106         106         107         104
-NLBEAM             107         107         108         104
+NLBEAM               1           1           2           1          0.0         0.0         1.0
+NLBEAM               2           2           3           2          0.0         0.0         1.0
+NLBEAM               3           3           4           3          0.0         0.0         1.0
+NLBEAM               4           4           5           4          0.0         0.0         1.0
+NLBEAM               5           5           6           5          0.0         0.0         1.0
+NLBEAM               6           6           7           6          0.0         0.0         1.0
+NLBEAM               7           7           8           7          0.0         0.0         1.0
+NLBEAM               8           8           9           8          0.0         0.0         1.0
+NLBEAM               9           9          10           9          0.0         0.0         1.0
+NLBEAM              10          10          11          10          0.0         0.0         1.0
+NLBEAM              11          11          12          11          0.0         0.0         1.0
+NLBEAM              12          12          13          12          0.0         0.0         1.0
+NLBEAM              13          13          14          13          0.0         0.0         1.0
+NLBEAM              14          14          15          14          0.0         0.0         1.0
+NLBEAM              15          15          16          15          0.0         0.0         1.0
+NLBEAM              16          16          17          16          0.0         0.0         1.0
+NLBEAM              17          17          18          17          0.0         0.0         1.0
+NLBEAM              18          18          19          18          0.0         0.0         1.0
+NLBEAM              19          19          20          19          0.0         0.0         1.0
+NLBEAM              20          20          21          20          0.0         0.0         1.0
+NLBEAM              21          21          22          21          0.0         0.0         1.0
+NLBEAM              22          22          23          22          0.0         0.0         1.0
+NLBEAM              23          23          24          23          0.0         0.0         1.0
+NLBEAM              24          24          25          24          0.0         0.0         1.0
+NLBEAM              25          25          26          25          0.0         0.0         1.0
+NLBEAM              26          26          27          26          0.0         0.0         1.0
+NLBEAM              27          27          28          27          0.0         0.0         1.0
+NLBEAM              28          28          29          28          0.0         0.0         1.0
+NLBEAM              29          29          30          29          0.0         0.0         1.0
+NLBEAM              30          30          31          30          0.0         0.0         1.0
+NLBEAM              31          31          32          31          0.0         0.0         1.0
+NLBEAM              32          32          33          32          0.0         0.0         1.0
+NLBEAM              33          33          34          33          0.0         0.0         1.0
+NLBEAM              34          34          35          34          0.0         0.0         1.0
+NLBEAM              35          35          36          35          0.0         0.0         1.0
+NLBEAM              36          36          37          36          0.0         0.0         1.0
+NLBEAM              37          37          38          37          0.0         0.0         1.0
+NLBEAM              38          38          39          38          0.0         0.0         1.0
+NLBEAM              39          39          40          39          0.0         0.0         1.0
+NLBEAM              40          40          41          40          0.0         0.0         1.0
+NLBEAM              41          41          42          41          0.0         0.0         1.0
+NLBEAM              42          42          43          42          0.0         0.0         1.0
+NLBEAM              43          43          44          43          0.0         0.0         1.0
+NLBEAM              44          44          45          44          0.0         0.0         1.0
+NLBEAM              45          45          46          45          0.0         0.0         1.0
+NLBEAM              46          46          47          46          0.0         0.0         1.0
+NLBEAM              47          47          48          47          0.0         0.0         1.0
+NLBEAM              48          48          49          48          0.0         0.0         1.0
+NLBEAM              49          49          50          49          0.0         0.0         1.0
+NLBEAM              50          50          51          50          0.0         0.0         1.0
+NLBEAM              51          51          52          51          0.0         0.0         1.0
+NLBEAM              52          52          53          52          0.0         0.0         1.0
+NLBEAM              53          53          54          53          0.0         0.0         1.0
+NLBEAM              54          54          55          54          0.0         0.0         1.0
+NLBEAM              55          55          56          55          0.0         0.0         1.0
+NLBEAM              56          56          57          56          0.0         0.0         1.0
+NLBEAM              57          57          58          57          0.0         0.0         1.0
+NLBEAM              58          58          59          58          0.0         0.0         1.0
+NLBEAM              59          59          60          59          0.0         0.0         1.0
+NLBEAM              60          60          61          60          0.0         0.0         1.0
+NLBEAM              61          61          62          61          0.0         0.0         1.0
+NLBEAM              62          62          63          62          0.0         0.0         1.0
+NLBEAM              63          63          64          63          0.0         0.0         1.0
+NLBEAM              64          64          65          64          0.0         0.0         1.0
+NLBEAM              65          65          66          65          0.0         0.0         1.0
+NLBEAM              66          66          67          66          0.0         0.0         1.0
+NLBEAM              67          67          68          67          0.0         0.0         1.0
+NLBEAM              68          68          69          68          0.0         0.0         1.0
+NLBEAM              69          69          70          69          0.0         0.0         1.0
+NLBEAM              70          70          71          70          0.0         0.0         1.0
+NLBEAM              71          71          72          71          0.0         0.0         1.0
+NLBEAM              72          72          73          72          0.0         0.0         1.0
+NLBEAM              73          73          74          73          0.0         0.0         1.0
+NLBEAM              74          74          75          74          0.0         0.0         1.0
+NLBEAM              75          75          76          75          0.0         0.0         1.0
+NLBEAM              76          76          77          76          0.0         0.0         1.0
+NLBEAM              77          77          78          77          0.0         0.0         1.0
+NLBEAM              78          78          79          78          0.0         0.0         1.0
+NLBEAM              79          79          80          79          0.0         0.0         1.0
+NLBEAM              80          80          81          80          0.0         0.0         1.0
+NLBEAM              81          81          82          81          0.0         0.0         1.0
+NLBEAM              82          82          83          82          0.0         0.0         1.0
+NLBEAM              83          83          84          83          0.0         0.0         1.0
+NLBEAM              84          84          85          84          0.0         0.0         1.0
+NLBEAM              85          85          86          85          0.0         0.0         1.0
+NLBEAM              86          86          87          86          0.0         0.0         1.0
+NLBEAM              87          87          88          87          0.0         0.0         1.0
+NLBEAM              88          88          89          88          0.0         0.0         1.0
+NLBEAM              89          89          90          89          0.0         0.0         1.0
+NLBEAM              90          90          91          90          0.0         0.0         1.0
+NLBEAM              91          91          92          91          0.0         0.0         1.0
+NLBEAM              92          92          93          92          0.0         0.0         1.0
+NLBEAM              93          93          94          93          0.0         0.0         1.0
+NLBEAM              94          94          95          94          0.0         0.0         1.0
+NLBEAM              95          95          96          95          0.0         0.0         1.0
+NLBEAM              96          96          97          96          0.0         0.0         1.0
+NLBEAM              97          97          98          97          0.0         0.0         1.0
+NLBEAM              98          98          99          98          0.0         0.0         1.0
+NLBEAM              99          99         100          99          0.0         0.0         1.0
+NLBEAM             100         100         101         100          0.0         0.0         1.0
+NLBEAM             101         101         102         101          0.0         0.0         1.0
+NLBEAM             102         102         103         102          0.0         0.0         1.0
+NLBEAM             103         103         104         103          0.0         0.0         1.0
+NLBEAM             104         104         105         104          0.0         0.0         1.0
+NLBEAM             105         105         106         104          0.0         0.0         1.0
+NLBEAM             106         106         107         104          0.0         0.0         1.0
+NLBEAM             107         107         108         104          0.0         0.0         1.0
 $ENDCONN                      
 
 
