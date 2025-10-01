@@ -946,7 +946,7 @@ class AdjointInterface:
                    #SolidSolver.RecordSolver()
                    self.MPIPrint('\n##### Running the adjoint\n')
                    SolidSolver.ReinitialiseSolver()
-                   SolidSolver.RunAdjoint()
+                   SolidSolver.RunSensitivityProblem()
 
             self.FSIIter += 1
 
