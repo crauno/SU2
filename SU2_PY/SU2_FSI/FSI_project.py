@@ -402,8 +402,8 @@ class Project:
        if self._design[self.design_iter].primal == True:
            
           # pyBeam 
-          orig_file = self.primal_folder + '/' + 'restart.pyBeam'
-          dest_file = self.adjoint_folder + '/' + 'solution.pyBeam'
+          orig_file = self.primal_folder + '/' + 'restart.pyAugusto'
+          dest_file = self.adjoint_folder + '/' + 'solution.pyAugusto'
           command.append('cp ' + orig_file + ' ' + dest_file )       
           
           # SU2
