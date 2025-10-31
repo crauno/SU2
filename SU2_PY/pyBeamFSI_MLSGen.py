@@ -120,7 +120,7 @@ def main():
         print('\n***************************** Initializing pyBeam ************************************')
     try:
             #SolidSolver = pyBeamInterface.pyBeamSolver(CSD_ConFile)
-            SolidSolver = pyAugustoInterface.pyAugustoSolver(AUG_ConFile, INTERF_file)
+            SolidSolver = pyAugustoInterface.pyAugustoSolver(AUG_ConFile, INTERF_file, comm)
             print("---> P"+ str(myid) +": | SolidSolver.nPoint:" + str(SolidSolver.nPoint) + ": | SolidSolver.nPointLocal:" + str(SolidSolver.nPointLocal))
     except TypeError as exception:
             print('ERROR building the Solid Solver: ', exception)
