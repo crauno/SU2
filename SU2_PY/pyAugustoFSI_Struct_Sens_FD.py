@@ -35,6 +35,7 @@
 
 #############################    run with    mpirun -n 64 python3 pyAugustoFSI_Struct_Sens_FD.py -f config_primal.cfg
 
+#############################    in the structural config file, the SMDAO type must be RESPONSE
 
 
 
@@ -53,6 +54,7 @@ from SU2_FSI.FSI_config import FSIConfig as io       # imports FSI config tools
 from SU2_FSI import PrimalInterface as FSI # imports FSI python tools
 import pyAugustoInterface as pyAugustoInterface
 import pyMLSInterface as Spline_Module
+from augusto_functions_toolbox import CheckSMDAOtype
 
 # imports the CFD (SU2) module for FSI computation
 import pysu2
@@ -98,6 +100,11 @@ def Sens(options, dvID, perturbed_DV):
     MLS_confFile = FSI_config['MLS_CONFIG_FILE_NAME']  # MLS configuration file
     INTERF_file = FSI_config['INTERFACE_NODES_FILE'] 
 
+
+    # check whether the structural analysis has been set to RESPONSE SMDAO type
+    CheckSMDAOtype(AUG_ConFile, "RESPONSE")
+
+
     if have_MPI:
         comm.barrier()
 
@@ -123,7 +130,7 @@ def Sens(options, dvID, perturbed_DV):
         print('\n***************************** Initializing pyBeam ************************************')
     try:
 
-        SolidSolver = pyAugustoInterface.pyAugustoSolver(AUG_ConFile, INTERF_file)
+        SolidSolver = pyAugustoInterface.pyAugustoSolver(AUG_ConFile, INTERF_file, comm)
 
         # update the design variable with the perturbed value
         SolidSolver.UpdateDesignVariable(dvID, perturbed_DV)
