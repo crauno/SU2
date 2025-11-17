@@ -25,6 +25,13 @@ $INIDV
 1    SING  1     589500000000.0
 2    SING  2     0.31279
 3    SING  3     2700.0
+4    SING  4     0.25425
+5    SING  5     0.16644
+6    SING  6     0.07543
+7    SING  7     0.03895
+8    SING  8     0.01596
+9    SING  9     1.58852
+10   SING  10    0.14587
 $ENDDV
 
 %========   SUBDVS ================
@@ -41,9 +48,16 @@ $ENDDV
 % is the category of the subDV. Available options depend on the TAG
 
 $INISUBDV
-1    MAT   1  YOUNG
-2    MAT   1  POISSON
-3    MAT   1  RHO
+1    MAT   1    YOUNG
+2    MAT   1    POISSON
+3    MAT   1    RHO
+4    PROP  1    A
+5    PROP  25   A
+6    PROP  50   A
+7    PROP  75   A
+8    PROP  100  A
+9    PROP  1    IYY
+10   PROP  1    IZZ
 $ENDSUBDV
 
 
