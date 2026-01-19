@@ -1,0 +1,332 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                              %
+% AUGUSTO configuration file                                                   %
+% Case description: _________________________________________________________  %
+% Author: ___________________________________________________________________  %
+% Institution: ______________________________________________________________  %
+% Date: __________                                                             %
+% File Version 0.1                                                             %
+%                                                                              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Respect the format.
+
+
+% Format for DV
+% ID   MOD   IDSUBDV   
+
+
+% Format for SUBDV
+% ID TAG  IDTAG  SUBTAG  VAL 
+
+% Format for SUBRESP
+% ID TAG  IDTAG  SUBTAG 
+
+% Format for RESP
+% ID MOD    AGGREG/TYPE    IDSUBRESPGROUP(if MOD is MULT)    %EXTRAVALS (if AGGREG is KS) 
+
+
+
+%========   DVS ================
+
+% ID   MOD   IDSUBDV   Value
+
+% --- ID
+%  id of the DV
+% --- MOD
+% Could be SING / MULT   
+% --- IDSUBDV
+% If MOD is SING, it si the ID of the subdv. If MOD=MULTI, then is the ID of the group of subdvs
+
+
+$INIDV                        
+1         SING      1         0.00635             
+2         SING      2         0.00635             
+3         SING      3         0.00635             
+4         SING      4         0.00635             
+5         SING      5         0.00635             
+6         SING      6         0.00635             
+7         SING      7         0.00635             
+8         SING      8         0.005334            
+9         SING      9         0.005334            
+10        SING      10        0.005334            
+11        SING      11        0.005334            
+12        SING      12        0.005334            
+13        SING      13        0.004572            
+14        SING      14        0.004572            
+15        SING      15        0.004572            
+16        SING      16        0.004572            
+17        SING      17        0.003302            
+18        SING      18        0.003302            
+19        SING      19        0.003302            
+20        SING      20        0.003302            
+21        SING      21        0.00254             
+22        SING      22        0.00254             
+23        SING      23        0.00254             
+24        SING      24        0.00254             
+25        SING      25        0.001651            
+26        SING      26        0.001651            
+27        SING      27        0.001651            
+28        SING      28        0.001651            
+29        SING      29        0.00635             
+30        SING      30        0.00635             
+31        SING      31        0.00635             
+32        SING      32        0.00635             
+33        SING      33        0.00635             
+34        SING      34        0.00635             
+35        SING      35        0.00635             
+36        SING      36        0.005334            
+37        SING      37        0.005334            
+38        SING      38        0.005334            
+39        SING      39        0.005334            
+40        SING      40        0.005334            
+41        SING      41        0.004572            
+42        SING      42        0.004572            
+43        SING      43        0.004572            
+44        SING      44        0.004572            
+45        SING      45        0.003302            
+46        SING      46        0.003302            
+47        SING      47        0.003302            
+48        SING      48        0.003302            
+49        SING      49        0.00254             
+50        SING      50        0.00254             
+51        SING      51        0.00254             
+52        SING      52        0.00254             
+53        SING      53        0.001651            
+54        SING      54        0.001651            
+55        SING      55        0.001651            
+56        SING      56        0.001651            
+57        SING      57        0.00635             
+58        SING      58        0.00635             
+59        SING      59        0.00635             
+60        SING      60        0.00635             
+61        SING      61        0.00635             
+62        SING      62        0.00635             
+63        SING      63        0.00635             
+64        SING      64        0.005334            
+65        SING      65        0.005334            
+66        SING      66        0.005334            
+67        SING      67        0.005334            
+68        SING      68        0.005334            
+69        SING      69        0.004572            
+70        SING      70        0.004572            
+71        SING      71        0.004572            
+72        SING      72        0.004572            
+73        SING      73        0.004572            
+74        SING      74        0.003302            
+75        SING      75        0.003302            
+76        SING      76        0.003302            
+77        SING      77        0.003302            
+78        SING      78        0.00254             
+79        SING      79        0.00254             
+80        SING      80        0.00254             
+81        SING      81        0.00254             
+82        SING      82        0.001651            
+83        SING      83        0.001651            
+84        SING      84        0.001651            
+85        SING      85        0.001651            
+86        SING      86        0.01905             
+87        SING      87        0.01905             
+88        SING      88        0.01905             
+89        SING      89        0.01905             
+90        SING      90        0.01524             
+91        SING      91        0.01524             
+92        SING      92        0.01524             
+93        SING      93        0.01524             
+94        SING      94        0.01524             
+95        SING      95        0.0127              
+96        SING      96        0.0127              
+97        SING      97        0.0127              
+98        SING      98        0.0127              
+99        SING      99        0.0127              
+100       SING      100       0.009525            
+101       SING      101       0.009525            
+102       SING      102       0.009525            
+103       SING      103       0.009525            
+104       SING      104       0.009525            
+105       SING      105       0.00508             
+106       SING      106       0.00508             
+107       SING      107       0.00508             
+108       SING      108       0.00508             
+109       SING      109       0.00508             
+110       SING      110       0.00254             
+111       SING      111       0.00254             
+112       SING      112       0.00254             
+113       SING      113       0.00254             
+$ENDDV          
+
+
+
+
+$INISUBDV                     
+1         PROP      1         THICKNESS           
+2         PROP      2         THICKNESS           
+3         PROP      3         THICKNESS           
+4         PROP      4         THICKNESS           
+5         PROP      5         THICKNESS           
+6         PROP      6         THICKNESS           
+7         PROP      7         THICKNESS           
+8         PROP      8         THICKNESS           
+9         PROP      9         THICKNESS           
+10        PROP      10        THICKNESS           
+11        PROP      11        THICKNESS           
+12        PROP      12        THICKNESS           
+13        PROP      13        THICKNESS           
+14        PROP      14        THICKNESS           
+15        PROP      15        THICKNESS           
+16        PROP      16        THICKNESS           
+17        PROP      17        THICKNESS           
+18        PROP      18        THICKNESS           
+19        PROP      19        THICKNESS           
+20        PROP      20        THICKNESS           
+21        PROP      21        THICKNESS           
+22        PROP      22        THICKNESS           
+23        PROP      23        THICKNESS           
+24        PROP      24        THICKNESS           
+25        PROP      25        THICKNESS           
+26        PROP      26        THICKNESS           
+27        PROP      27        THICKNESS           
+28        PROP      28        THICKNESS           
+29        PROP      29        THICKNESS           
+30        PROP      30        THICKNESS           
+31        PROP      31        THICKNESS           
+32        PROP      32        THICKNESS           
+33        PROP      33        THICKNESS           
+34        PROP      34        THICKNESS           
+35        PROP      35        THICKNESS           
+36        PROP      36        THICKNESS           
+37        PROP      37        THICKNESS           
+38        PROP      38        THICKNESS           
+39        PROP      39        THICKNESS           
+40        PROP      40        THICKNESS           
+41        PROP      41        THICKNESS           
+42        PROP      42        THICKNESS           
+43        PROP      43        THICKNESS           
+44        PROP      44        THICKNESS           
+45        PROP      45        THICKNESS           
+46        PROP      46        THICKNESS           
+47        PROP      47        THICKNESS           
+48        PROP      48        THICKNESS           
+49        PROP      49        THICKNESS           
+50        PROP      50        THICKNESS           
+51        PROP      51        THICKNESS           
+52        PROP      52        THICKNESS           
+53        PROP      53        THICKNESS           
+54        PROP      54        THICKNESS           
+55        PROP      55        THICKNESS           
+56        PROP      56        THICKNESS           
+57        PROP      57        THICKNESS           
+58        PROP      58        THICKNESS           
+59        PROP      59        THICKNESS           
+60        PROP      60        THICKNESS           
+61        PROP      61        THICKNESS           
+62        PROP      62        THICKNESS           
+63        PROP      63        THICKNESS           
+64        PROP      64        THICKNESS           
+65        PROP      65        THICKNESS           
+66        PROP      66        THICKNESS           
+67        PROP      67        THICKNESS           
+68        PROP      68        THICKNESS           
+69        PROP      69        THICKNESS           
+70        PROP      70        THICKNESS           
+71        PROP      71        THICKNESS           
+72        PROP      72        THICKNESS           
+73        PROP      73        THICKNESS           
+74        PROP      74        THICKNESS           
+75        PROP      75        THICKNESS           
+76        PROP      76        THICKNESS           
+77        PROP      77        THICKNESS           
+78        PROP      78        THICKNESS           
+79        PROP      79        THICKNESS           
+80        PROP      80        THICKNESS           
+81        PROP      81        THICKNESS           
+82        PROP      82        THICKNESS           
+83        PROP      83        THICKNESS           
+84        PROP      84        THICKNESS           
+85        PROP      85        THICKNESS           
+86        PROP      86        THICKNESS           
+87        PROP      87        THICKNESS           
+88        PROP      88        THICKNESS           
+89        PROP      89        THICKNESS           
+90        PROP      90        THICKNESS           
+91        PROP      91        THICKNESS           
+92        PROP      92        THICKNESS           
+93        PROP      93        THICKNESS           
+94        PROP      94        THICKNESS           
+95        PROP      95        THICKNESS           
+96        PROP      96        THICKNESS           
+97        PROP      97        THICKNESS           
+98        PROP      98        THICKNESS           
+99        PROP      99        THICKNESS           
+100       PROP      100       THICKNESS           
+101       PROP      101       THICKNESS           
+102       PROP      102       THICKNESS           
+103       PROP      103       THICKNESS           
+104       PROP      104       THICKNESS           
+105       PROP      105       THICKNESS           
+106       PROP      106       THICKNESS           
+107       PROP      107       THICKNESS           
+108       PROP      108       THICKNESS           
+109       PROP      109       THICKNESS           
+110       PROP      110       THICKNESS           
+111       PROP      111       THICKNESS           
+112       PROP      112       THICKNESS           
+113       PROP      113       THICKNESS           
+$ENDSUBDV                     
+
+
+
+%========  SUBRESP  ================
+% ID TAG  IDTAG  SUBTAG 
+%
+% ID
+% ID of the subresponse
+
+% TAG 
+% is the category of the SUBRESP. Could be related to  DISP / GENDEF / GENFORCE / STRAIN / STRESS / WEIGHT / FREQUENCY / MODE 
+
+% IDTAG
+% If the response mode is SING it is the ID specific entity to which  the DV refers. 
+% If the response mode is MULT it is the ID of a SET of entities to be aggregated
+% subTAG  
+%  Available options depend on the TAG   ( three fields SUBTAG1, SUBTAG2, SUBTAG3 )
+%
+% SUBTAG1: ( if TAG = DISP ) : UX, UY, UZ, RX, RY, RZ, MAGU, MAGR 
+%          ( if TAG = GENDEF    and IDTAG refers to a CPlate  ):  EPS01, EPS02, GAMMA012, K11, K22, K12, GAMMA1, GAMMA2 
+%          ( if TAG = GENDEF    and IDTAG refers to a CBar    ):  EPS0, K2, K3, GAMMA2, GAMMA3, BETA
+%          ( if TAG = GENFORCE  and IDTAG refers to a CPlate  ):  N11, N22, N12, M11, M22, M12, V1, V2
+%          ( if TAG = GENFORCE  and IDTAG refers to a CBar    ):  N, M2, M3, T2, T3, MT
+%          ( if TAG = STRESS    and IDTAG refers to a CPlate  ):  XX, YY, XY, XZ, YZ, VM
+%
+% SUBTAG2: (  IDTAG refers to a CPlate  ):  GP0, GP1, GP2, GP3, CENTROID, N0, N1, N2, N3 
+%          (  IDTAG refers to a CBar  ):    GP0, GP1, CENTROID, N0, N1
+%
+% SUBTAG3: ( if TAG = STRESS  and IDTAG refers to a CPlate  ):  TOP, MID, BOTTOM 
+% 
+% Example
+
+
+$INISUBRESP
+1   DISP   12911  MAGU                       
+$ENDSUBRESP
+
+
+%========  RESP
+
+% ID   MOD   IDSUBRESP(if MOD is MULT)  AGGREGMODE  %EXTRA1 (if AGGREG is KS) 
+%
+% ID
+% is the ID of the response
+% MOD
+% Could be SING or MULT.   If is SING it refers directly to only one subresponse. IF MULT, it refers to a group of Subresponses
+% IDSUBRESP
+% id of the subresponse (if MOD=SING) or group (if MOD=MULT)
+% AGGREGMODE  (only for MOD= MULT)
+% Is the way the group of subresponses are aggregated. Could be  SUM, L1, AVG,  L2, KS , KSadv
+% EXTRA1   (only for MOD= MULT)
+% Are double values to calibrate the KSadv method 
+
+
+$INIRESP
+1     SING      1
+$ENDRESP
