@@ -114,9 +114,9 @@ class Project:
         # Read Adjoint config
         self.configFSIAdjoint = FSIConfig(self.config['CONFIG_ADJOINT'])
         # Locate AUGUSTO meshfile
-        self.pyAugustoMesh = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG'], 'INPUT_FILENAME')
+        self.pyAugustoMesh = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], 'INPUT_FILENAME')
         # Locate AUGUSTO smdao
-        self.pyAugustoSmdao = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG'], 'SMDAO_FILENAME')
+        self.pyAugustoSmdao = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], 'SMDAO_FILENAME')
         # Locate file with interface nodes
         self.pyInterfaceFile = readConfig(self.config['CONFIG_PRIMAL'], 'INTERFACE_NODES_FILE')
 

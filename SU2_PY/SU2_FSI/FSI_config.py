@@ -94,7 +94,7 @@ class FSIConfig:
                 # string values
                 if case("SU2_CONFIG"): pass
                 if case("PYBEAM_CONFIG"): pass
-                if case("AUGUSTO_CONFIG"): pass
+                if case("AUGUSTO_CONFIG_FSI"): pass
                 if case("MLS_CONFIG_FILE_NAME"): pass
                 if case("INTERFACE_NODES_FILE"): pass
                 if case("INTERNAL_FLOW"):

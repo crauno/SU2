@@ -89,7 +89,7 @@ def main():
 
     FSI_config = io(confFile)  # FSI configuration file
     CFD_ConFile = FSI_config['SU2_CONFIG']  # CFD configuration file
-    AUG_ConFile = FSI_config['AUGUSTO_CONFIG']  # AUGUSTO  configuration file
+    AUG_ConFile = FSI_config['AUGUSTO_CONFIG_FSI']  # AUGUSTO  configuration file
     MLS_confFile = FSI_config['MLS_CONFIG_FILE_NAME']  # MLS configuration file
     INTERF_file = FSI_config['INTERFACE_NODES_FILE'] 
 

@@ -373,7 +373,7 @@ def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyAugustoMesh, pyAug
        config = configOpt['FOLDER'] + '/' + configFSI['MLS_CONFIG_FILE_NAME']
        command.append('cp ' + config + ' ' + folder + '/')
        # 3
-       config = configOpt['FOLDER'] + '/' + configFSI['AUGUSTO_CONFIG']
+       config = configOpt['FOLDER'] + '/' + configFSI['AUGUSTO_CONFIG_FSI']
        command.append('cp ' + config + ' ' + folder + '/')
        # creating a symbolic link to numpy spline matric which doesn't change
        spline = configOpt['FOLDER'] + '/' + 'Spline.npy'
