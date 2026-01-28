@@ -113,10 +113,6 @@ class Project:
         self.configFSIPrimal = FSIConfig(self.config['CONFIG_PRIMAL'])
         # Read Adjoint config
         self.configFSIAdjoint = FSIConfig(self.config['CONFIG_ADJOINT'])
-        # Locate pyBeam mesh file
-        self.pyBeamMesh = readConfig(self.configFSIPrimal['PYBEAM_CONFIG'], 'MESH_FILE')
-        # Locate pyBeam properties
-        self.pyBeamProp = readConfig(self.configFSIPrimal['PYBEAM_CONFIG'], 'PROPERTY_FILE')
         # Locate AUGUSTO meshfile
         self.pyAugustoMesh = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG'], 'INPUT_FILENAME')
         # Locate AUGUSTO smdao
@@ -369,7 +365,7 @@ class Project:
        command = 'cp ' + config_input + ' ' + self.primal_folder + '/'
        run_command(command, 'Pulling primal config', False) 
        
-       PullingPrimalAdjointFiles(self.config, self.primal_folder, self.configFSIPrimal, self.pyBeamMesh, self.pyBeamProp, self.pyAugustoMesh, self.pyAugustoSmdao, self.pyInterfaceFile)
+       PullingPrimalAdjointFiles(self.config, self.primal_folder, self.configFSIPrimal, self.pyAugustoMesh, self.pyAugustoSmdao, self.pyInterfaceFile)
        # pulling mesh file 
        self.SetMesh(self.primal_folder)  
        
@@ -392,7 +388,7 @@ class Project:
        run_command(command, 'Pulling Adjoint config', False)        
        
        
-       PullingPrimalAdjointFiles(self.config, self.adjoint_folder, self.configFSIAdjoint, self.pyBeamMesh, self.pyBeamProp, self.pyAugustoMesh, self.pyAugustoSmdao, self.pyInterfaceFile)
+       PullingPrimalAdjointFiles(self.config, self.adjoint_folder, self.configFSIAdjoint, self.pyAugustoMesh, self.pyAugustoSmdao, self.pyInterfaceFile)
 
        # pulling mesh file 
        self.SetMesh(self.adjoint_folder)         

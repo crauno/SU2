@@ -89,7 +89,6 @@ def main():
 
     FSI_config = io(confFile)  # FSI configuration file
     CFD_ConFile = FSI_config['SU2_CONFIG']  # CFD configuration file
-    CSD_ConFile = FSI_config['PYBEAM_CONFIG']  # CSD configuration file
     AUG_ConFile = FSI_config['AUGUSTO_CONFIG']  # AUGUSTO  configuration file
     MLS_confFile = FSI_config['MLS_CONFIG_FILE_NAME']  # MLS configuration file
     INTERF_file = FSI_config['INTERFACE_NODES_FILE'] 

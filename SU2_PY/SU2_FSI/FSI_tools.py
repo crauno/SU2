@@ -363,19 +363,16 @@ def ReadGeoConstraintGradients( geo_folder,ConsList,n_dv, sign ):
     
     return gradient
     
-def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyBeamMesh, pyBeamProp, pyAugustoMesh, pyAugustoSmdao, pyInterfaceFile):
+def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyAugustoMesh, pyAugustoSmdao, pyInterfaceFile):
        # pulling primal files
        command = []
        # 1
        config = configOpt['FOLDER'] + '/' + configFSI['SU2_CONFIG']
        command.append('cp ' + config + ' ' + folder + '/')
        # 2
-       config = configOpt['FOLDER'] + '/' + configFSI['PYBEAM_CONFIG']
-       command.append('cp ' + config + ' ' + folder + '/')
-       # 3
        config = configOpt['FOLDER'] + '/' + configFSI['MLS_CONFIG_FILE_NAME']
        command.append('cp ' + config + ' ' + folder + '/')
-       # 4
+       # 3
        config = configOpt['FOLDER'] + '/' + configFSI['AUGUSTO_CONFIG']
        command.append('cp ' + config + ' ' + folder + '/')
        # creating a symbolic link to numpy spline matric which doesn't change
@@ -386,19 +383,14 @@ def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyBeamMesh, pyBeamPr
           
        # pulling files for pyBeam (mesh and properties)
        command = []
+
        # 1
-       config = configOpt['FOLDER'] + '/' + pyBeamMesh
-       command.append('cp ' + config + ' ' + folder + '/')
-       # 2
-       config = configOpt['FOLDER'] + '/' + pyBeamProp
-       command.append('cp ' + config + ' ' + folder + '/')
-       # 3
        config = configOpt['FOLDER'] + '/' + pyAugustoMesh
        command.append('cp ' + config + ' ' + folder + '/') 
-       # 4
+       # 2
        config = configOpt['FOLDER'] + '/' + pyAugustoSmdao
        command.append('cp ' + config + ' ' + folder + '/')
-       # 5
+       # 3
        config = configOpt['FOLDER'] + '/' + pyInterfaceFile
        command.append('cp ' + config + ' ' + folder + '/')        
        for i in range(len(command)):
