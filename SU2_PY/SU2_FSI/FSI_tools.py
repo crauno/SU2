@@ -35,6 +35,7 @@ import numpy as np
 from math import pow, factorial
 import scipy.io
 import csv
+from structopt.pystructopt.pyoptlib.struct_tools import PullAugustoFiles
 
 def SaveSplineMatrix(config):
     """
@@ -373,28 +374,17 @@ def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyAugustoMesh, pyAug
        config = configOpt['FOLDER'] + '/' + configFSI['MLS_CONFIG_FILE_NAME']
        command.append('cp ' + config + ' ' + folder + '/')
        # 3
-       config = configOpt['FOLDER'] + '/' + configFSI['AUGUSTO_CONFIG_FSI']
-       command.append('cp ' + config + ' ' + folder + '/')
+       config = configOpt['FOLDER'] + '/' + pyInterfaceFile
+       command.append('cp ' + config + ' ' + folder + '/')  
        # creating a symbolic link to numpy spline matric which doesn't change
        spline = configOpt['FOLDER'] + '/' + 'Spline.npy'
        command.append('ln -s ' + spline + ' ' + folder + '/' + 'Spline.npy')      
        for i in range(len(command)):
           run_command(command[i], 'Pulling primal config file ' + str(i) , False) 
           
-       # pulling files for pyBeam (mesh and properties)
-       command = []
-
-       # 1
-       config = configOpt['FOLDER'] + '/' + pyAugustoMesh
-       command.append('cp ' + config + ' ' + folder + '/') 
-       # 2
-       config = configOpt['FOLDER'] + '/' + pyAugustoSmdao
-       command.append('cp ' + config + ' ' + folder + '/')
-       # 3
-       config = configOpt['FOLDER'] + '/' + pyInterfaceFile
-       command.append('cp ' + config + ' ' + folder + '/')        
-       for i in range(len(command)):
-          run_command(command[i], 'Pulling primal pyBeam file ' + str(i) , False)        
+       # pulling files for Augusto 
+       PullAugustoFiles(configOpt['FOLDER'] + '/', folder, configFSI['AUGUSTO_CONFIG_FSI'], pyAugustoMesh, pyAugustoSmdao)
+          
           
 def ReadPointInversion(configDef,MeshFile):
     # First it is necessary to look for the DV_MARKER 
