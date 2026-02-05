@@ -38,6 +38,8 @@ from SU2_FSI import FSI_design
 from SU2_FSI.FSI_tools import run_command, readConfig, PullingPrimalAdjointFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP
 from SU2_FSI.FSI_design import Design
 from SU2_FSI.FSI_tools import  readConfig
+from structopt.pystructopt.pyoptlib.struct_config import OptConfig as StructOptConfig
+from structopt.pystructopt.pyoptlib.struct_project import Project as StructProject
 # -------------------------------------------------------------------
 #  Project Class
 # -------------------------------------------------------------------
@@ -69,6 +71,9 @@ class Project:
         # config objects for primal and adjoint simulations with structural and fluid config files and options
         self.configFSIPrimal = None
         self.configFSIAdjoint = None
+        
+        # structural project. Initialised in case structrual DVs or objective are present
+        self.structProject = None
         
         # Design container
         self._design = []
@@ -119,6 +124,27 @@ class Project:
         self.pyAugustoSmdao = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], 'SMDAO_FILENAME')
         # Locate file with interface nodes
         self.pyInterfaceFile = readConfig(self.config['CONFIG_PRIMAL'], 'INTERFACE_NODES_FILE')
+
+    
+    def InitStructProject(self):
+
+        opt_mode = self.config['OPT_MODE']
+
+        if opt_mode not in ["AERO", "STRUCT"]:
+            sys.exit(opt_mode + " is an invalid option for OPT_MODE field. Available options are either AERO or STRUCT. ")
+
+        if opt_mode == "STRUCT":
+
+           print('Initializing structural project...')
+
+           structConfig = StructOptConfig(self.config['FOLDER'], self.config['CONFIG_STRUCT_OPT'], self.config['FOLDER'], self.config['NUMBER_PART'])
+           
+           self.structProject = StructProject(structConfig, False)
+
+            
+        
+        sys.exit("--------------------- STOP INSIDE InitStructProject() ---------------------")
+
 
     def obj_f(self,dvs):
         print('Project obj_f') 

@@ -178,7 +178,9 @@ class OptConfig:
                 if case("CONFIG_PRIMAL"): pass
                 if case("CONFIG_ADJOINT"): pass
                 if case("CONFIG_GEO"): pass
-                if case("CONFIG_DEF"):
+                if case("CONFIG_DEF"): pass
+                if case("CONFIG_STRUCT_OPT"): pass
+                if case("OPT_MODE"): 
                     self._ConfigContent[this_param] = this_value
                     break
                     

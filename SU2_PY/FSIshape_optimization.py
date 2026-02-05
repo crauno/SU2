@@ -88,6 +88,9 @@ def FSIshape_optimization( filename                           ,
 
     # Instantiate project object
     project = Project(config)
+
+    # if needed, instantiate a structural project
+    project.InitStructProject()
     
     
     # call optimization function  (nned to define some high level elements yet....)
