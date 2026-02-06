@@ -76,6 +76,7 @@ def FSIshape_optimization( filename                           ,
     relax_factor      = float ( config['OPT_RELAX_FACTOR'] )                  # line search scale
     gradient_factor   = float ( config['OPT_GRADIENT_FACTOR'] )               # objective function and gradient scale
     opt_constraint    = config['OPT_CONSTRAINT']
+    opt_mode          = config['OPT_MODE']
     folder = config['FOLDER']
     accu              = float ( config['OPT_ACCURACY'] ) * gradient_factor    # optimizer accuracy
     # n_dv
@@ -90,7 +91,14 @@ def FSIshape_optimization( filename                           ,
     project = Project(config)
 
     # if needed, instantiate a structural project
-    project.InitStructProject()
+    if opt_mode == "STRUCT" :
+
+       project.InitStructProject()
+       sys.exit("--------------------- STOP ---------------------")
+       #project.structProject.ReadDVbounds(config['FOLDER'] + '/' + project.structProject.config["CONFIG_SMDAO"], 1.0)
+       #xb = list(zip(project.structProject.DV['XLB'], project.structProject.DV['XUB']))
+       #x0 = project.structProject.DV['X']
+       #project.structProject.InitNormalizedVariables(x0, xb)
     
     
     # call optimization function  (nned to define some high level elements yet....)
