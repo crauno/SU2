@@ -141,9 +141,7 @@ class Project:
            
            self.structProject = StructProject(structConfig, False)
 
-            
-        
-        sys.exit("--------------------- STOP INSIDE InitStructProject() ---------------------")
+           self.structProject.InitNormalizedVariables()
 
 
     def obj_f(self,dvs):

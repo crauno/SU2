@@ -94,11 +94,8 @@ def FSIshape_optimization( filename                           ,
     if opt_mode == "STRUCT" :
 
        project.InitStructProject()
-       sys.exit("--------------------- STOP ---------------------")
-       #project.structProject.ReadDVbounds(config['FOLDER'] + '/' + project.structProject.config["CONFIG_SMDAO"], 1.0)
-       #xb = list(zip(project.structProject.DV['XLB'], project.structProject.DV['XUB']))
-       #x0 = project.structProject.DV['X']
-       #project.structProject.InitNormalizedVariables(x0, xb)
+       xb = project.structProject.xb_norm
+       x0 = project.structProject.x0_norm
     
     
     # call optimization function  (nned to define some high level elements yet....)
@@ -124,7 +121,6 @@ def slsqp(project,x0=None,xb=None,its=100,accu=1e-10,grads=True):
     """
 
     # Performing spline
-    #print('Splining commented')
     SaveSplineMatrix(project.config)
           
     # function handles
