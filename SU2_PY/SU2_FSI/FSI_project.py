@@ -65,6 +65,7 @@ class Project:
         self.geo_folder = ''
         self.primal_folder = ''
         self.adjoint_folder = ''
+        self.opt_mode = self.config['OPT_MODE']
         
         self.design_toll = 10**(-20)  # allowable difference into design variable vector to consider the same design
         
@@ -128,12 +129,7 @@ class Project:
     
     def InitStructProject(self):
 
-        opt_mode = self.config['OPT_MODE']
-
-        if opt_mode not in ["AERO", "STRUCT"]:
-            sys.exit(opt_mode + " is an invalid option for OPT_MODE field. Available options are either AERO or STRUCT. ")
-
-        if opt_mode == "STRUCT":
+        if self.opt_mode == "STRUCT":
 
            print('Initializing structural project...')
 

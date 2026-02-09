@@ -91,6 +91,11 @@ def FSIshape_optimization( filename                           ,
     project = Project(config)
 
     # if needed, instantiate a structural project
+    
+    if opt_mode not in ["AERO", "STRUCT"]:
+    
+            sys.exit(opt_mode + " is an invalid option for OPT_MODE field. Available options are either AERO or STRUCT. ")
+    
     if opt_mode == "STRUCT" :
 
        project.InitStructProject()
