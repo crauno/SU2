@@ -221,7 +221,7 @@ def obj_f(x,project):
     """  
     if project.opt_mode == "STRUCT":
 
-       struct_obj = project.structProject.obj_f(x)
+       struct_obj = project.structProject.obj_f_normalized(x)
 
        project.ConnectProjects()
 
@@ -245,7 +245,7 @@ def obj_df(x,project):
     
     if project.opt_mode == "STRUCT":
         
-        obj_df = project.structProject.obj_df(x)
+        obj_df = project.structProject.obj_df_normalized(x)
         
         project.ConnectProjects()
         
