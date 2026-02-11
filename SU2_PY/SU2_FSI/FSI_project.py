@@ -503,7 +503,7 @@ class Project:
 
 
         if self.structProject.initialised_new_design :
-           #print("---------------------------------------------------------------------------------------------------- ADDING NEW AERO DESIGN")
+
            self._design.append(Design(self.config,self.configFSIPrimal,self.configFSIAdjoint, self.folder, self.design_folder, self.design_iter , None, None ))
            
            self.structProject.initialised_new_design = False

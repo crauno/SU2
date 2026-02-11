@@ -242,8 +242,17 @@ def obj_df(x,project):
         Objective Function Gradients    
         scipy_slsqp: df(x), ndarray[dim]
     """    
-  
-    obj_df = project.obj_df(x)    
+    
+    if project.opt_mode == "STRUCT":
+        
+        obj_df = project.structProject.obj_df(x)
+        
+        project.ConnectProjects()
+        
+    elif project.opt_mode == "AERO":   
+         
+        obj_df = project.obj_df(x)    
+
     #scipy.io.savemat(  './obj_df.mat', mdict={'obj_df': obj_df})
     return obj_df
 
