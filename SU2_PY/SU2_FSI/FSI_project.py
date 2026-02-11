@@ -273,6 +273,12 @@ class Project:
             
             
     def CheckNewDesign(self, x_in):
+       
+       # if the optimisation is with structural DVs and objective, new designs are initialised
+       # by the structrual project
+       if self.opt_mode == "STRUCT" :
+          return
+
        if self.design_iter == -1:
            print('Evaluating initial design')
            self.design_iter = self.design_iter + 1
@@ -472,4 +478,38 @@ class Project:
             
             
         return gradient
+
+
+
+
+
+    def ConnectProjects(self):
         
+        self.design_iter = self.structProject.design_iter
+        self.design_folder = self.structProject.design_folder
+        self.primal_folder = self.structProject.design_folder_primal
+        self.adjoint_folder = self.structProject.design_folder_adjoint
+
+
+        #print(self.design_iter)
+        #print()
+        #print(self.design_folder)
+        #print()
+        #print(self.primal_folder)
+        #print()
+        #print(self.adjoint_folder)
+        #print()
+
+
+
+        if self.structProject.initialised_new_design :
+           #print("---------------------------------------------------------------------------------------------------- ADDING NEW AERO DESIGN")
+           self._design.append(Design(self.config,self.configFSIPrimal,self.configFSIAdjoint, self.folder, self.design_folder, self.design_iter , None, None ))
+           
+           self.structProject.initialised_new_design = False
+
+
+
+
+
+            

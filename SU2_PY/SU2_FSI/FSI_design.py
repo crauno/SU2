@@ -94,7 +94,10 @@ class Design:
         self.__dv = None
         self._setdv(dv)              # collection of dv_variables of the current design (private)
         self.x_old = x_old          # collection of dv_variable of the previous design (private)
-        self.n_dv = len(self.__dv)
+
+        if self.__dv is not None :
+           self.n_dv = len(self.__dv)
+           
         self.configFSIPrimal = configFSIPrimal
         self.configFSIAdjoint = configFSIAdjoint   
         # booleians for every analysis

@@ -219,10 +219,22 @@ def obj_f(x,project):
         Objective Functio       
         scipy_slsqp: minimize f(x), float
     """  
+    if project.opt_mode == "STRUCT":
+
+       struct_obj = project.structProject.obj_f(x)
+
+       project.ConnectProjects()
+
+
+    aero_obj = project.obj_f(x)
+
+       
+    if project.opt_mode == "STRUCT":
+       return struct_obj
+
+    elif project.opt_mode == "AERO":
+       return aero_obj
   
-    obj = project.obj_f(x)   
-  
-    return obj
 
 def obj_df(x,project):
     """ dobj = obj_df(x,project)
