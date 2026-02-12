@@ -511,5 +511,19 @@ class Project:
 
 
 
+    def CheckMeshFileUniq(self):
+       """
+       In the current implementation, all the FE solver configuration files (for FSI equilibrium and optimisaiton constraints evaluation) 
+       must point at the same mesh file. This function checks the uniqueness of the mesh file
+       """
+       
+       cfg_files = [self.pyAugustoMesh, self.structProject.pyAugustoMeshObjf] + self.structProject.pyAugustoMeshConstr
+
+       if len(set(cfg_files)) != 1:
+
+         sys.exit("\nError: Multiple FE meshfiles detected. In the current implementation, all the FE configuration files must point to a single mesh file")
+
+
+
 
             
