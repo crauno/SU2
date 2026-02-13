@@ -221,12 +221,12 @@ def obj_f(x,project):
         Objective Functio       
         scipy_slsqp: minimize f(x), float
     """  
+
+    project.CheckNewFSIDesign(x)
+
     if project.opt_mode == "STRUCT":
 
        struct_obj = project.structProject.obj_f_normalized(x)
-
-       project.ConnectProjects()
-
 
     aero_obj = project.obj_f(x)
 
@@ -245,12 +245,12 @@ def obj_df(x,project):
         scipy_slsqp: df(x), ndarray[dim]
     """    
     
+    project.CheckNewFSIDesign(x)
+
     if project.opt_mode == "STRUCT":
         
         obj_df = project.structProject.obj_df_normalized(x)
-        
-        project.ConnectProjects()
-        
+              
     elif project.opt_mode == "AERO":   
          
         obj_df = project.obj_df(x)    
@@ -287,6 +287,7 @@ def con_cieq(x,project):
         Inequality Constraints
 
     """ 
+    project.CheckNewFSIDesign(x)
 
     cons = project.con_cieq(x)  
   
@@ -301,6 +302,7 @@ def con_dcieq(x,project):
         
         scipy_slsqp: dcieq(x), ndarray[ncieq x dim]
     """
+    project.CheckNewFSIDesign(x)
 
     dcons = project.con_dcieq(x)
     #scipy.io.savemat(  './dcons.mat', mdict={'dcons': dcons})         

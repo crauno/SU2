@@ -142,10 +142,10 @@ class Project:
 
     def obj_f(self,dvs):
         print('Project obj_f') 
-        x_in = copy.deepcopy(dvs)
+        #x_in = copy.deepcopy(dvs)
         # Checking if new design is needed
         # In case starts new design and deform
-        self.CheckNewDesign(x_in)
+        #self.CheckNewDesign(x_in)
                  
         #Primal
         self.Primal()
@@ -157,10 +157,10 @@ class Project:
         
     def obj_df(self,dvs):
         print('Project obj_df')   
-        x_in = copy.deepcopy(dvs)
+        #x_in = copy.deepcopy(dvs)
         # Check if new design is needed (it won't as Adjoin is performed after primal)        
         # In case start new design and deform
-        self.CheckNewDesign(x_in)
+        #self.CheckNewDesign(x_in)
         
         #Adjoint
         self.Adjoint()
@@ -213,10 +213,10 @@ class Project:
     
     def con_cieq(self,dvs):
         print('Project con_cieq')
-        x_in = copy.deepcopy(dvs)
+        #x_in = copy.deepcopy(dvs)
         # Check if new design is needed        
         # In case start new design and deform
-        self.CheckNewDesign(x_in)
+        #self.CheckNewDesign(x_in)
         
         #Check if Geo has been executed, if it hasn't, execute Geo
         self.CheckGeo()
@@ -229,10 +229,10 @@ class Project:
     
     def con_dcieq(self,dvs):
         print('con_diceq')
-        x_in = copy.deepcopy(dvs)
+        #x_in = copy.deepcopy(dvs)
         # Check if new design is needed (it won't as geo gradient is calculated after geo)       
         # In case start new design and deform
-        self.CheckNewDesign(x_in)
+        #self.CheckNewDesign(x_in)
 
         #Check if Geo has been executed, if it hasn't, execute Geo
         self.CheckGeo()
@@ -380,23 +380,28 @@ class Project:
     def Primal(self):
        """
        Sets up and Performs primal solver
-       """         
-       # creating folder for analysis
-       self.primal_folder = self.design_folder + '/Primal'
-       command = 'mkdir ' + self.primal_folder   
-       run_command(command, 'Creating Primal directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)           
-        
-       # pulling primal config
-       config_input = self.config['FOLDER'] + '/' + self.config['CONFIG_PRIMAL'] 
-       command = 'cp ' + config_input + ' ' + self.primal_folder + '/'
-       run_command(command, 'Pulling primal config', False) 
+       """
+       if self._design[self.design_iter].primal == False:
+
+           # creating folder for analysis
+           self.primal_folder = self.design_folder + '/Primal'
+           command = 'mkdir ' + self.primal_folder   
+           run_command(command, 'Creating Primal directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)           
+            
+           # pulling primal config
+           config_input = self.config['FOLDER'] + '/' + self.config['CONFIG_PRIMAL'] 
+           command = 'cp ' + config_input + ' ' + self.primal_folder + '/'
+           run_command(command, 'Pulling primal config', False) 
+           
+           PullingPrimalAdjointFiles(self.config, self.primal_folder, self.configFSIPrimal, self.pyAugustoMesh, self.pyAugustoSmdao, self.pyInterfaceFile)
+           # pulling mesh file 
+           self.SetMesh(self.primal_folder)  
+           
+           # Running primal
+           self._design[self.design_iter].FSIPrimal(self.primal_folder)
        
-       PullingPrimalAdjointFiles(self.config, self.primal_folder, self.configFSIPrimal, self.pyAugustoMesh, self.pyAugustoSmdao, self.pyInterfaceFile)
-       # pulling mesh file 
-       self.SetMesh(self.primal_folder)  
-       
-       # Running primal
-       self._design[self.design_iter].FSIPrimal(self.primal_folder)
+       else:
+           print("Primal FSI problem already solved: only pulling the result")
        
     def Adjoint(self):
        """
@@ -507,6 +512,25 @@ class Project:
            self._design.append(Design(self.config,self.configFSIPrimal,self.configFSIAdjoint, self.folder, self.design_folder, self.design_iter , None, None ))
            
            self.structProject.initialised_new_design = False
+
+
+
+    def CheckNewFSIDesign(self, x):
+        
+        x_in = copy.deepcopy(x)
+
+        if self.opt_mode == "STRUCT" :
+           
+           self.StructProject.CheckNewDesign(x_in)
+
+           self.ConnectProjects()
+
+        elif self.opt_mode == "AERO" :
+
+           self.CheckNewDesign(x_in)
+
+
+
 
 
 
