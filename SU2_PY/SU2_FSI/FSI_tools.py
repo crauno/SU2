@@ -41,10 +41,10 @@ def SaveSplineMatrix(config):
     """
     Spline matrix is computed at the beginning and saved in the main folder to be used at every iteration
     """
-    # compose string command
-    #command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' /home/lukes94/SU2/SU2_PY/pyBeamFSI_MLSGen.py -f ' + config['CONFIG_PRIMAL']
-    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' /home/lscalia/Escritorio/SU2/SU2_PY/pyBeamFSI_MLSGen.py -f ' + config['CONFIG_PRIMAL']
-    #print (command)
+
+    su2_home = os.environ['SU2_HOME']
+    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' ' + su2_home + '/SU2_PY/pyBeamFSI_MLSGen.py -f ' + config['CONFIG_PRIMAL']
+
     # Compose local output file
     Output_file = config['FOLDER'] + '/Output_Spline.out'
 
@@ -185,11 +185,11 @@ def FSIPrimal(primal_folder, config):
     '''   
     
     # going to ./Primal folder
-    os.chdir(primal_folder)       
-    #command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' pyBeamFSI_opt.py -f ' + config['CONFIG_PRIMAL']
-    #command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' /home/lukes94/SU2/SU2_PY/pyBeamFSI_opt.py -f ' + config['CONFIG_PRIMAL']
-    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' /home/lscalia/Escritorio/SU2/SU2_PY/pyBeamFSI_opt.py -f ' + config['CONFIG_PRIMAL']
-    print ("command: " + command)
+    os.chdir(primal_folder)           
+
+    su2_home = os.environ['SU2_HOME']
+    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' ' + su2_home + '/SU2_PY/pyBeamFSI_opt.py -f ' + config['CONFIG_PRIMAL']
+    
     # Compose local output file
     Output_file =  'Output_primal.out'
 
@@ -209,9 +209,10 @@ def FSIAdjoint(adj_folder, config):
 
     # going to ./Primal folder
     os.chdir(adj_folder)    
-    #command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' /home/lukes94/SU2/SU2_PY/pyBeamFSI_AD_opt.py -f ' + config['CONFIG_ADJOINT']
-    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' /home/lscalia/Escritorio/SU2/SU2_PY/pyBeamFSI_AD_opt.py -f ' + config['CONFIG_ADJOINT']
-    #print (command)
+
+    su2_home = os.environ['SU2_HOME']
+    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' ' + su2_home + '/SU2_PY/pyBeamFSI_AD_opt.py -f ' + config['CONFIG_ADJOINT']
+
     # Compose local output file
     Output_file =  'Output_adjoint.out'   
     
