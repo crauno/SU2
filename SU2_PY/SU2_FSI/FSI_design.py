@@ -271,6 +271,11 @@ class Design:
         Fuction that updates the name of the mesh file input from the config file of GEO, SU2_primal and SU2_Adjoint
         according to possible deformations
         """
+
+        if self.config['OPT_MODE'] == "STRUCT":
+           print("-----------------------------------------------------------------> No need to change SU2 meshfilename (UpdateMeshFilename)")
+           return
+
         # Set up current mesh file name
         if self.design_nbr == 0:
            mesh_filename = readConfig(self.folder + '/' + self.config['CONFIG_DEF'], 'MESH_FILENAME')
