@@ -289,7 +289,17 @@ def con_cieq(x,project):
     """ 
     project.CheckNewFSIDesign(x)
 
-    cons = project.con_cieq(x)  
+    if project.opt_mode == "STRUCT":
+
+       # since structrual constraints are evaluated at the deformed configuration,
+       # first it must be sure that the primnal FSI problem has been solved 
+       project.Primal() 
+       
+       cons = project.structProject.con_cieq_normalized(x)
+    
+    elif project.opt_mode == "AERO":
+
+         cons = project.con_cieq(x)  
   
     return cons
     

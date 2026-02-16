@@ -521,7 +521,7 @@ class Project:
 
         if self.opt_mode == "STRUCT" :
            
-           self.StructProject.CheckNewDesign(x_in)
+           self.structProject.CheckNewDesign(x_in, True)
 
            self.ConnectProjects()
 
