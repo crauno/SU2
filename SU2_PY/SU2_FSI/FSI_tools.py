@@ -216,7 +216,7 @@ def FSIAdjoint(adj_folder, config, struct_constr_cfg):
     constr_cfg = 'NONE' if struct_constr_cfg is None else struct_constr_cfg
     Output_file = 'Output_adjoint.out' if struct_constr_cfg is None else 'Output_adjoint_constr.out' 
 
-    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' ' + su2_home + '/SU2_PY/pyBeamFSI_AD_opt.py -f ' + config['CONFIG_ADJOINT'] + ' -c ' + constr_cfg
+    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' ' + su2_home + '/SU2_PY/pyBeamFSI_AD_opt.py -f ' + config['CONFIG_ADJOINT'] + ' -c ' + constr_cfg + ' -o ' + config['OPT_MODE']
     
     # Launching shell command
     run_command(command, 'Adjoint', True,  Output_file)

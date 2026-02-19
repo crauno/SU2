@@ -38,7 +38,6 @@ from optparse import OptionParser  # use a parser for configuration
 
 from SU2_FSI.FSI_config import FSIConfig as io       # imports FSI config tools
 from SU2_FSI import PrimalInterface as FSI # imports FSI python tools
-import pyBeamInterface as pyBeamInterface
 import pyAugustoInterface as pyAugustoInterface
 import pyMLSInterface as Spline_Module
 

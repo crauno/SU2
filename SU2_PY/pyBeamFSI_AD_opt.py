@@ -37,7 +37,6 @@ from optparse import OptionParser  # use a parser for configuration
 
 from SU2_FSI.FSI_config import FSIConfig as io       # imports FSI config tools
 from SU2_FSI import AdjointInterface as FSI # imports FSI python tools
-import pyBeamInterface as pyBeamInterface
 import pyAugustoInterface as pyAugustoInterface
 import pyMLSInterface as Spline_Module
 
@@ -57,6 +56,8 @@ def main():
                       help="read config from FILE", metavar="FILE")
     parser.add_option("-c", "--file_constr", dest="filename_constr",
                       help="read constraint config from FILE", metavar="FILE")
+    parser.add_option("-o", "--opt_mode", dest="opt_mode",
+                      help="optimisation mode (AERO or STRUCT)", metavar="TYPE")
     parser.add_option("--serial", action="store_true",
                       help="Specify if we need to initialize MPI", dest="serial", default=False)
 
@@ -125,6 +126,12 @@ def main():
     try:
             #SolidSolver = pyBeamInterface.pyBeamADSolver(CSD_ConFile)
             SolidSolver = pyAugustoInterface.pyAugustoADSolver(AUG_ConFile, INTERF_file, comm)
+
+            if options.opt_mode == "STRUCT" :
+               
+               SolidSolver.setIsStructResponseTrue()
+               
+
             print("---> P"+ str(myid) +": | SolidSolver.nPoint:" + str(SolidSolver.nPoint) + ": | SolidSolver.nPointLocal:" + str(SolidSolver.nPointLocal))
     except TypeError as exception:
             print('ERROR building the Solid Solver: ', exception)

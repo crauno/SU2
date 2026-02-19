@@ -756,11 +756,7 @@ class AdjointInterface:
                 SolidSolver.SetDisplacementAdjoint(idPoint, localDispSolidAdjointX[iVertex],
                                                             localDispSolidAdjointY[iVertex],
                                                             localDispSolidAdjointZ[iVertex])
-                ######################################################################################################
-            self.MPIBarrier()
-            SolidSolver.CheckOnTransferOfDispAdjoint()
-            self.MPIBarrier()
-                ######################################################################################################
+
         # Delete local variables
         del localDispFlowAdjointX, localDispFlowAdjointY, localDispFlowAdjointZ
 
