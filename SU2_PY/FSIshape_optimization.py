@@ -314,8 +314,14 @@ def con_dcieq(x,project):
     """
     project.CheckNewFSIDesign(x)
 
-    dcons = project.con_dcieq(x)
-    #scipy.io.savemat(  './dcons.mat', mdict={'dcons': dcons})         
+    if project.opt_mode == "STRUCT":
+
+         dcons = project.con_struct_dcieq_normalized()         
+
+    elif project.opt_mode == "AERO":
+
+         dcons = project.con_dcieq(x)
+    #scipy.io.savemat(  './dcons.mat', mdict={'dcons': dcons})
     return dcons
 
 

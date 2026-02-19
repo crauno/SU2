@@ -450,7 +450,7 @@ class Project:
           sys.exit()
 
        # Running adjoint
-       self._design[self.design_iter].FSIAdjoint(self.adjoint_folder)
+       self._design[self.design_iter].FSIAdjoint(self.adjoint_folder, None)
             
     def SetMesh(self, destination_folder):
        """
@@ -550,4 +550,85 @@ class Project:
 
 
 
-            
+
+
+
+
+
+    def con_struct_dcieq_normalized(self):
+
+       """
+       Solve the coupled adjoint problem for strutural optimisation constraint
+       """          
+      
+       # create adjoint constraint subfolders and pull the needed files
+       self.structProject.constr_subfolders_adjoint = []
+
+       for i in range(len(self.structProject.config['AUGUSTO_CONFIG_CONSTR'])):
+
+            # create current adjoint constraint subfolder
+            current_adj_folder = self.structProject.design_folder_adjoint + '/' + self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i].split('.')[0]
+            self.structProject.constr_subfolders_adjoint.append(current_adj_folder)
+
+            command = 'mkdir ' + current_adj_folder    
+            run_command(command, 'Creating subdirectory for constraint ' + self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], False)
+ 
+       
+            # pull adjoint config
+            config_input = self.config['FOLDER'] + '/' + self.config['CONFIG_ADJOINT'] 
+            command = 'cp ' + config_input + ' ' + current_adj_folder + '/'
+            run_command(command, 'Pulling Adjoint config', False)        
+       
+            # pull files for analysis
+            PullingPrimalAdjointFiles(self.config, current_adj_folder, self.configFSIAdjoint, self.structProject.pyAugustoMeshConstr[i], self.structProject.pyAugustoSmdaoConstr[i], self.pyInterfaceFile)
+
+            # pulling mesh file 
+            self.SetMesh(current_adj_folder)         
+       
+            # pulling restart for pyAugusto and SU2 and flow.vtk
+            command = []
+            if self._design[self.design_iter].primal == True:
+           
+               # pyBeam 
+               orig_file = self.primal_folder + '/' + 'restart.pyAugusto'
+               dest_file = current_adj_folder + '/' + 'solution.pyAugusto'
+               command.append('cp ' + orig_file + ' ' + dest_file )       
+               
+               # SU2
+               orig_file = self.primal_folder + '/' + 'restart_flow.dat'
+               dest_file = current_adj_folder + '/' + 'solution_flow.dat'
+               command.append('cp ' + orig_file + ' ' + dest_file ) 
+               
+               # flow.meta
+               orig_file = self.primal_folder + '/' + 'flow.meta'  
+               command.append('cp ' + orig_file + ' ' + current_adj_folder + '/' )
+     
+               for j in range(len(command)):
+                  run_command(command[j], 'Pulling solution file ' + str(j) , False)  
+        
+            else:      
+              print('Primal not yet available, can t pull solutions for Adjoint....')
+              sys.exit()
+
+            # Running adjoint
+            self._design[self.design_iter].FSIAdjoint(current_adj_folder, self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i])
+
+       
+
+       # pull non normalized gradient of constraint inequality
+       c_dieq, global_factor = self.structProject._design[self.design_iter].pull_c_dieq(self.structProject.constr_subfolders_adjoint)
+        
+       dcon_physical =  np.array(c_dieq) * global_factor
+
+
+       # Scale gradients for normalized space
+       if dcon_physical.ndim == 1:
+            dcon_normalized = dcon_physical * self.structProject.x_range
+       else:
+            # Multiple constraints - scale each column
+            dcon_normalized = dcon_physical.copy()
+            for i in range(len(self.structProject.x_range)):
+                dcon_normalized[:, i] *= self.structProject.x_range[i]
+        
+       return dcon_normalized
+              

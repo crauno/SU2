@@ -201,26 +201,29 @@ def FSIPrimal(primal_folder, config):
     
 
 
-def FSIAdjoint(adj_folder, config):
+def FSIAdjoint(adj_folder, config, struct_constr_cfg):
     '''
             Executes in:
              ./Adjoint
     '''      
 
     # going to ./Primal folder
+    original_dir = os.getcwd()
     os.chdir(adj_folder)    
 
     su2_home = os.environ['SU2_HOME']
-    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' ' + su2_home + '/SU2_PY/pyBeamFSI_AD_opt.py -f ' + config['CONFIG_ADJOINT']
 
-    # Compose local output file
-    Output_file =  'Output_adjoint.out'   
+    constr_cfg = 'NONE' if struct_constr_cfg is None else struct_constr_cfg
+    Output_file = 'Output_adjoint.out' if struct_constr_cfg is None else 'Output_adjoint_constr.out' 
+
+    command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' ' + su2_home + '/SU2_PY/pyBeamFSI_AD_opt.py -f ' + config['CONFIG_ADJOINT'] + ' -c ' + constr_cfg
     
     # Launching shell command
     run_command(command, 'Adjoint', True,  Output_file)
     
     # go back to project folder (3 levels up)
-    os.chdir( '../../..')        
+    #os.chdir( '../../..')
+    os.chdir(original_dir)         
     
 def Geometry(geo_folder, config):
     '''

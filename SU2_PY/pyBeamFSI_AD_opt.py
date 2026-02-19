@@ -55,6 +55,8 @@ def main():
     parser = OptionParser()
     parser.add_option("-f", "--file", dest="filename",
                       help="read config from FILE", metavar="FILE")
+    parser.add_option("-c", "--file_constr", dest="filename_constr",
+                      help="read constraint config from FILE", metavar="FILE")
     parser.add_option("--serial", action="store_true",
                       help="Specify if we need to initialize MPI", dest="serial", default=False)
 
@@ -89,7 +91,12 @@ def main():
 
     FSI_config = io(confFile)  # FSI configuration file
     CFD_ConFile = FSI_config['SU2_CONFIG']  # CFD configuration file
-    AUG_ConFile = FSI_config['AUGUSTO_CONFIG_FSI']  # AUGUSTO  configuration file
+
+    if options.filename_constr == "NONE":
+       AUG_ConFile = FSI_config['AUGUSTO_CONFIG_FSI']  # AUGUSTO  configuration file
+    else:
+       AUG_ConFile = options.filename_constr
+
     MLS_confFile = FSI_config['MLS_CONFIG_FILE_NAME']  # MLS configuration file
     INTERF_file = FSI_config['INTERFACE_NODES_FILE'] 
 
@@ -190,6 +197,22 @@ def main():
     if myid == rootProcess:
        elapsed_time =  timer.time() - start
        print('Primal problem elapsed time: ', elapsed_time)
+    #return
+
+    # if the coupled adjoint was on a structural response,
+    # print the results on file
+
+    if options.filename_constr != "NONE":
+
+       dresp = SolidSolver.beam.beam.GetSensitivities()
+       obj_file = open("d_Constraints.dat", "w")
+       for i in range(0, len(dresp)):
+            obj_file.write('%20s \t' % '#')
+            obj_file.write('%20s \n' % str(-dresp[i]))   # check if change of sign is needed
+       obj_file.close()
+    
+
+
     return
 
 

@@ -150,7 +150,7 @@ class Design:
         # perform primal
         FSIPrimal(primal_folder, self.config)
         
-    def FSIAdjoint(self,adj_folder):   
+    def FSIAdjoint(self,adj_folder, struct_constr_cfg):   
         
         self.adjoint = True
         
@@ -158,7 +158,7 @@ class Design:
         self.UpdateMeshFilename( adj_folder, self.configFSIAdjoint['SU2_CONFIG'])
         
         # perform adjoint
-        FSIAdjoint(adj_folder, self.config)        
+        FSIAdjoint(adj_folder, self.config, struct_constr_cfg)        
 
     def SU2_GEO(self, geo_folder):
 
