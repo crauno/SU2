@@ -96,7 +96,7 @@ def Sens(options, dvID, perturbed_DV):
 
     FSI_config = io(confFile)  # FSI configuration file
     CFD_ConFile = FSI_config['SU2_CONFIG']  # CFD configuration file
-    AUG_ConFile = FSI_config['AUGUSTO_CONFIG']  # AUGUSTO  configuration file
+    AUG_ConFile = FSI_config['AUGUSTO_CONFIG_FSI']  # AUGUSTO  configuration file
     MLS_confFile = FSI_config['MLS_CONFIG_FILE_NAME']  # MLS configuration file
     INTERF_file = FSI_config['INTERFACE_NODES_FILE'] 
 
@@ -224,12 +224,10 @@ def main():
    myid = comm.Get_rank()
 
    # --- This is only accessed if running from command prompt --- #
-   delta = [5.00000000e-02, 1.23019153e-02, 3.02674238e-03, 7.44694566e-04,
- 1.83223389e-04, 4.50799721e-05, 1.10913999e-05, 2.72890924e-06,
- 6.71416206e-07, 1.65194105e-07, 4.06440777e-08, 1.00000000e-08]
+   delta = [0.001, 0.0005, 0.0001, 0.00005, 0.00001]
 
-   DV_ids = 1
-   DV_values = 589500000000.0
+   DV_ids = 4
+   DV_values = 0.025
    
    file = open("Sensitivity_FD_node_DV_" + str(DV_ids) + "_centered.txt", "w")
    file.write("DV id = {}\n".format(DV_ids))

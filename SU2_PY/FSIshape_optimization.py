@@ -232,6 +232,8 @@ def obj_f(x,project):
 
        
     if project.opt_mode == "STRUCT":
+       print("---------------------------------------- EXTRACTED OBJECTIVE -----------------------------------------------")
+       print(struct_obj)
        return struct_obj
 
     elif project.opt_mode == "AERO":
@@ -256,6 +258,8 @@ def obj_df(x,project):
         obj_df = project.obj_df(x)    
 
     #scipy.io.savemat(  './obj_df.mat', mdict={'obj_df': obj_df})
+    print("---------------------------------------- EXTRACTED GRADIENT OBJECTIVE -----------------------------------------------")
+    print(obj_df)
     return obj_df
 
 def con_ceq(x,project):
@@ -300,7 +304,8 @@ def con_cieq(x,project):
     elif project.opt_mode == "AERO":
 
          cons = project.con_cieq(x)  
-  
+    print("---------------------------------------- EXTRACTED CONSTRAINT -----------------------------------------------")
+    print(cons)
     return cons
     
     
@@ -322,6 +327,8 @@ def con_dcieq(x,project):
 
          dcons = project.con_dcieq(x)
     #scipy.io.savemat(  './dcons.mat', mdict={'dcons': dcons})
+    print("---------------------------------------- EXTRACTED GRADIENT CONSTRAINT -----------------------------------------------")
+    print(dcons)
     return dcons
 
 
