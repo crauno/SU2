@@ -180,6 +180,7 @@ class OptConfig:
                 if case("CONFIG_GEO"): pass
                 if case("CONFIG_DEF"): pass
                 if case("CONFIG_STRUCT_OPT"): pass
+                if case("STRUCT_CONSTR_EVAL_STATE"): pass
                 if case("OPT_MODE"): 
                     self._ConfigContent[this_param] = this_value
                     break

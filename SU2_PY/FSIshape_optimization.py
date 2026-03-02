@@ -102,7 +102,7 @@ def FSIshape_optimization( filename                           ,
        xb = project.structProject.xb_norm
        x0 = project.structProject.x0_norm
 
-       project.CheckMeshFileUniq()
+       project.CheckStructuralSetup()
     
     
     # call optimization function  (nned to define some high level elements yet....)

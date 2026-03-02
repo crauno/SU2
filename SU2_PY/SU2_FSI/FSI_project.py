@@ -40,6 +40,7 @@ from SU2_FSI.FSI_design import Design
 from SU2_FSI.FSI_tools import  readConfig
 from structopt.pystructopt.pyoptlib.struct_config import OptConfig as StructOptConfig
 from structopt.pystructopt.pyoptlib.struct_project import Project as StructProject
+from structopt.pystructopt.pyoptlib.struct_tools import readConfig as readAUGUSTOConfig
 # -------------------------------------------------------------------
 #  Project Class
 # -------------------------------------------------------------------
@@ -134,6 +135,8 @@ class Project:
            print('Initializing structural project...')
 
            structConfig = StructOptConfig(self.config['FOLDER'], self.config['CONFIG_STRUCT_OPT'], self.config['FOLDER'], self.config['NUMBER_PART'])
+
+           self.structConstrEvalState = self.config['STRUCT_CONSTR_EVAL_STATE'].replace(",", " ").split()
            
            self.structProject = StructProject(structConfig, False)
 
@@ -535,21 +538,44 @@ class Project:
 
 
 
-    def CheckMeshFileUniq(self):
+    def CheckStructuralSetup(self):
+      
        """
-       In the current implementation, all the FE solver configuration files (for FSI equilibrium and optimisaiton constraints evaluation) 
-       must point at the same mesh file. This function checks the uniqueness of the mesh file
+       Make some checks on the configuration and mesh files regarding the structural optimisation
        """
        
-       cfg_files = [self.pyAugustoMesh, self.structProject.pyAugustoMeshObjf] + self.structProject.pyAugustoMeshConstr
+       # check that the mesh file is unique     
+       mesh_files = [self.pyAugustoMesh, self.structProject.pyAugustoMeshObjf] + self.structProject.pyAugustoMeshConstr
 
-       if len(set(cfg_files)) != 1:
+       if len(set(mesh_files)) != 1:
 
          sys.exit("\nError: Multiple FE meshfiles detected. In the current implementation, all the FE configuration files must point to a single mesh file")
 
+       # check whether the labels in STRUCT_CONSTR_EVAL_STATE are correct
+       for j in self.structConstrEvalState:
+
+         if j not in ["DEF", "UNDEF"]:
+
+            sys.exit("\nError: " + j + " is a wrong entry for STRUCT_CONSTR_EVAL_STATE")
 
 
 
+       
+       # check whether the number of labels in STRUCT_CONSTR_EVAL_STATE is equal to the number of constraint config files in AUGUSTO_CONFIG_CONSTR
+       if len(self.structProject.config['AUGUSTO_CONFIG_CONSTR']) != len(self.structConstrEvalState):
+
+           sys.exit("\nError: number of labels in STRUCT_CONSTR_EVAL_STATE must be equal to the number of constraint configuration files in AUGUSTO_CONFIG_CONSTR")
+
+
+       # stress constraints are evaluated always on the deflected configuration. Check if any stress constraint in AUGUSTO_CONFIG_CONSTR  has a  
+       # corresponding DEF label in STRUCT_CONSTR_EVAL_STATE. Currently, in AUGUSTO, stress response analyses are the only STEADY analysis type
+       for i in range(len(self.structProject.config['AUGUSTO_CONFIG_CONSTR'])):
+
+           analysis_type = readAUGUSTOConfig(self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], "ANALYSIS")
+
+           if analysis_type == "STEADY" and self.structConstrEvalState[i] != "DEF":
+              
+              sys.exit("\nError: stress constraints must be evaluated in the deformed configuration (DEF)")
 
 
 
