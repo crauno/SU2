@@ -539,7 +539,7 @@ class Project:
 
 
     def CheckStructuralSetup(self):
-      
+
        """
        Make some checks on the configuration and mesh files regarding the structural optimisation
        """
@@ -567,15 +567,14 @@ class Project:
            sys.exit("\nError: number of labels in STRUCT_CONSTR_EVAL_STATE must be equal to the number of constraint configuration files in AUGUSTO_CONFIG_CONSTR")
 
 
-       # stress constraints are evaluated always on the deflected configuration. Check if any stress constraint in AUGUSTO_CONFIG_CONSTR  has a  
-       # corresponding DEF label in STRUCT_CONSTR_EVAL_STATE. Currently, in AUGUSTO, stress response analyses are the only STEADY analysis type
+       # Structural responses of STEADY analysis type are always evaluated on the deflected configuration.
        for i in range(len(self.structProject.config['AUGUSTO_CONFIG_CONSTR'])):
 
            analysis_type = readAUGUSTOConfig(self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], "ANALYSIS")
 
            if analysis_type == "STEADY" and self.structConstrEvalState[i] != "DEF":
               
-              sys.exit("\nError: stress constraints must be evaluated in the deformed configuration (DEF)")
+              sys.exit("\nError: Structural responses of STEADY analysis type must be evaluated on the deformed configuration (DEF)")
 
 
 
