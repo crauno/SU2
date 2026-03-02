@@ -137,6 +137,8 @@ class Project:
            structConfig = StructOptConfig(self.config['FOLDER'], self.config['CONFIG_STRUCT_OPT'], self.config['FOLDER'], self.config['NUMBER_PART'])
 
            self.structConstrEvalState = self.config['STRUCT_CONSTR_EVAL_STATE'].replace(",", " ").split()
+
+           structConfig.structConstrEvalState = self.structConstrEvalState
            
            self.structProject = StructProject(structConfig, False)
 
