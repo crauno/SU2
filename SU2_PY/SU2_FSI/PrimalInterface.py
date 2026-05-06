@@ -860,7 +860,6 @@ class Interface:
             # --- Surface fluid loads interpolation and communication ---#
             self.MPIPrint('\n##### Transferring fluid tractions to the beam solver\n')
             self.MPIBarrier()
-            SolidSolver.ReinitialiseSolver()
             self.transferFluidTractions(FluidSolver, SolidSolver, MLSSolver,self.FSIIter)
 
             if nFSIIter !=1:  # if the analysis we are running is not rigid (which means nFSIIter =1)

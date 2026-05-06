@@ -924,7 +924,6 @@ class AdjointInterface:
             # --- Surface fluid loads interpolation and communication ---#
             self.MPIPrint('\n##### Transferring fluid tractions to the beam solver\n')
             self.MPIBarrier()
-            SolidSolver.ReinitialiseSolver()
             self.transferFluidTractions(FluidSolver, SolidSolver, MLSSolver)
 
             # --- Displacement adjoints interpolation and communication ---#
@@ -941,7 +940,6 @@ class AdjointInterface:
                    #self.MPIPrint('\n##### Recording the pyBeam solution process\n')
                    #SolidSolver.RecordSolver()
                    self.MPIPrint('\n##### Running the adjoint\n')
-                   SolidSolver.ReinitialiseSolver()
                    SolidSolver.RunSensitivityProblem(self.FSIIter)
 
             self.FSIIter += 1
