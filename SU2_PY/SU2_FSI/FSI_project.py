@@ -134,11 +134,7 @@ class Project:
 
            print('Initializing structural project...')
 
-           structConfig = StructOptConfig(self.config['FOLDER'], self.config['CONFIG_STRUCT_OPT'], self.config['FOLDER'], self.config['NUMBER_PART'])
-
-           self.structConstrEvalState = self.config['STRUCT_CONSTR_EVAL_STATE'].replace(",", " ").split()
-
-           structConfig.structConstrEvalState = self.structConstrEvalState
+           structConfig = StructOptConfig(self.config['FOLDER'], self.config['CONFIG_STRUCT_OPT'], self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], self.config['FOLDER'], self.config['NUMBER_PART'])
            
            self.structProject = StructProject(structConfig, False)
 
@@ -552,32 +548,6 @@ class Project:
        if len(set(mesh_files)) != 1:
 
          sys.exit("\nError: Multiple FE meshfiles detected. In the current implementation, all the FE configuration files must point to a single mesh file")
-
-       # check whether the labels in STRUCT_CONSTR_EVAL_STATE are correct
-       for j in self.structConstrEvalState:
-
-         if j not in ["DEF", "UNDEF"]:
-
-            sys.exit("\nError: " + j + " is a wrong entry for STRUCT_CONSTR_EVAL_STATE")
-
-
-
-       
-       # check whether the number of labels in STRUCT_CONSTR_EVAL_STATE is equal to the number of constraint config files in AUGUSTO_CONFIG_CONSTR
-       if len(self.structProject.config['AUGUSTO_CONFIG_CONSTR']) != len(self.structConstrEvalState):
-
-           sys.exit("\nError: number of labels in STRUCT_CONSTR_EVAL_STATE must be equal to the number of constraint configuration files in AUGUSTO_CONFIG_CONSTR")
-
-
-       # Structural responses of STEADY analysis type are always evaluated on the deflected configuration.
-       for i in range(len(self.structProject.config['AUGUSTO_CONFIG_CONSTR'])):
-
-           analysis_type = readAUGUSTOConfig(self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], "ANALYSIS")
-
-           if analysis_type == "STEADY" and self.structConstrEvalState[i] != "DEF":
-              
-              sys.exit("\nError: Structural responses of STEADY analysis type must be evaluated on the deformed configuration (DEF)")
-
 
 
 
