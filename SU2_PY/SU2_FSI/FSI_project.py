@@ -142,7 +142,8 @@ class Project:
 
 
     def obj_f(self,dvs):
-        print('Project obj_f') 
+      
+        print('Calling aero obj_f') 
         #x_in = copy.deepcopy(dvs)
         # Checking if new design is needed
         # In case starts new design and deform
@@ -157,7 +158,8 @@ class Project:
         return obj_f*scale*global_factor
         
     def obj_df(self,dvs):
-        print('Project obj_df')   
+
+        print('Calling aero obj_df')   
         #x_in = copy.deepcopy(dvs)
         # Check if new design is needed (it won't as Adjoin is performed after primal)        
         # In case start new design and deform
@@ -176,7 +178,8 @@ class Project:
         return obj_df*global_factor
 
     def con_ceq(self,dvs):
-        print('Project con_ceq')
+      
+        print('Calling aero con_ceq')
         x_in = copy.deepcopy(dvs)
         # Check if new design is needed        
         # In case start new design and deform
@@ -193,7 +196,8 @@ class Project:
         return c_eq* global_factor
     
     def con_dceq(self,dvs):
-        print('Project con_dceq')
+      
+        print('Calling aero con_dceq')
         x_in = copy.deepcopy(dvs)
         # Check if new design is needed (it won't as geo gradient is calculated after geo)       
         # In case start new design and deform
@@ -213,7 +217,8 @@ class Project:
         return dc_eq*global_factor
     
     def con_cieq(self,dvs):
-        print('Project con_cieq')
+      
+        print('Calling aero con_cieq')
         #x_in = copy.deepcopy(dvs)
         # Check if new design is needed        
         # In case start new design and deform
@@ -229,7 +234,8 @@ class Project:
         return c_ieq* global_factor
     
     def con_dcieq(self,dvs):
-        print('con_diceq')
+      
+        print('Calling aero con_dcieq')
         #x_in = copy.deepcopy(dvs)
         # Check if new design is needed (it won't as geo gradient is calculated after geo)       
         # In case start new design and deform
