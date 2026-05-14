@@ -400,7 +400,7 @@ class Project:
            command = 'cp ' + config_input + ' ' + self.primal_folder + '/'
            run_command(command, 'Pulling primal config', False) 
            
-           PullingPrimalAdjointFiles(self.config, self.primal_folder, self.configFSIPrimal, self.pyAugustoMesh, self.pyAugustoSmdao, self.pyInterfaceFile)
+           PullingPrimalAdjointFiles(self.config['FOLDER'], self.primal_folder, self.configFSIPrimal, self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
            # pulling mesh file 
            self.SetMesh(self.primal_folder)  
            
@@ -426,7 +426,7 @@ class Project:
        run_command(command, 'Pulling Adjoint config', False)        
        
        
-       PullingPrimalAdjointFiles(self.config, self.adjoint_folder, self.configFSIAdjoint, self.pyAugustoMesh, self.pyAugustoSmdao, self.pyInterfaceFile)
+       PullingPrimalAdjointFiles(self.config['FOLDER'], self.adjoint_folder, self.configFSIAdjoint, self.configFSIAdjoint['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
 
        # pulling mesh file 
        self.SetMesh(self.adjoint_folder)         
@@ -583,7 +583,7 @@ class Project:
             run_command(command, 'Pulling Adjoint config', False)        
        
             # pull files for analysis
-            PullingPrimalAdjointFiles(self.config, current_adj_folder, self.configFSIAdjoint, self.structProject.pyAugustoMeshConstr[i], self.structProject.pyAugustoSmdaoConstr[i], self.pyInterfaceFile)
+            PullingPrimalAdjointFiles(self.config['FOLDER'], current_adj_folder, self.configFSIAdjoint, self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], self.pyInterfaceFile)
 
             # pulling mesh file 
             self.SetMesh(current_adj_folder)         

@@ -210,12 +210,13 @@ def main():
     # print the results on file
 
     if options.filename_constr != "NONE":
-
+       
+       # writing sensitivities to file
        dresp = SolidSolver.beam.beam.GetSensitivities()
+       dv_ids = SolidSolver.beam.beam.GetDVids()
        obj_file = open("d_Constraints.dat", "w")
-       for i in range(0, len(dresp)):
-            obj_file.write('%20s \t' % '#')
-            obj_file.write('%20s \n' % str(-dresp[i]))   # check if change of sign is needed
+       for i in range(len(dv_ids)):
+          obj_file.write('%-12s  %20s \n' % (str(dv_ids[i]), str(-dresp[i])))
        obj_file.close()
     
 

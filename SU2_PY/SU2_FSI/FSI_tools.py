@@ -368,26 +368,29 @@ def ReadGeoConstraintGradients( geo_folder,ConsList,n_dv, sign ):
     
     return gradient
     
-def PullingPrimalAdjointFiles(configOpt, folder, configFSI, pyAugustoMesh, pyAugustoSmdao, pyInterfaceFile):
+def PullingPrimalAdjointFiles(source_folder, dest_folder, configFSI, configAUGUSTO, pyInterfaceFile):
+
        # pulling primal files
        command = []
        # 1
-       config = configOpt['FOLDER'] + '/' + configFSI['SU2_CONFIG']
-       command.append('cp ' + config + ' ' + folder + '/')
+       config = source_folder + '/' + configFSI['SU2_CONFIG']
+       command.append('cp ' + config + ' ' + dest_folder + '/')
        # 2
-       config = configOpt['FOLDER'] + '/' + configFSI['MLS_CONFIG_FILE_NAME']
-       command.append('cp ' + config + ' ' + folder + '/')
+       config = source_folder + '/' + configFSI['MLS_CONFIG_FILE_NAME']
+       command.append('cp ' + config + ' ' + dest_folder + '/')
        # 3
-       config = configOpt['FOLDER'] + '/' + pyInterfaceFile
-       command.append('cp ' + config + ' ' + folder + '/')  
+       config = source_folder + '/' + pyInterfaceFile
+       command.append('cp ' + config + ' ' + dest_folder + '/')  
        # creating a symbolic link to numpy spline matric which doesn't change
-       spline = configOpt['FOLDER'] + '/' + 'Spline.npy'
-       command.append('ln -s ' + spline + ' ' + folder + '/' + 'Spline.npy')      
+       spline = source_folder + '/' + 'Spline.npy'
+       command.append('ln -s ' + spline + ' ' + dest_folder + '/' + 'Spline.npy')      
        for i in range(len(command)):
           run_command(command[i], 'Pulling primal config file ' + str(i) , False) 
           
-       # pulling files for Augusto 
-       PullAugustoFiles(configOpt['FOLDER'] + '/', folder, configFSI['AUGUSTO_CONFIG_FSI'], pyAugustoMesh, pyAugustoSmdao)
+       # pulling files for Augusto
+       pyAugustoMesh = readConfig(configAUGUSTO, 'INPUT_FILENAME') 
+       pyAugustoSmdao = readConfig(configAUGUSTO, 'SMDAO_FILENAME') 
+       PullAugustoFiles(source_folder + '/', dest_folder, configAUGUSTO, pyAugustoMesh, pyAugustoSmdao)
           
           
 def ReadPointInversion(configDef,MeshFile):
