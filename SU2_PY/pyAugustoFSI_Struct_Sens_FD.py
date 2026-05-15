@@ -116,7 +116,7 @@ def Sens(options, dvID, perturbed_DV):
         FluidSolver = pysu2.CSinglezoneDriver(CFD_ConFile, 1, comm)
     except TypeError as exception:
         print('A TypeError occured in pysu2.CSingleZoneDriver : ', exception)
-        if serial:
+        if options.serial:
             print('ERROR : You are trying to launch a computation without initializing MPI but the wrapper has been built in parallel. Please remove the --serial option that is incompatible with a parallel build.')
         else:
             print('ERROR : You are trying to initialize MPI with a serial build of the wrapper. Please, add --serial to launch your simulation.')
@@ -192,15 +192,23 @@ def Sens(options, dvID, perturbed_DV):
     
     Js = SolidSolver.GetObjFunction() 
 
-    if myid == rootProcess:
-       print('DRAG COEFFICIENT: ', cd)
-
     # Postprocess the solver and exit cleanly
     FluidSolver.Postprocessing()
 
     if FluidSolver is not None:
         del FluidSolver
 
+    if SolidSolver is not None:
+        del SolidSolver
+
+    if FSIInterface is not None:
+        del FSIInterface
+
+    if MLS is not None:
+       del MLS
+
+    if have_MPI:
+       comm.barrier()
 
     return cd, Js
 
@@ -218,72 +226,92 @@ def main():
 
    (options, args) = parser.parse_args()
 
-
    from mpi4py import MPI
    comm = MPI.COMM_WORLD
    myid = comm.Get_rank()
 
-   # --- This is only accessed if running from command prompt --- #
    delta = [0.001, 0.0005, 0.0001, 0.00005, 0.00001]
 
    DV_ids = 4
    DV_values = 0.025
-   
-   file = open("Sensitivity_FD_node_DV_" + str(DV_ids) + "_centered.txt", "w")
-   file.write("DV id = {}\n".format(DV_ids))
-   file.write("DV value = {}\n".format(DV_values))
-   file.write("\n")
-   file.write("\n")
-   file.write("\n")
-   file.flush()
 
+   results = []
 
+   with open("Sensitivity_FD_node_DV_" + str(DV_ids) + "_centered.txt", "w") as file:
 
-   for i in range(len(delta)):
-
-      delta_used = delta[i]
-
-      # --- Set Parameter for surface sensitivity --- #
-   
-      file.write("Delta used = {}\n".format(delta_used))
-      file.write("\n") 
+      file.write("=" * 80 + "\n")
+      file.write("  CENTERED FINITE DIFFERENCE SENSITIVITY ANALYSIS\n")
+      file.write("=" * 80 + "\n")
+      file.write("  DV id    = {}\n".format(DV_ids))
+      file.write("  DV value = {:16.12f}\n".format(DV_values))
+      file.write("=" * 80 + "\n\n")
       file.flush()
 
-      perturbed_DV_plus = (1.0 + delta_used) * DV_values
-      file.write("DV_plus = {:16.12f}\n".format(perturbed_DV_plus))
-      drag_plus, Js_plus = Sens(options, DV_ids, perturbed_DV_plus)
-      file.write("drag_plus = {:16.12f}\n".format(drag_plus))
-      file.write("Js_plus = {:16.12f}\n".format(Js_plus))
-      file.flush()
+      for i in range(len(delta)):
 
-      if myid == 0:
-         os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_plus.dat")
-      
+         delta_used = delta[i]
 
-      perturbed_DV_minus = (1.0 - delta_used) * DV_values
-      file.write("DV_minus = {:16.12f}\n".format(perturbed_DV_minus))
-      drag_minus, Js_minus = Sens(options, DV_ids, perturbed_DV_minus)   
-      file.write("drag_minus = {:16.12f}\n".format(drag_minus))
-      file.write("Js_minus = {:16.12f}\n".format(Js_minus))
-      file.flush()
-      
-      if myid == 0:
-         os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_minus.dat")
-      
-      Cd_sens = (drag_plus - drag_minus) / (2 * delta_used * DV_values)
-      Js_sens = (Js_plus - Js_minus) / (2 * delta_used * DV_values)
+         file.write("-" * 80 + "\n")
+         file.write("  Step {:d}/{:d} | delta = {:12.8e}\n".format(
+                     i + 1, len(delta), delta_used))
+         file.write("-" * 80 + "\n")
+         file.flush()
 
-      file.write("Sensitivity Cd = {:25.22f}\n".format(Cd_sens))
-      file.write("Sensitivity Js = {:25.22f}\n".format(Js_sens))
-      file.flush()
+         # --- Plus perturbation ---
+         perturbed_DV_plus = (1.0 + delta_used) * DV_values
+         file.write("  DV+  = {:16.12f}\n".format(perturbed_DV_plus))
+         file.flush()
+
+         drag_plus, Js_plus = Sens(options, DV_ids, perturbed_DV_plus)
+
+         file.write("  Cd+  = {:16.12f}\n".format(drag_plus))
+         file.write("  Js+  = {:16.12f}\n".format(Js_plus))
+         file.flush()
+
+         if myid == 0:
+            os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_plus.dat")
+
+         # --- Minus perturbation ---
+         perturbed_DV_minus = (1.0 - delta_used) * DV_values
+         file.write("  DV-  = {:16.12f}\n".format(perturbed_DV_minus))
+         file.flush()
+
+         drag_minus, Js_minus = Sens(options, DV_ids, perturbed_DV_minus)
+
+         file.write("  Cd-  = {:16.12f}\n".format(drag_minus))
+         file.write("  Js-  = {:16.12f}\n".format(Js_minus))
+         file.flush()
+
+         if myid == 0:
+            os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_minus.dat")
+
+         # --- Sensitivities ---
+         Cd_sens = (drag_plus - drag_minus) / (2 * delta_used * DV_values)
+         Js_sens = (Js_plus - Js_minus) / (2 * delta_used * DV_values)
+
+         file.write("  dCd/dDV = {:25.22f}\n".format(Cd_sens))
+         file.write("  dJs/dDV = {:25.22f}\n".format(Js_sens))
+         file.write("\n")
+         file.flush()
+
+         results.append((delta_used, drag_plus, drag_minus, Js_plus, Js_minus, Cd_sens, Js_sens))
+
+      # --- Summary table ---
       file.write("\n")
-      file.write("\n")
-      file.flush()
-   
-   file.close()
+      file.write("=" * 80 + "\n")
+      file.write("  SUMMARY\n")
+      file.write("=" * 80 + "\n")
+      file.write("  {:>12s}  {:>16s}  {:>16s}  {:>25s}  {:>25s}\n".format(
+                  "delta", "Cd+", "Cd-", "dCd/dDV", "dJs/dDV"))
+      file.write("  " + "-" * 100 + "\n")
+
+      for (delta_used, cd_p, cd_m, js_p, js_m, cd_s, js_s) in results:
+         file.write("  {:12.8e}  {:16.12f}  {:16.12f}  {:25.22f}  {:25.22f}\n".format(
+                     delta_used, cd_p, cd_m, cd_s, js_s))
+
+      file.write("=" * 80 + "\n")
 
    return
-
 # -------------------------------------------------------------------
 #  Run Main Program
 # -------------------------------------------------------------------
