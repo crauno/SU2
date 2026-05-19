@@ -940,7 +940,7 @@ class AdjointInterface:
                    #self.MPIPrint('\n##### Recording the pyBeam solution process\n')
                    #SolidSolver.RecordSolver()
                    self.MPIPrint('\n##### Running the adjoint\n')
-                   SolidSolver.RunSensitivityProblem(self.FSIIter)
+                   SolidSolver.RunCoupledSensitivityProblem(self.FSIIter)
 
             self.FSIIter += 1
 
