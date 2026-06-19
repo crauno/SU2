@@ -619,13 +619,12 @@ class Interface:
                                               self.globalSolidLoadY[iVertex],
                                               self.globalSolidLoadZ[iVertex])
 
-            # write loadfile
-            # beam.SetLoads(107 , 0 , 0 ,350000.)
-            load_file = open("Solid_load_"+str(FSI_iter)+".dat", "w")
-            for iVertex in range(0, self.nSolidInterfaceNodes):
-               idPoint = SolidSolver.InterfaceNodes[iVertex]
-               load_file.write("beam.SetLoads( " + str(idPoint) + " , " + str(self.globalSolidLoadX[iVertex]) + " , " + str(self.globalSolidLoadY[iVertex]) + " , " + str(self.globalSolidLoadZ[iVertex]) + " )\n")
-            load_file.close()
+            if myid == self.rootProcess:
+                load_file = open("Solid_load_"+str(FSI_iter)+".dat", "w")
+                for iVertex in range(0, self.nSolidInterfaceNodes):
+                   idPoint = SolidSolver.InterfaceNodes[iVertex]
+                   load_file.write("beam.SetLoads( " + str(idPoint) + " , " + str(self.globalSolidLoadX[iVertex]) + " , " + str(self.globalSolidLoadY[iVertex]) + " , " + str(self.globalSolidLoadZ[iVertex]) + " )\n")
+                load_file.close()
 
     def transferStructuralDisplacements(self, FSIConfig, FluidSolver, SolidSolver, MLSSolver):
         """

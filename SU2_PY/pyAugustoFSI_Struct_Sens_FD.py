@@ -237,79 +237,83 @@ def main():
 
    results = []
 
-   with open("Sensitivity_FD_node_DV_" + str(DV_ids) + "_centered.txt", "w") as file:
+   if myid == 0:
+      outfile = open("Sensitivity_FD_node_DV_" + str(DV_ids) + "_centered.txt", "w")
+      outfile.write("=" * 80 + "\n")
+      outfile.write("  CENTERED FINITE DIFFERENCE SENSITIVITY ANALYSIS\n")
+      outfile.write("=" * 80 + "\n")
+      outfile.write("  DV id    = {}\n".format(DV_ids))
+      outfile.write("  DV value = {:16.12f}\n".format(DV_values))
+      outfile.write("=" * 80 + "\n\n")
+      outfile.flush()
 
-      file.write("=" * 80 + "\n")
-      file.write("  CENTERED FINITE DIFFERENCE SENSITIVITY ANALYSIS\n")
-      file.write("=" * 80 + "\n")
-      file.write("  DV id    = {}\n".format(DV_ids))
-      file.write("  DV value = {:16.12f}\n".format(DV_values))
-      file.write("=" * 80 + "\n\n")
-      file.flush()
+   for i in range(len(delta)):
 
-      for i in range(len(delta)):
+      delta_used = delta[i]
 
-         delta_used = delta[i]
+      if myid == 0:
+         outfile.write("-" * 80 + "\n")
+         outfile.write("  Step {:d}/{:d} | delta = {:12.8e}\n".format(
+                        i + 1, len(delta), delta_used))
+         outfile.write("-" * 80 + "\n")
+         outfile.flush()
 
-         file.write("-" * 80 + "\n")
-         file.write("  Step {:d}/{:d} | delta = {:12.8e}\n".format(
-                     i + 1, len(delta), delta_used))
-         file.write("-" * 80 + "\n")
-         file.flush()
+      # --- Plus perturbation ---
+      perturbed_DV_plus = (1.0 + delta_used) * DV_values
+      if myid == 0:
+         outfile.write("  DV+  = {:16.12f}\n".format(perturbed_DV_plus))
+         outfile.flush()
 
-         # --- Plus perturbation ---
-         perturbed_DV_plus = (1.0 + delta_used) * DV_values
-         file.write("  DV+  = {:16.12f}\n".format(perturbed_DV_plus))
-         file.flush()
+      drag_plus, Js_plus = Sens(options, DV_ids, perturbed_DV_plus)
 
-         drag_plus, Js_plus = Sens(options, DV_ids, perturbed_DV_plus)
+      if myid == 0:
+         outfile.write("  Cd+  = {:16.12f}\n".format(drag_plus))
+         outfile.write("  Js+  = {:16.12f}\n".format(Js_plus))
+         outfile.flush()
+         os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_plus.dat")
 
-         file.write("  Cd+  = {:16.12f}\n".format(drag_plus))
-         file.write("  Js+  = {:16.12f}\n".format(Js_plus))
-         file.flush()
+      # --- Minus perturbation ---
+      perturbed_DV_minus = (1.0 - delta_used) * DV_values
+      if myid == 0:
+         outfile.write("  DV-  = {:16.12f}\n".format(perturbed_DV_minus))
+         outfile.flush()
 
-         if myid == 0:
-            os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_plus.dat")
+      drag_minus, Js_minus = Sens(options, DV_ids, perturbed_DV_minus)
 
-         # --- Minus perturbation ---
-         perturbed_DV_minus = (1.0 - delta_used) * DV_values
-         file.write("  DV-  = {:16.12f}\n".format(perturbed_DV_minus))
-         file.flush()
+      if myid == 0:
+         outfile.write("  Cd-  = {:16.12f}\n".format(drag_minus))
+         outfile.write("  Js-  = {:16.12f}\n".format(Js_minus))
+         outfile.flush()
+         os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_minus.dat")
 
-         drag_minus, Js_minus = Sens(options, DV_ids, perturbed_DV_minus)
+      # --- Sensitivities ---
+      Cd_sens = (drag_plus - drag_minus) / (2 * delta_used * DV_values)
+      Js_sens = (Js_plus - Js_minus) / (2 * delta_used * DV_values)
 
-         file.write("  Cd-  = {:16.12f}\n".format(drag_minus))
-         file.write("  Js-  = {:16.12f}\n".format(Js_minus))
-         file.flush()
+      if myid == 0:
+         outfile.write("  dCd/dDV = {:25.22f}\n".format(Cd_sens))
+         outfile.write("  dJs/dDV = {:25.22f}\n".format(Js_sens))
+         outfile.write("\n")
+         outfile.flush()
 
-         if myid == 0:
-            os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_minus.dat")
+      results.append((delta_used, drag_plus, drag_minus, Js_plus, Js_minus, Cd_sens, Js_sens))
 
-         # --- Sensitivities ---
-         Cd_sens = (drag_plus - drag_minus) / (2 * delta_used * DV_values)
-         Js_sens = (Js_plus - Js_minus) / (2 * delta_used * DV_values)
-
-         file.write("  dCd/dDV = {:25.22f}\n".format(Cd_sens))
-         file.write("  dJs/dDV = {:25.22f}\n".format(Js_sens))
-         file.write("\n")
-         file.flush()
-
-         results.append((delta_used, drag_plus, drag_minus, Js_plus, Js_minus, Cd_sens, Js_sens))
-
+   if myid == 0:
       # --- Summary table ---
-      file.write("\n")
-      file.write("=" * 80 + "\n")
-      file.write("  SUMMARY\n")
-      file.write("=" * 80 + "\n")
-      file.write("  {:>12s}  {:>16s}  {:>16s}  {:>25s}  {:>25s}\n".format(
-                  "delta", "Cd+", "Cd-", "dCd/dDV", "dJs/dDV"))
-      file.write("  " + "-" * 100 + "\n")
+      outfile.write("\n")
+      outfile.write("=" * 80 + "\n")
+      outfile.write("  SUMMARY\n")
+      outfile.write("=" * 80 + "\n")
+      outfile.write("  {:>12s}  {:>16s}  {:>16s}  {:>25s}  {:>25s}\n".format(
+                    "delta", "Cd+", "Cd-", "dCd/dDV", "dJs/dDV"))
+      outfile.write("  " + "-" * 100 + "\n")
 
       for (delta_used, cd_p, cd_m, js_p, js_m, cd_s, js_s) in results:
-         file.write("  {:12.8e}  {:16.12f}  {:16.12f}  {:25.22f}  {:25.22f}\n".format(
-                     delta_used, cd_p, cd_m, cd_s, js_s))
+         outfile.write("  {:12.8e}  {:16.12f}  {:16.12f}  {:25.22f}  {:25.22f}\n".format(
+                       delta_used, cd_p, cd_m, cd_s, js_s))
 
-      file.write("=" * 80 + "\n")
+      outfile.write("=" * 80 + "\n")
+      outfile.close()
 
    return
 # -------------------------------------------------------------------
