@@ -618,13 +618,20 @@ class Interface:
                 SolidSolver.SetLoads(idPoint, self.globalSolidLoadX[iVertex],
                                               self.globalSolidLoadY[iVertex],
                                               self.globalSolidLoadZ[iVertex])
+            
+        ## old loads printing
+        #if myid == self.rootProcess:
+        #    load_file = open("Solid_load_"+str(FSI_iter)+".dat", "w")
+        #    for iVertex in range(0, self.nSolidInterfaceNodes):
+        #       idPoint = SolidSolver.InterfaceNodes[iVertex]
+        #       load_file.write("beam.SetLoads( " + str(idPoint) + " , " + str(self.globalSolidLoadX[iVertex]) + " , " + str(self.globalSolidLoadY[iVertex]) + " , " + str(self.globalSolidLoadZ[iVertex]) + " )\n")
+        #    load_file.close()
+        
+        if myid == self.rootProcess:
+            
+           output_loads_file = "Solid_load_" + str(FSI_iter) + ".dat"
+           SolidSolver.PrintLoads(output_loads_file, SolidSolver.InterfaceNodes, self.globalSolidLoadX, self.globalSolidLoadY, self.globalSolidLoadZ)
 
-            if myid == self.rootProcess:
-                load_file = open("Solid_load_"+str(FSI_iter)+".dat", "w")
-                for iVertex in range(0, self.nSolidInterfaceNodes):
-                   idPoint = SolidSolver.InterfaceNodes[iVertex]
-                   load_file.write("beam.SetLoads( " + str(idPoint) + " , " + str(self.globalSolidLoadX[iVertex]) + " , " + str(self.globalSolidLoadY[iVertex]) + " , " + str(self.globalSolidLoadZ[iVertex]) + " )\n")
-                load_file.close()
 
     def transferStructuralDisplacements(self, FSIConfig, FluidSolver, SolidSolver, MLSSolver):
         """
