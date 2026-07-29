@@ -39,17 +39,25 @@ from structopt.pystructopt.pyoptlib.struct_tools import PullAugustoFiles
 
 def SaveSplineMatrix(config):
     """
-    Spline matrix is computed at the beginning and saved in the main folder to be used at every iteration
+    Spline matrix is computed at the beginning and saved in the testcase folder to be used at every iteration
     """
 
     su2_home = os.environ['SU2_HOME']
     command = 'mpirun -n ' + str(config['NUMBER_PART']) + ' ' + su2_home + '/SU2_PY/pyBeamFSI_MLSGen.py -f ' + config['CONFIG_PRIMAL']
 
     # Compose local output file
-    Output_file = config['FOLDER'] + '/Output_Spline.out'
+    Output_file = config['TESTCASE_FOLDER'] + '/Output_Spline.out'
+
+    # Run from the testcase folder: CONFIG_PRIMAL and everything it references
+    # (mesh, interface nodes file, ...) live there, and Spline.npy needs to be
+    # saved there too so PullingPrimalAdjointFiles can pick it up per design.
+    original_dir = os.getcwd()
+    os.chdir(config['TESTCASE_FOLDER'])
 
     # Launching shell command
     run_command(command, 'Splining', True,  Output_file)
+
+    os.chdir(original_dir)
 
 def readConfig(ConfigFileName, voice, BreakCode = True):
     """
@@ -388,8 +396,8 @@ def PullingPrimalAdjointFiles(source_folder, dest_folder, configFSI, configAUGUS
           run_command(command[i], 'Pulling primal config file ' + str(i) , False) 
           
        # pulling files for Augusto
-       pyAugustoMesh = readConfig(configAUGUSTO, 'INPUT_FILENAME') 
-       pyAugustoSmdao = readConfig(configAUGUSTO, 'SMDAO_FILENAME') 
+       pyAugustoMesh = readConfig(source_folder + '/' + configAUGUSTO, 'INPUT_FILENAME')
+       pyAugustoSmdao = readConfig(source_folder + '/' + configAUGUSTO, 'SMDAO_FILENAME')
        PullAugustoFiles(source_folder + '/', dest_folder, configAUGUSTO, pyAugustoMesh, pyAugustoSmdao)
           
           

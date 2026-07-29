@@ -25,6 +25,11 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with SU2. If not, see <http://www.gnu.org/licenses/>.
 
+
+
+
+#run with:      python3 FSIshape_optimization.py -n 64 -f config_opt.cfg -p   path/to/folder/config/opt/file      
+
 import os, sys, shutil
 from SU2_FSI.FSI_config import OptConfig as OptConfig
 from SU2_FSI.FSI_tools import SaveSplineMatrix, readConfig, readDVParam
@@ -45,30 +50,48 @@ def main():
                       help="read config from FILE", metavar="FILE")
     parser.add_option("-n", "--partitions", dest="partitions", default=1,
                       help="number of PARTITIONS", metavar="PARTITIONS")
+    parser.add_option("-p", "--path", dest="path",
+                      help="path to the folder containing all the files needed for the analysis "
+                           "(optimization config, primal/adjoint/deform/geo configs, mesh, AUGUSTO "
+                           "configs, etc). Its contents are staged into DESIGNS/testcase.", metavar="PATH")
 
 
 
     (options, args)=parser.parse_args()
-    
+
     # process inputs
     options.partitions  = int( options.partitions )
 
+    if not options.path:
+        parser.error("-p/--path is required: point it at the folder with all the files needed for the analysis")
 
     FSIshape_optimization( options.filename    ,
-                        options.partitions     )
-    
+                        options.partitions     ,
+                        options.path           )
+
 #: main()
 
 def FSIshape_optimization( filename                           ,
-                        partitions  = 0                       ):
+                        partitions  = 0                       ,
+                        source_path = None                    ):
 
-    # Read opt Config
-    config = OptConfig(filename)  # opt configuration file
+    root_folder = str(os.getcwd())
+    source_folder = os.path.abspath(source_path)
+
+    # Read opt Config directly from the source folder (staging into
+    # DESIGNS/testcase happens inside Project, once we know OPT_MODE etc.)
+    config = OptConfig(os.path.join(source_folder, filename))  # opt configuration file
 
 
 
     config['NUMBER_PART'] = partitions
-    config['FOLDER'] = str(os.getcwd()) 
+    config['FOLDER'] = root_folder
+    config['SOURCE_FOLDER'] = source_folder
+
+    # Instantiate project object. This stages DESIGNS/testcase (copying every
+    # analysis input file from SOURCE_FOLDER there) and exposes the result as
+    # config['TESTCASE_FOLDER'] before anything else touches those files.
+    project = Project(config)
 
     its               = int ( config['OPT_ITERATIONS'] )                      # number of opt iterations
     bound_upper       = float ( config['OPT_BOUND_UPPER'] )                   # variable bound to be scaled by the line search
@@ -80,18 +103,15 @@ def FSIshape_optimization( filename                           ,
     folder = config['FOLDER']
     accu              = float ( config['OPT_ACCURACY'] ) * gradient_factor    # optimizer accuracy
     # n_dv
-    dv_kind_str = readConfig(config['CONFIG_DEF'], 'DV_KIND')
+    dv_kind_str = readConfig(config['TESTCASE_FOLDER'] + '/' + config['CONFIG_DEF'], 'DV_KIND')
     n_dv = int(len(dv_kind_str.split(',')))
     x0                = [0.0]*n_dv # initial design
     xb_low            = [float(bound_lower)/float(relax_factor)]*n_dv      # lower dv bound it includes the line search acceleration factor
     xb_up             = [float(bound_upper)/float(relax_factor)]*n_dv      # upper dv bound it includes the line search acceleration fa
     xb                = list(zip(xb_low, xb_up)) # design bounds
 
-    # Instantiate project object
-    project = Project(config)
-
     # if needed, instantiate a structural project
-    
+
     if opt_mode not in ["AERO", "STRUCT"]:
     
             sys.exit(opt_mode + " is an invalid option for OPT_MODE field. Available options are either AERO or STRUCT. ")
@@ -175,7 +195,7 @@ def slsqp(project,x0=None,xb=None,its=100,accu=1e-10,grads=True):
     # obj scale
     # I need to look into the Adjoint flow file
     # Adjoint config
-    adjointflow_config = project.configFSIAdjoint['SU2_CONFIG']
+    adjointflow_config = project.testcase_folder + '/' + project.configFSIAdjoint['SU2_CONFIG']
     line = readConfig(adjointflow_config, 'OBJECTIVE_FUNCTION')
     if line.find('*') != -1:
        line = line.split("*", 1)

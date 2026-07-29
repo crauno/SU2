@@ -60,54 +60,62 @@ class Project:
         
         folder = self.config['FOLDER']  # root folder where optimization is done
         #folder = folder.rstrip('/')
-        self.folder  = folder  
+        self.folder  = folder
+        self.source_folder = self.config['SOURCE_FOLDER']  # folder (-p) holding all the analysis input files
         self.design_folder = ''
         self.deform_folder = ''
         self.geo_folder = ''
         self.primal_folder = ''
         self.adjoint_folder = ''
         self.opt_mode = self.config['OPT_MODE']
-        
+
         self.design_toll = 10**(-20)  # allowable difference into design variable vector to consider the same design
-        
+
         # config objects for primal and adjoint simulations with structural and fluid config files and options
         self.configFSIPrimal = None
         self.configFSIAdjoint = None
-        
+
         # structural project. Initialised in case structrual DVs or objective are present
         self.structProject = None
-        
+
         # Design container
         self._design = []
 
         self.design_iter = -1  # optimization iter (design number) [initialization]
         self.magnord_design = 3 # Expected order of magnitude of design number
-        
-        # Design variable options
-        # Reading point inversion
-        MeshFile = readConfig(self.config['CONFIG_DEF'], 'MESH_FILENAME')
-        self.PointInv = ReadPointInversion(self.config['CONFIG_DEF'],MeshFile)
-    
-        # reading Bezier curves order
-        line = readConfig(self.config['CONFIG_DEF'], 'FFD_DEGREE')
-        line = line.strip('( )')
-        line = line.split(',')
-        self.ffd_degree = [int(float(line[0])),int(float(line[1])),int(float(line[2]))]
-        
-        # DV_values indexes (control points indexes of the FD Box)    
-        self.FFD_indexes = readDVParam(self.config['CONFIG_DEF'])
-        self.n_dv = 0 # number of design variables
 
-        # check if to fix the CP  on the root of the wing
-        if self.config['FFD_CONSTRAINT'] == 'ROOT':
-           self.ffd_fixed = Fix_FFD_CP(self.ffd_degree)
-        
         # clean previous designs
         self.clean_previous_designs()
 
         # Creating design folder
         self.create_design_folder()
-        
+
+        # Stage every analysis input file from self.source_folder (-p) into
+        # DESIGNS/testcase. From here on, self.testcase_folder is the reference
+        # folder the solver pulls files from, replacing SU2_PY's former role.
+        self.create_testcase_folder()
+        self.config['TESTCASE_FOLDER'] = self.testcase_folder
+
+        # Design variable options
+        # Reading point inversion
+        config_def = self.testcase_folder + '/' + self.config['CONFIG_DEF']
+        MeshFile = readConfig(config_def, 'MESH_FILENAME')
+        self.PointInv = ReadPointInversion(config_def, self.testcase_folder + '/' + MeshFile)
+
+        # reading Bezier curves order
+        line = readConfig(config_def, 'FFD_DEGREE')
+        line = line.strip('( )')
+        line = line.split(',')
+        self.ffd_degree = [int(float(line[0])),int(float(line[1])),int(float(line[2]))]
+
+        # DV_values indexes (control points indexes of the FD Box)
+        self.FFD_indexes = readDVParam(config_def)
+        self.n_dv = 0 # number of design variables
+
+        # check if to fix the CP  on the root of the wing
+        if self.config['FFD_CONSTRAINT'] == 'ROOT':
+           self.ffd_fixed = Fix_FFD_CP(self.ffd_degree)
+
         # project memorizes config of both adjoin and primal solvers (top level config)
         self.setup_configs()
 
@@ -117,15 +125,15 @@ class Project:
         Reads config files for primal and Adjoint simulations
         '''
         # Read primal config
-        self.configFSIPrimal = FSIConfig(self.config['CONFIG_PRIMAL'])
+        self.configFSIPrimal = FSIConfig(self.testcase_folder + '/' + self.config['CONFIG_PRIMAL'])
         # Read Adjoint config
-        self.configFSIAdjoint = FSIConfig(self.config['CONFIG_ADJOINT'])
+        self.configFSIAdjoint = FSIConfig(self.testcase_folder + '/' + self.config['CONFIG_ADJOINT'])
         # Locate AUGUSTO meshfile
-        self.pyAugustoMesh = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], 'INPUT_FILENAME')
+        self.pyAugustoMesh = readConfig(self.testcase_folder + '/' + self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], 'INPUT_FILENAME')
         # Locate AUGUSTO smdao
-        self.pyAugustoSmdao = readConfig(self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], 'SMDAO_FILENAME')
+        self.pyAugustoSmdao = readConfig(self.testcase_folder + '/' + self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], 'SMDAO_FILENAME')
         # Locate file with interface nodes
-        self.pyInterfaceFile = readConfig(self.config['CONFIG_PRIMAL'], 'INTERFACE_NODES_FILE')
+        self.pyInterfaceFile = readConfig(self.testcase_folder + '/' + self.config['CONFIG_PRIMAL'], 'INTERFACE_NODES_FILE')
 
     
     def InitStructProject(self):
@@ -134,7 +142,7 @@ class Project:
 
            print('Initializing structural project...')
 
-           structConfig = StructOptConfig(self.config['FOLDER'], self.config['CONFIG_STRUCT_OPT'], self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], self.config['FOLDER'], self.config['NUMBER_PART'])
+           structConfig = StructOptConfig(self.folder, self.config['CONFIG_STRUCT_OPT'], self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], self.testcase_folder, self.config['NUMBER_PART'])
            
            self.structProject = StructProject(structConfig, False)
 
@@ -272,13 +280,26 @@ class Project:
     
     
     def create_design_folder(self):
-              
+
         command = 'mkdir ' + self.folder + '/DESIGNS'
 
         # Executes shell command
-        run_command(command, 'Create design folder', False)  
-            
-            
+        run_command(command, 'Create design folder', False)
+
+
+    def create_testcase_folder(self):
+
+        self.testcase_folder = self.folder + '/DESIGNS/testcase'
+
+        command = 'mkdir ' + self.testcase_folder
+        run_command(command, 'Create testcase folder', False)
+
+        # Stage all the analysis input files (config, mesh, AUGUSTO configs, etc.)
+        command = 'cp -r ' + self.source_folder + '/. ' + self.testcase_folder + '/'
+        run_command(command, 'Pulling testcase files from ' + self.source_folder, False)
+
+
+
     def CheckNewDesign(self, x_in):
        
        # if the optimisation is with structural DVs and objective, new designs are initialised
@@ -326,7 +347,7 @@ class Project:
             
         print('InitializeNew Design x_in = {}'.format(x_in))    
         # initialize and append new design object    
-        self._design.append(Design(self.config,self.configFSIPrimal,self.configFSIAdjoint, self.folder, self.design_folder, self.design_iter ,x_in, x_old ))    
+        self._design.append(Design(self.config,self.configFSIPrimal,self.configFSIAdjoint, self.testcase_folder, self.design_folder, self.design_iter ,x_in, x_old ))
         
 
     def DeformMesh(self):    
@@ -347,13 +368,13 @@ class Project:
         run_command(command, 'Creating deform directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)   
            
         # pull config deformation file
-        config_deform = self.config['FOLDER'] + '/' + self.config['CONFIG_DEF'] 
+        config_deform = self.testcase_folder + '/' + self.config['CONFIG_DEF']
         command = 'cp ' + config_deform + ' ' + self.deform_folder + '/'
         run_command(command, 'Pulling deformation config', False)
-        
-        # creating a symbolic link to original meshfile      
-        mesh_filename = readConfig(self.config['CONFIG_DEF'], 'MESH_FILENAME')
-        command = 'ln -s ' + str(os.getcwd()) + '/' + mesh_filename + ' ' + self.deform_folder + '/' + mesh_filename
+
+        # creating a symbolic link to original meshfile
+        mesh_filename = readConfig(config_deform, 'MESH_FILENAME')
+        command = 'ln -s ' + self.testcase_folder + '/' + mesh_filename + ' ' + self.deform_folder + '/' + mesh_filename
         run_command(command, 'Pulling mesh config for deformation', False)
         
         # Performing mesh deformation
@@ -374,7 +395,7 @@ class Project:
            run_command(command, 'Creating GEO directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)      
            
            # pulling geo deformation file
-           config_geo = self.config['FOLDER'] + '/' + self.config['CONFIG_GEO'] 
+           config_geo = self.testcase_folder + '/' + self.config['CONFIG_GEO']
            command = 'cp ' + config_geo + ' ' + self.geo_folder + '/'
            run_command(command, 'Pulling geo config', False)     
            # pulling mesh file 
@@ -396,11 +417,11 @@ class Project:
            run_command(command, 'Creating Primal directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)           
             
            # pulling primal config
-           config_input = self.config['FOLDER'] + '/' + self.config['CONFIG_PRIMAL'] 
+           config_input = self.testcase_folder + '/' + self.config['CONFIG_PRIMAL']
            command = 'cp ' + config_input + ' ' + self.primal_folder + '/'
-           run_command(command, 'Pulling primal config', False) 
-           
-           PullingPrimalAdjointFiles(self.config['FOLDER'], self.primal_folder, self.configFSIPrimal, self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
+           run_command(command, 'Pulling primal config', False)
+
+           PullingPrimalAdjointFiles(self.testcase_folder, self.primal_folder, self.configFSIPrimal, self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
            # pulling mesh file 
            self.SetMesh(self.primal_folder)  
            
@@ -421,12 +442,12 @@ class Project:
        run_command(command, 'Creating Adjoint directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)   
        
        # pulling adjoint config
-       config_input = self.config['FOLDER'] + '/' + self.config['CONFIG_ADJOINT'] 
+       config_input = self.testcase_folder + '/' + self.config['CONFIG_ADJOINT']
        command = 'cp ' + config_input + ' ' + self.adjoint_folder + '/'
-       run_command(command, 'Pulling Adjoint config', False)        
-       
-       
-       PullingPrimalAdjointFiles(self.config['FOLDER'], self.adjoint_folder, self.configFSIAdjoint, self.configFSIAdjoint['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
+       run_command(command, 'Pulling Adjoint config', False)
+
+
+       PullingPrimalAdjointFiles(self.testcase_folder, self.adjoint_folder, self.configFSIAdjoint, self.configFSIAdjoint['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
 
        # pulling mesh file 
        self.SetMesh(self.adjoint_folder)         
@@ -466,13 +487,13 @@ class Project:
        
        if self._design[self.design_iter].deformation == False:
           # In case deformation hasn't occurred (first iteration) we need the original mesh file
-          mesh_filename = readConfig(self.config['CONFIG_DEF'], 'MESH_FILENAME')
-          command = 'ln -s ' + str(os.getcwd()) + '/' + mesh_filename + ' ' + destination_folder + '/' + mesh_filename
+          mesh_filename = readConfig(self.testcase_folder + '/' + self.config['CONFIG_DEF'], 'MESH_FILENAME')
+          command = 'ln -s ' + self.testcase_folder + '/' + mesh_filename + ' ' + destination_folder + '/' + mesh_filename
           run_command(command, 'Pulling mesh config for deformation', False)
-          
+
        else:
           # in case deformation has occurred mesh file is named as output of SU2_DEF and needs to be pulled from the dedicated folder
-          mesh_filename = readConfig(self.config['CONFIG_DEF'], 'MESH_OUT_FILENAME')
+          mesh_filename = readConfig(self.testcase_folder + '/' + self.config['CONFIG_DEF'], 'MESH_OUT_FILENAME')
           command = 'ln -s ' + self.deform_folder + '/' + mesh_filename + ' ' + destination_folder + '/' + mesh_filename
           run_command(command, 'Pulling mesh config for deformation', False)
           
@@ -516,7 +537,7 @@ class Project:
 
         if self.structProject.initialised_new_design :
 
-           self._design.append(Design(self.config,self.configFSIPrimal,self.configFSIAdjoint, self.folder, self.design_folder, self.design_iter , None, None ))
+           self._design.append(Design(self.config,self.configFSIPrimal,self.configFSIAdjoint, self.testcase_folder, self.design_folder, self.design_iter , None, None ))
            
            self.structProject.initialised_new_design = False
 
@@ -578,12 +599,12 @@ class Project:
  
        
             # pull adjoint config
-            config_input = self.config['FOLDER'] + '/' + self.config['CONFIG_ADJOINT'] 
+            config_input = self.testcase_folder + '/' + self.config['CONFIG_ADJOINT']
             command = 'cp ' + config_input + ' ' + current_adj_folder + '/'
-            run_command(command, 'Pulling Adjoint config', False)        
-       
+            run_command(command, 'Pulling Adjoint config', False)
+
             # pull files for analysis
-            PullingPrimalAdjointFiles(self.config['FOLDER'], current_adj_folder, self.configFSIAdjoint, self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], self.pyInterfaceFile)
+            PullingPrimalAdjointFiles(self.testcase_folder, current_adj_folder, self.configFSIAdjoint, self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], self.pyInterfaceFile)
 
             # pulling mesh file 
             self.SetMesh(current_adj_folder)         
