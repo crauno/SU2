@@ -252,7 +252,7 @@ class Design:
             # If option is selected, applying sharp edge utility provided by SU2 
             option = readConfig(adj_folder + '/' +self.configFSIAdjoint['SU2_CONFIG'], 'SENS_REMOVE_SHARP', False) 
             if option == 'YES':                         
-               SharpEdge(adj_folder,self.configFSIAdjoint['SU2_CONFIG'])
+               SharpEdge(adj_folder,adj_folder + '/' + self.configFSIAdjoint['SU2_CONFIG'])
                
             # performing the chain rule over grid nodes sensitivities
             obj_df = ChainRule(adj_folder,FFD_indexes, PointInv,ffd_degree)
