@@ -149,6 +149,70 @@ class Project:
            self.structProject.InitNormalizedVariables()
 
 
+    def CheckOptCase(self):
+
+        """
+        Identifies which of the optimisation cases is being run (based on
+        OPT_MODE and, for OPT_MODE = STRUCT, the SU2 adjoint OBJECTIVE_WEIGHT)
+        and validates the configuration for that case.
+
+        The objective scaling is handled entirely on the python side
+        (obj_scale, global_factor), so OBJECTIVE_WEIGHT in the SU2 adjoint
+        config is only ever allowed to be 1.0 (or absent/commented out, which
+        defaults to 1.0) or 0.0:
+
+        AERO   (aero objective, aero design variables): OBJECTIVE_WEIGHT must
+               be 1.0 (or absent).
+
+        STRUCT (structural design variables):
+               - OBJECTIVE_WEIGHT = 1.0 (or absent) -> aero objective
+                 differentiated with respect to structural design variables.
+               - OBJECTIVE_WEIGHT = 0.0 -> structural objective
+                 differentiated with respect to structural design variables.
+
+        Any other OBJECTIVE_WEIGHT value raises an error and stops the
+        optimisation.
+        """
+
+        if self.opt_mode not in ["AERO", "STRUCT"]:
+
+            sys.exit(self.opt_mode + " is an invalid option for OPT_MODE field. Available options are either AERO or STRUCT. ")
+
+        print('==============================================================')
+        print('  Optimisation case summary')
+        print('==============================================================')
+
+        adjoint_flow_config = self.testcase_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
+        weight_line = readConfig(adjoint_flow_config, 'OBJECTIVE_WEIGHT', False)
+
+        if weight_line == 'NO':
+            weights = [1.0]
+        else:
+            weights = [float(w) for w in weight_line.replace(',', ' ').split()]
+
+        if self.opt_mode == "AERO":
+
+            if any(w != 1.0 for w in weights):
+                sys.exit('OBJECTIVE_WEIGHT in ' + adjoint_flow_config +
+                          ' must be 1.0 (or absent/commented out) when OPT_MODE = AERO.'
+                          ' Found: ' + weight_line)
+
+            print('Optimisation case: AERO objective / AERO design variables')
+
+        elif self.opt_mode == "STRUCT":
+
+            if all(w == 1.0 for w in weights):
+                print('Optimisation case: AERO objective / STRUCT design variables')
+
+            elif all(w == 0.0 for w in weights):
+                print('Optimisation case: STRUCT objective / STRUCT design variables')
+
+            else:
+                sys.exit('OBJECTIVE_WEIGHT in ' + adjoint_flow_config +
+                          ' must be either 1.0 (or absent/commented out, for an AERO objective) or 0.0'
+                          ' (for a STRUCT objective) when OPT_MODE = STRUCT. Found: ' + weight_line)
+
+
     def obj_f(self,dvs):
       
         print('Calling aero obj_f') 

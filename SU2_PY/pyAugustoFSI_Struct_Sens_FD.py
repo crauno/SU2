@@ -230,10 +230,10 @@ def main():
    comm = MPI.COMM_WORLD
    myid = comm.Get_rank()
 
-   delta = [0.001, 0.0005, 0.0001, 0.00005, 0.00001]
+   delta = [0.001, 0.0001, 0.00001]
 
-   DV_ids = 4
-   DV_values = 0.025
+   DV_ids = 20
+   DV_values = 0.02
 
    results = []
 

@@ -110,12 +110,11 @@ def FSIshape_optimization( filename                           ,
     xb_up             = [float(bound_upper)/float(relax_factor)]*n_dv      # upper dv bound it includes the line search acceleration fa
     xb                = list(zip(xb_low, xb_up)) # design bounds
 
-    # if needed, instantiate a structural project
+    
 
-    if opt_mode not in ["AERO", "STRUCT"]:
+    project.CheckOptCase()
     
-            sys.exit(opt_mode + " is an invalid option for OPT_MODE field. Available options are either AERO or STRUCT. ")
-    
+    # if needed, instantiate a structural project
     if opt_mode == "STRUCT" :
 
        project.InitStructProject()
