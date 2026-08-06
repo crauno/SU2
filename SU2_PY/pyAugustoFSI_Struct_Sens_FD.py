@@ -33,9 +33,18 @@
 
 
 
-#############################    run with    mpirun -n 64 python3 pyAugustoFSI_Struct_Sens_FD.py -f config_primal.cfg
+#############################    run with    mpirun -n 64 python3 pyAugustoFSI_Struct_Sens_FD.py -f config_primal.cfg -p /path/to/testcase
 
 #############################    in the structural config file, the SMDAO type must be RESPONSE
+
+#############################    -p points at the folder with all the files needed for the analysis
+#############################    (config_primal.cfg, AUGUSTO/MLS configs, mesh, interface file, etc.),
+#############################    same convention as FSIshape_optimization.py. Its contents are copied
+#############################    flat into this script's own folder (SU2_PY) and the analysis runs
+#############################    there, generating whatever clutter (vtk, solid_load, restart, etc.)
+#############################    the solver produces. At the end, a fresh FD_FSI_analysis folder is
+#############################    created containing a clean 'testcase' copy of the -p inputs plus the
+#############################    history and summary output files.
 
 
 
@@ -52,6 +61,7 @@ from optparse import OptionParser  # use a parser for configuration
 
 from SU2_FSI.FSI_config import FSIConfig as io       # imports FSI config tools
 from SU2_FSI import PrimalInterface as FSI # imports FSI python tools
+from SU2_FSI.FSI_tools import run_command
 import pyAugustoInterface as pyAugustoInterface
 import pyMLSInterface as Spline_Module
 from augusto_functions_toolbox import CheckSMDAOtype
@@ -221,14 +231,38 @@ def main():
    parser = OptionParser()
    parser.add_option("-f", "--file", dest="filename",
                       help="read config from FILE", metavar="FILE")
+   parser.add_option("-p", "--path", dest="path",
+                      help="path to the folder containing all the files needed for the analysis "
+                           "(config_primal.cfg, AUGUSTO/MLS configs, mesh, interface file, etc.). "
+                           "Its contents are copied into this script's folder to run, and a clean "
+                           "copy plus the results is collected into FD_FSI_analysis at the end.",
+                      metavar="PATH")
    parser.add_option("--serial", action="store_true",
                       help="Specify if we need to initialize MPI", dest="serial", default=False)
 
    (options, args) = parser.parse_args()
 
+   if not options.path:
+      parser.error("-p/--path is required: point it at the folder with all the files needed for the analysis")
+
    from mpi4py import MPI
    comm = MPI.COMM_WORLD
    myid = comm.Get_rank()
+
+   # Stage every analysis input file from -p directly into the current
+   # working directory (SU2_PY), so the analysis runs here exactly as it did
+   # before -p existed. Everything the solver generates along the way (vtk,
+   # solid_load, restart files, etc.) is left here too. Only at the end are
+   # the history/summary outputs collected into FD_FSI_analysis, alongside a
+   # clean copy of the testcase inputs.
+   root_folder = os.getcwd()
+   source_folder = os.path.abspath(options.path)
+
+   if myid == 0:
+      run_command('cp -r ' + source_folder + '/. ' + root_folder + '/',
+                  'Pulling testcase files from ' + source_folder, False)
+
+   comm.barrier()
 
    delta = [0.001, 0.0001, 0.00001]
 
@@ -236,9 +270,11 @@ def main():
    DV_values = 0.02
 
    results = []
+   summary_filename = "Sensitivity_FD_node_DV_" + str(DV_ids) + "_centered.txt"
+   history_filenames = []
 
    if myid == 0:
-      outfile = open("Sensitivity_FD_node_DV_" + str(DV_ids) + "_centered.txt", "w")
+      outfile = open(summary_filename, "w")
       outfile.write("=" * 80 + "\n")
       outfile.write("  CENTERED FINITE DIFFERENCE SENSITIVITY ANALYSIS\n")
       outfile.write("=" * 80 + "\n")
@@ -270,7 +306,9 @@ def main():
          outfile.write("  Cd+  = {:16.12f}\n".format(drag_plus))
          outfile.write("  Js+  = {:16.12f}\n".format(Js_plus))
          outfile.flush()
-         os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_plus.dat")
+         plus_filename = "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_plus.dat"
+         os.rename("historyFSI.dat", plus_filename)
+         history_filenames.append(plus_filename)
 
       # --- Minus perturbation ---
       perturbed_DV_minus = (1.0 - delta_used) * DV_values
@@ -284,7 +322,9 @@ def main():
          outfile.write("  Cd-  = {:16.12f}\n".format(drag_minus))
          outfile.write("  Js-  = {:16.12f}\n".format(Js_minus))
          outfile.flush()
-         os.rename("historyFSI.dat", "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_minus.dat")
+         minus_filename = "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_minus.dat"
+         os.rename("historyFSI.dat", minus_filename)
+         history_filenames.append(minus_filename)
 
       # --- Sensitivities ---
       Cd_sens = (drag_plus - drag_minus) / (2 * delta_used * DV_values)
@@ -314,6 +354,21 @@ def main():
 
       outfile.write("=" * 80 + "\n")
       outfile.close()
+
+      # --- Collect final results into FD_FSI_analysis --- #
+      fd_folder = os.path.join(root_folder, 'FD_FSI_analysis')
+      testcase_folder = os.path.join(fd_folder, 'testcase')
+
+      if os.path.isdir(fd_folder):
+         run_command('rm -r ' + fd_folder, 'Remove old FD_FSI_analysis folder', False)
+      run_command('mkdir ' + fd_folder, 'Create FD_FSI_analysis folder', False)
+      run_command('mkdir ' + testcase_folder, 'Create testcase folder', False)
+      run_command('cp -r ' + source_folder + '/. ' + testcase_folder + '/',
+                  'Copying clean testcase files into FD_FSI_analysis', False)
+
+      for fname in [summary_filename] + history_filenames:
+         run_command('mv ' + os.path.join(root_folder, fname) + ' ' + os.path.join(fd_folder, fname),
+                     'Moving ' + fname + ' into FD_FSI_analysis', False)
 
    return
 # -------------------------------------------------------------------
