@@ -35,7 +35,7 @@ from math import pow, factorial
 import time, os, sys
 from SU2_FSI.FSI_config import FSIConfig as FSIConfig
 from SU2_FSI import FSI_design
-from SU2_FSI.FSI_tools import run_command, readConfig, PullingPrimalAdjointFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP
+from SU2_FSI.FSI_tools import run_command, readConfig, PullingPrimalAdjointFiles, PullRestartFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP
 from SU2_FSI.FSI_design import Design
 from SU2_FSI.FSI_tools import  readConfig
 from structopt.pystructopt.pyoptlib.struct_config import OptConfig as StructOptConfig
@@ -517,27 +517,11 @@ class Project:
        self.SetMesh(self.adjoint_folder)         
        
        # pulling restart for pyBeam and SU2 and flow.vtk
-       command = []
        if self._design[self.design_iter].primal == True:
-           
-          # pyBeam 
-          orig_file = self.primal_folder + '/' + 'restart.pyAugusto'
-          dest_file = self.adjoint_folder + '/' + 'solution.pyAugusto'
-          command.append('cp ' + orig_file + ' ' + dest_file )       
-          
-          # SU2
-          orig_file = self.primal_folder + '/' + 'restart_flow.dat'
-          dest_file = self.adjoint_folder + '/' + 'solution_flow.dat'
-          command.append('cp ' + orig_file + ' ' + dest_file ) 
-          
-          # flow.meta
-          orig_file = self.primal_folder + '/' + 'flow.meta'  
-          command.append('cp ' + orig_file + ' ' + self.adjoint_folder + '/' )
 
-          for i in range(len(command)):
-             run_command(command[i], 'Pulling solution file ' + str(i) , False)  
-        
-       else:     
+          PullRestartFiles(self.primal_folder, self.adjoint_folder)
+
+       else:
           print('Primal not yet available, can t pull solutions for Adjoint....')
           sys.exit()
 
@@ -674,27 +658,11 @@ class Project:
             self.SetMesh(current_adj_folder)         
        
             # pulling restart for pyAugusto and SU2 and flow.vtk
-            command = []
             if self._design[self.design_iter].primal == True:
-           
-               # pyBeam 
-               orig_file = self.primal_folder + '/' + 'restart.pyAugusto'
-               dest_file = current_adj_folder + '/' + 'solution.pyAugusto'
-               command.append('cp ' + orig_file + ' ' + dest_file )       
-               
-               # SU2
-               orig_file = self.primal_folder + '/' + 'restart_flow.dat'
-               dest_file = current_adj_folder + '/' + 'solution_flow.dat'
-               command.append('cp ' + orig_file + ' ' + dest_file ) 
-               
-               # flow.meta
-               orig_file = self.primal_folder + '/' + 'flow.meta'  
-               command.append('cp ' + orig_file + ' ' + current_adj_folder + '/' )
-     
-               for j in range(len(command)):
-                  run_command(command[j], 'Pulling solution file ' + str(j) , False)  
-        
-            else:      
+
+               PullRestartFiles(self.primal_folder, current_adj_folder)
+
+            else:
               print('Primal not yet available, can t pull solutions for Adjoint....')
               sys.exit()
 

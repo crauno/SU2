@@ -399,8 +399,31 @@ def PullingPrimalAdjointFiles(source_folder, dest_folder, configFSI, configAUGUS
        pyAugustoMesh = readConfig(source_folder + '/' + configAUGUSTO, 'INPUT_FILENAME')
        pyAugustoSmdao = readConfig(source_folder + '/' + configAUGUSTO, 'SMDAO_FILENAME')
        PullAugustoFiles(source_folder + '/', dest_folder, configAUGUSTO, pyAugustoMesh, pyAugustoSmdao)
-          
-          
+
+
+def PullRestartFiles(primal_folder, dest_folder):
+
+       # pulling restart files from the primal run as the Adjoint's solution files
+       command = []
+
+       # pyBeam
+       orig_file = primal_folder + '/' + 'restart.pyAugusto'
+       dest_file = dest_folder + '/' + 'solution.pyAugusto'
+       command.append('cp ' + orig_file + ' ' + dest_file)
+
+       # SU2
+       orig_file = primal_folder + '/' + 'restart_flow.dat'
+       dest_file = dest_folder + '/' + 'solution_flow.dat'
+       command.append('cp ' + orig_file + ' ' + dest_file)
+
+       # flow.meta
+       orig_file = primal_folder + '/' + 'flow.meta'
+       command.append('cp ' + orig_file + ' ' + dest_folder + '/')
+
+       for i in range(len(command)):
+          run_command(command[i], 'Pulling solution file ' + str(i) , False)
+
+
 def ReadPointInversion(configDef,MeshFile):
     # First it is necessary to look for the DV_MARKER 
     DV_MARKER = readConfig(configDef, 'DV_MARKER')
