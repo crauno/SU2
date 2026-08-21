@@ -33,18 +33,27 @@
 
 
 
-#############################    run with    mpirun -n 64 python3 pyAugustoFSI_Struct_Sens_FD.py -f config_primal.cfg -p /path/to/testcase
 
-#############################    in the structural config file, the SMDAO type must be RESPONSE
+#############################    run with    mpirun -n 64 python3 pyAugustoFSI_Struct_Sens_FD.py -f config_primal.cfg -p /path/to/testcase -r crm.cfg crm_modal.cfg
+
+#############################    -r lists one or more AUGUSTO config files (each with its own SMDAO
+#############################    file) whose response is evaluated on the FSI-converged structural
+#############################    state, for every DV perturbation. Include the FSI config itself
+#############################    (AUGUSTO_CONFIG_FSI, e.g. crm.cfg) in -r if its own response should
+#############################    be evaluated too -- it is no longer evaluated automatically.
+
+#############################    SMDAO_TYPE must be RESPONSE in the FSI config and in every -r config
+#############################    (checked upfront, before any analysis starts).
 
 #############################    -p points at the folder with all the files needed for the analysis
-#############################    (config_primal.cfg, AUGUSTO/MLS configs, mesh, interface file, etc.),
-#############################    same convention as FSIshape_optimization.py. Its contents are copied
-#############################    flat into this script's own folder (SU2_PY) and the analysis runs
-#############################    there, generating whatever clutter (vtk, solid_load, restart, etc.)
-#############################    the solver produces. At the end, a fresh FD_FSI_analysis folder is
-#############################    created containing a clean 'testcase' copy of the -p inputs plus the
-#############################    history and summary output files.
+#############################    (config_primal.cfg, AUGUSTO/MLS configs, mesh, interface file, the
+#############################    -r configs and their own mesh/SMDAO files, etc.), same convention as
+#############################    FSIshape_optimization.py. Its contents are copied flat into this
+#############################    script's own folder (SU2_PY) and the analysis runs there, generating
+#############################    whatever clutter (vtk, solid_load, restart, etc.) the solver produces.
+#############################    At the end, a fresh FD_FSI_analysis folder is created containing a
+#############################    clean 'testcase' copy of the -p inputs, plus the history, restart and
+#############################    summary output files.
 
 
 
@@ -57,11 +66,11 @@
 import os, sys, shutil, copy
 import time as timer
 
-from optparse import OptionParser  # use a parser for configuration
+import argparse
 
 from SU2_FSI.FSI_config import FSIConfig as io       # imports FSI config tools
 from SU2_FSI import PrimalInterface as FSI # imports FSI python tools
-from SU2_FSI.FSI_tools import run_command
+from SU2_FSI.FSI_tools import run_command, readConfig
 import pyAugustoInterface as pyAugustoInterface
 import pyMLSInterface as Spline_Module
 from augusto_functions_toolbox import CheckSMDAOtype
@@ -108,11 +117,7 @@ def Sens(options, dvID, perturbed_DV):
     CFD_ConFile = FSI_config['SU2_CONFIG']  # CFD configuration file
     AUG_ConFile = FSI_config['AUGUSTO_CONFIG_FSI']  # AUGUSTO  configuration file
     MLS_confFile = FSI_config['MLS_CONFIG_FILE_NAME']  # MLS configuration file
-    INTERF_file = FSI_config['INTERFACE_NODES_FILE'] 
-
-
-    # check whether the structural analysis has been set to RESPONSE SMDAO type
-    CheckSMDAOtype(AUG_ConFile, "RESPONSE")
+    INTERF_file = FSI_config['INTERFACE_NODES_FILE']
 
 
     if have_MPI:
@@ -144,7 +149,7 @@ def Sens(options, dvID, perturbed_DV):
 
         # update the design variable with the perturbed value
         SolidSolver.UpdateDesignVariable(dvID, perturbed_DV)
-        
+
 
         print("---> P"+ str(myid) +": | SolidSolver.nPoint:" + str(SolidSolver.nPoint) + ": | SolidSolver.nPointLocal:" + str(SolidSolver.nPointLocal))
     except TypeError as exception:
@@ -180,7 +185,7 @@ def Sens(options, dvID, perturbed_DV):
     if myid == rootProcess:  # we perform this calculation on the root core
         print('\n***************************** Initializing MLS Interpolation *************************')
     try:
-            MLS = Spline_Module.pyMLSInterface(MLS_confFile, FSIInterface.globalFluidCoordinates, 
+            MLS = Spline_Module.pyMLSInterface(MLS_confFile, FSIInterface.globalFluidCoordinates,
                                                FSIInterface.globalSolidCoordinates)
     except TypeError as exception:
             print('ERROR building the MLS Interpolation: ', exception)
@@ -199,8 +204,40 @@ def Sens(options, dvID, perturbed_DV):
         comm.Barrier()
 
     cl, cd = FSIInterface.SteadyFSI(FSI_config, FluidSolver, SolidSolver, MLS, None)
-    
-    Js = SolidSolver.GetObjFunction() 
+
+    # --- Evaluate every requested response on the FSI-converged structural
+    # state. Each response gets its own standalone CAugusto instance, fed the
+    # just-converged restart.pyAugusto (copied to the hardcoded "solution.pyAugusto"
+    # that ReadPrimalSolution() expects) and the same perturbed DV as the coupled
+    # run, then evaluated via EvalConstraintFSI() -- the same mechanism
+    # struct_project.py uses for structural constraints/objective. This is
+    # uniform for every response, whether it's the FSI config itself or a
+    # separate one (e.g. modal), and safe to reuse "solution.pyAugusto" across
+    # perturbations since everything here runs strictly sequentially: it is
+    # overwritten only once the previous perturbation's responses are fully
+    # evaluated. --- #
+    responses = {}
+    if options.responses:
+
+        resp_solver = pyAugusto.CAugusto()
+        resp_solver.InitialiseMPI(comm, True)
+
+        for resp_cfg in options.responses:
+
+            if myid == rootProcess:
+                run_command('cp restart.pyAugusto solution.pyAugusto',
+                            'Pulling FSI restart for ' + resp_cfg, False)
+            if have_MPI:
+                comm.barrier()
+
+            resp_solver.Initialise(resp_cfg, os.getcwd() + '/')
+            resp_solver.UpdateDesignVariable(dvID, perturbed_DV)
+            resp_solver.EvalConstraintFSI()
+            responses[resp_cfg] = resp_solver.GetObjFunction()
+            resp_solver.Finalise()
+
+            if have_MPI:
+                comm.barrier()
 
     # Postprocess the solver and exit cleanly
     FluidSolver.Postprocessing()
@@ -220,7 +257,7 @@ def Sens(options, dvID, perturbed_DV):
     if have_MPI:
        comm.barrier()
 
-    return cd, Js
+    return cd, responses
 
 
 # -------------------------------------------------------------------
@@ -228,22 +265,46 @@ def Sens(options, dvID, perturbed_DV):
 # -------------------------------------------------------------------
 def main():
    # --- Get the FSI config file name form the command line options --- #
-   parser = OptionParser()
-   parser.add_option("-f", "--file", dest="filename",
+   parser = argparse.ArgumentParser()
+   parser.add_argument("-f", "--file", dest="filename", required=True,
                       help="read config from FILE", metavar="FILE")
-   parser.add_option("-p", "--path", dest="path",
+   parser.add_argument("-p", "--path", dest="path", required=True,
                       help="path to the folder containing all the files needed for the analysis "
-                           "(config_primal.cfg, AUGUSTO/MLS configs, mesh, interface file, etc.). "
-                           "Its contents are copied into this script's folder to run, and a clean "
-                           "copy plus the results is collected into FD_FSI_analysis at the end.",
+                           "(config_primal.cfg, AUGUSTO/MLS configs, mesh, interface file, the -r "
+                           "configs and their own mesh/SMDAO files, etc.). Its contents are copied "
+                           "into this script's folder to run, and a clean copy plus the results is "
+                           "collected into FD_FSI_analysis at the end.",
                       metavar="PATH")
-   parser.add_option("--serial", action="store_true",
+   parser.add_argument("-r", "--responses", dest="responses", nargs="*", default=[],
+                      help="AUGUSTO config files (must already exist inside -p, each with its own "
+                           "SMDAO file) whose response is evaluated on the FSI-converged structural "
+                           "state, for every DV perturbation. Include the FSI config itself "
+                           "(AUGUSTO_CONFIG_FSI) here too if its own response should be evaluated -- "
+                           "it is not evaluated automatically anymore.",
+                      metavar="CONFIG")
+   parser.add_argument("--serial", action="store_true",
                       help="Specify if we need to initialize MPI", dest="serial", default=False)
 
-   (options, args) = parser.parse_args()
+   options = parser.parse_args()
 
-   if not options.path:
-      parser.error("-p/--path is required: point it at the folder with all the files needed for the analysis")
+   source_folder = os.path.abspath(options.path)
+
+   # --- Resolve and validate every AUGUSTO config whose SMDAO response will
+   # be evaluated (the FSI config itself, plus everything after -r): each
+   # must exist in -p and have SMDAO_TYPE = RESPONSE. Done upfront, against
+   # the original -p folder, before any staging or analysis starts. A config
+   # listed both as the FSI config and in -r is simply checked twice. --- #
+   primal_cfg_path = os.path.join(source_folder, options.filename)
+   if not os.path.isfile(primal_cfg_path):
+      parser.error('Primal config not found in ' + source_folder + ': ' + options.filename)
+
+   fsi_augusto_cfg = readConfig(primal_cfg_path, 'AUGUSTO_CONFIG_FSI')
+
+   for cfg_name in [fsi_augusto_cfg] + options.responses:
+      cfg_path = os.path.join(source_folder, cfg_name)
+      if not os.path.isfile(cfg_path):
+         parser.error('AUGUSTO config not found in ' + source_folder + ': ' + cfg_name)
+      CheckSMDAOtype(cfg_path, "RESPONSE")
 
    from mpi4py import MPI
    comm = MPI.COMM_WORLD
@@ -253,10 +314,9 @@ def main():
    # working directory (SU2_PY), so the analysis runs here exactly as it did
    # before -p existed. Everything the solver generates along the way (vtk,
    # solid_load, restart files, etc.) is left here too. Only at the end are
-   # the history/summary outputs collected into FD_FSI_analysis, alongside a
-   # clean copy of the testcase inputs.
+   # the history/restart/summary outputs collected into FD_FSI_analysis,
+   # alongside a clean copy of the testcase inputs.
    root_folder = os.getcwd()
-   source_folder = os.path.abspath(options.path)
 
    if myid == 0:
       run_command('cp -r ' + source_folder + '/. ' + root_folder + '/',
@@ -264,14 +324,18 @@ def main():
 
    comm.barrier()
 
-   delta = [0.001, 0.0001, 0.00001]
-
+   delta = [0.01, 0.001, 0.0001, 0.00001]
+   
    DV_ids = 20
-   DV_values = 0.02
+   DV_values = 0.02 
 
    results = []
    summary_filename = "Sensitivity_FD_node_DV_" + str(DV_ids) + "_centered.txt"
    history_filenames = []
+   restart_filenames = []
+
+   # column width for each response's derivative column, wide enough for its label
+   response_col_width = {r: max(25, len('d(' + r + ')/dDV') + 2) for r in options.responses}
 
    if myid == 0:
       outfile = open(summary_filename, "w")
@@ -280,6 +344,8 @@ def main():
       outfile.write("=" * 80 + "\n")
       outfile.write("  DV id    = {}\n".format(DV_ids))
       outfile.write("  DV value = {:16.12f}\n".format(DV_values))
+      outfile.write("  Responses evaluated = {}\n".format(
+                    ", ".join(options.responses) if options.responses else "(none)"))
       outfile.write("=" * 80 + "\n\n")
       outfile.flush()
 
@@ -300,15 +366,23 @@ def main():
          outfile.write("  DV+  = {:16.12f}\n".format(perturbed_DV_plus))
          outfile.flush()
 
-      drag_plus, Js_plus = Sens(options, DV_ids, perturbed_DV_plus)
+      drag_plus, responses_plus = Sens(options, DV_ids, perturbed_DV_plus)
 
       if myid == 0:
          outfile.write("  Cd+  = {:16.12f}\n".format(drag_plus))
-         outfile.write("  Js+  = {:16.12f}\n".format(Js_plus))
+         for r in options.responses:
+            outfile.write("  R[{}]+  = {:16.12f}\n".format(r, responses_plus[r]))
+         outfile.write("\n\n")
          outfile.flush()
+
          plus_filename = "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_plus.dat"
          os.rename("historyFSI.dat", plus_filename)
          history_filenames.append(plus_filename)
+
+         if options.responses:
+            restart_plus_filename = "restart_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_plus.pyAugusto"
+            os.rename("restart.pyAugusto", restart_plus_filename)
+            restart_filenames.append(restart_plus_filename)
 
       # --- Minus perturbation ---
       perturbed_DV_minus = (1.0 - delta_used) * DV_values
@@ -316,41 +390,56 @@ def main():
          outfile.write("  DV-  = {:16.12f}\n".format(perturbed_DV_minus))
          outfile.flush()
 
-      drag_minus, Js_minus = Sens(options, DV_ids, perturbed_DV_minus)
+      drag_minus, responses_minus = Sens(options, DV_ids, perturbed_DV_minus)
 
       if myid == 0:
          outfile.write("  Cd-  = {:16.12f}\n".format(drag_minus))
-         outfile.write("  Js-  = {:16.12f}\n".format(Js_minus))
+         for r in options.responses:
+            outfile.write("  R[{}]-  = {:16.12f}\n".format(r, responses_minus[r]))
+         outfile.write("\n\n")
          outfile.flush()
+
          minus_filename = "historyFSI_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_minus.dat"
          os.rename("historyFSI.dat", minus_filename)
          history_filenames.append(minus_filename)
 
+         if options.responses:
+            restart_minus_filename = "restart_DV_" + str(DV_ids) + "_DH_" + str(delta_used) + "_minus.pyAugusto"
+            os.rename("restart.pyAugusto", restart_minus_filename)
+            restart_filenames.append(restart_minus_filename)
+
       # --- Sensitivities ---
       Cd_sens = (drag_plus - drag_minus) / (2 * delta_used * DV_values)
-      Js_sens = (Js_plus - Js_minus) / (2 * delta_used * DV_values)
+      response_sens = {r: (responses_plus[r] - responses_minus[r]) / (2 * delta_used * DV_values)
+                        for r in options.responses}
 
       if myid == 0:
          outfile.write("  dCd/dDV = {:25.22f}\n".format(Cd_sens))
-         outfile.write("  dJs/dDV = {:25.22f}\n".format(Js_sens))
+         for r in options.responses:
+            outfile.write("  d({})/dDV = {:25.22e}\n".format(r, response_sens[r]))
          outfile.write("\n")
          outfile.flush()
 
-      results.append((delta_used, drag_plus, drag_minus, Js_plus, Js_minus, Cd_sens, Js_sens))
+      results.append((delta_used, drag_plus, drag_minus, Cd_sens, response_sens))
 
    if myid == 0:
-      # --- Summary table ---
+      # --- Summary table (one column per response, labelled by its config file) --- #
       outfile.write("\n")
       outfile.write("=" * 80 + "\n")
       outfile.write("  SUMMARY\n")
       outfile.write("=" * 80 + "\n")
-      outfile.write("  {:>12s}  {:>16s}  {:>16s}  {:>25s}  {:>25s}\n".format(
-                    "delta", "Cd+", "Cd-", "dCd/dDV", "dJs/dDV"))
-      outfile.write("  " + "-" * 100 + "\n")
 
-      for (delta_used, cd_p, cd_m, js_p, js_m, cd_s, js_s) in results:
-         outfile.write("  {:12.8e}  {:16.12f}  {:16.12f}  {:25.22f}  {:25.22f}\n".format(
-                       delta_used, cd_p, cd_m, cd_s, js_s))
+      header = "  {:>12s}  {:>16s}  {:>16s}  {:>25s}".format("delta", "Cd+", "Cd-", "dCd/dDV")
+      for r in options.responses:
+         header += "  {:>{w}s}".format("d(" + r + ")/dDV", w=response_col_width[r])
+      outfile.write(header + "\n")
+      outfile.write("  " + "-" * (len(header) - 2) + "\n")
+
+      for (delta_used, cd_p, cd_m, cd_s, response_sens) in results:
+         row = "  {:12.8e}  {:16.12f}  {:16.12f}  {:25.22f}".format(delta_used, cd_p, cd_m, cd_s)
+         for r in options.responses:
+            row += "  {:{w}.16e}".format(response_sens[r], w=response_col_width[r])
+         outfile.write(row + "\n")
 
       outfile.write("=" * 80 + "\n")
       outfile.close()
@@ -366,7 +455,7 @@ def main():
       run_command('cp -r ' + source_folder + '/. ' + testcase_folder + '/',
                   'Copying clean testcase files into FD_FSI_analysis', False)
 
-      for fname in [summary_filename] + history_filenames:
+      for fname in [summary_filename] + history_filenames + restart_filenames:
          run_command('mv ' + os.path.join(root_folder, fname) + ' ' + os.path.join(fd_folder, fname),
                      'Moving ' + fname + ' into FD_FSI_analysis', False)
 
