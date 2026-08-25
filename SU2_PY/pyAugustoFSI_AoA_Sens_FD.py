@@ -1,0 +1,430 @@
+#!/usr/bin/env python3
+
+## \file fsi_computation.py
+#  \brief Python wrapper code for FSI computation by coupling pyBeam and SU2.
+#  \author David Thomas, Rocco Bombardieri, Ruben Sanchez
+#  \version 7.0.0
+#
+# SU2 Original Developers: Dr. Francisco D. Palacios.
+#                          Dr. Thomas D. Economon.
+#
+# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
+#                 Prof. Piero Colonna's group at Delft University of Technology.
+#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
+#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
+#                 Prof. Rafael Palacios' group at Imperial College London.
+#                 Prof. Edwin van der Weide's group at the University of Twente.
+#                 Prof. Vincent Terrapon's group at the University of Liege.
+#
+# Copyright (C) 2012-2017 SU2, the open-source CFD code.
+#
+# SU2 is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# SU2 is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with SU2. If not, see <http://www.gnu.org/licenses/>.
+
+
+
+#############################    run with    mpirun -n 64 python3 pyAugustoFSI_AoA_Sens_FD.py -f config_primal.cfg -p /path/to/testcase
+
+#############################    in the structural config file, the SMDAO type must be RESPONSE
+
+#############################    Perturbs AoA (centered FD, additive in degrees, about the nominal
+#############################    AOA already in the CFD config) at fixed structural design -- used to
+#############################    validate Sens_AoA from the coupled discrete adjoint. Requires
+#############################    FIXED_CL_MODE= NO in the CFD config (checked upfront and before every
+#############################    perturbed run): with FIXED_CL_MODE= YES, SU2's own trim driver would
+#############################    move AoA away from the value perturbed here during the run.
+
+#############################    -p points at the folder with all the files needed for the analysis
+#############################    (config_primal.cfg, AUGUSTO/MLS configs, mesh, interface file, etc.),
+#############################    same convention as FSIshape_optimization.py. Its contents are copied
+#############################    flat into this script's own folder (SU2_PY) and the analysis runs
+#############################    there, generating whatever clutter (vtk, solid_load, restart, etc.)
+#############################    the solver produces. At the end, a fresh FD_FSI_analysis folder is
+#############################    created containing a clean 'testcase' copy of the -p inputs plus the
+#############################    history and summary output files.
+
+
+
+
+
+# ----------------------------------------------------------------------
+#  Imports
+# ----------------------------------------------------------------------
+
+import os, sys, shutil, copy
+import time as timer
+
+from optparse import OptionParser  # use a parser for configuration
+
+from SU2_FSI.FSI_config import FSIConfig as io       # imports FSI config tools
+from SU2_FSI import PrimalInterface as FSI # imports FSI python tools
+from SU2_FSI.FSI_tools import run_command, readConfig
+import pyAugustoInterface as pyAugustoInterface
+import pyMLSInterface as Spline_Module
+from augusto_functions_toolbox import CheckSMDAOtype
+
+# imports the CFD (SU2) module for FSI computation
+import pysu2
+import pyAugusto
+
+
+def SetAOA(cfd_config_file, new_aoa):
+    """
+    Rewrites the AOA= line of an SU2 CFD config file in place with new_aoa (deg).
+    """
+    with open(cfd_config_file, 'r') as f:
+        lines = f.readlines()
+
+    found = False
+    for i, line in enumerate(lines):
+        if (not "=" in line) or (line.strip()[0:1] == '%'):
+            continue
+        param = line.split("=", 1)[0].strip()
+        if param == 'AOA':
+            lines[i] = 'AOA= {:.12f}\n'.format(new_aoa)
+            found = True
+            break
+
+    if not found:
+        sys.exit('ERROR: could not find an AOA= line in ' + cfd_config_file)
+
+    with open(cfd_config_file, 'w') as f:
+        f.writelines(lines)
+
+
+# -------------------------------------------------------------------
+#  Main
+# -------------------------------------------------------------------
+
+def Sens(options, perturbed_AoA):
+
+    if options.serial:
+        comm = 0
+        myid = 0
+        numberPart = 1
+        have_MPI = False
+    else:
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        myid = comm.Get_rank()
+        numberPart = comm.Get_size()
+        have_MPI = True
+
+    rootProcess = 0
+
+    # --- Set the working directory --- #
+    if myid == rootProcess:
+        if os.getcwd() not in sys.path:
+            sys.path.append(os.getcwd())
+            print("Setting working directory : {}".format(os.getcwd()))
+        else:
+            print("Working directory is set to {}".format(os.getcwd()))
+
+    # starts timer
+    start = timer.time()
+
+    confFile = str(options.filename)
+
+    FSI_config = io(confFile)  # FSI configuration file
+    CFD_ConFile = FSI_config['SU2_CONFIG']  # CFD configuration file
+    AUG_ConFile = FSI_config['AUGUSTO_CONFIG_FSI']  # AUGUSTO  configuration file
+    MLS_confFile = FSI_config['MLS_CONFIG_FILE_NAME']  # MLS configuration file
+    INTERF_file = FSI_config['INTERFACE_NODES_FILE'] 
+
+
+    # check whether the structural analysis has been set to RESPONSE SMDAO type
+    CheckSMDAOtype(AUG_ConFile, "RESPONSE")
+
+    # FIXED_CL_MODE must be NO: with FIXED_CL_MODE=YES SU2's internal trim driver
+    # moves AoA during the run (CEulerSolver::SetCoefficient_Gradients), which would
+    # override the perturbed AoA we are about to write and corrupt the FD
+    fixed_cl_mode = readConfig(CFD_ConFile, 'FIXED_CL_MODE', False)
+    if fixed_cl_mode == 'YES':
+        sys.exit('ERROR: FIXED_CL_MODE must be NO in ' + CFD_ConFile +
+                  ' to perturb AoA directly (found FIXED_CL_MODE= ' + fixed_cl_mode + ').')
+
+    # write the perturbed AoA into the CFD config before the fluid solver reads it
+    if myid == rootProcess:
+        SetAOA(CFD_ConFile, perturbed_AoA)
+
+    if have_MPI:
+        comm.barrier()
+
+
+    # --- Initialize the fluid solver: SU2 --- #
+    if myid == rootProcess:
+        print('\n***************************** Initializing SU2 **************************************')
+    try:
+        FluidSolver = pysu2.CSinglezoneDriver(CFD_ConFile, 1, comm)
+    except TypeError as exception:
+        print('A TypeError occured in pysu2.CSingleZoneDriver : ', exception)
+        if options.serial:
+            print('ERROR : You are trying to launch a computation without initializing MPI but the wrapper has been built in parallel. Please remove the --serial option that is incompatible with a parallel build.')
+        else:
+            print('ERROR : You are trying to initialize MPI with a serial build of the wrapper. Please, add --serial to launch your simulation.')
+        return
+
+    if have_MPI:
+        comm.barrier()
+
+    # --- Initialize the solid solver: pyBeam --- #
+    if myid == rootProcess:
+        print('\n***************************** Initializing pyBeam ************************************')
+    try:
+
+        SolidSolver = pyAugustoInterface.pyAugustoSolver(AUG_ConFile, INTERF_file, comm)
+
+        print("---> P"+ str(myid) +": | SolidSolver.nPoint:" + str(SolidSolver.nPoint) + ": | SolidSolver.nPointLocal:" + str(SolidSolver.nPointLocal))
+    except TypeError as exception:
+            print('ERROR building the Solid Solver: ', exception)
+    #else:
+    #    SolidSolver = None
+
+    if have_MPI:
+        comm.barrier()
+
+    # --- Initialize and set the coupling environment --- #
+    if myid == rootProcess:
+        print('\n***************************** Initializing FSI interface *****************************')
+    try:
+        FSIInterface = FSI.Interface(FSI_config, FluidSolver, SolidSolver, None, have_MPI)
+    except TypeError as exception:
+        print('ERROR building the FSI Interface: ', exception)
+
+    if have_MPI:
+        comm.barrier()
+
+
+    if myid == rootProcess:
+        print('\n***************************** Connect fluid and solid solvers *****************************')
+    try:
+        FSIInterface.connect(FSI_config, FluidSolver, SolidSolver)
+    except TypeError as exception:
+        print('ERROR building the Interpolation Interface: ', exception)
+
+    if have_MPI:
+        comm.barrier()
+
+    if myid == rootProcess:  # we perform this calculation on the root core
+        print('\n***************************** Initializing MLS Interpolation *************************')
+    try:
+            MLS = Spline_Module.pyMLSInterface(MLS_confFile, FSIInterface.globalFluidCoordinates, 
+                                               FSIInterface.globalSolidCoordinates)
+    except TypeError as exception:
+            print('ERROR building the MLS Interpolation: ', exception)
+
+    #else:
+    #    MLS = None
+
+    if have_MPI:
+        comm.barrier()
+
+    # Run the solver
+    if myid == 0:
+        print("\n------------------------------ Begin Solver -----------------------------\n")
+    sys.stdout.flush()
+    if have_MPI:
+        comm.Barrier()
+
+    cl, cd = FSIInterface.SteadyFSI(FSI_config, FluidSolver, SolidSolver, MLS, None)
+    
+    Js = SolidSolver.GetObjFunction() 
+
+    # Postprocess the solver and exit cleanly
+    FluidSolver.Postprocessing()
+
+    if FluidSolver is not None:
+        del FluidSolver
+
+    if SolidSolver is not None:
+        del SolidSolver
+
+    if FSIInterface is not None:
+        del FSIInterface
+
+    if MLS is not None:
+       del MLS
+
+    if have_MPI:
+       comm.barrier()
+
+    return cl, cd, Js
+
+
+# -------------------------------------------------------------------
+#  Run Main Program
+# -------------------------------------------------------------------
+def main():
+   # --- Get the FSI config file name form the command line options --- #
+   parser = OptionParser()
+   parser.add_option("-f", "--file", dest="filename",
+                      help="read config from FILE", metavar="FILE")
+   parser.add_option("-p", "--path", dest="path",
+                      help="path to the folder containing all the files needed for the analysis "
+                           "(config_primal.cfg, AUGUSTO/MLS configs, mesh, interface file, etc.). "
+                           "Its contents are copied into this script's folder to run, and a clean "
+                           "copy plus the results is collected into FD_FSI_analysis at the end.",
+                      metavar="PATH")
+   parser.add_option("--serial", action="store_true",
+                      help="Specify if we need to initialize MPI", dest="serial", default=False)
+
+   (options, args) = parser.parse_args()
+
+   if not options.path:
+      parser.error("-p/--path is required: point it at the folder with all the files needed for the analysis")
+
+   from mpi4py import MPI
+   comm = MPI.COMM_WORLD
+   myid = comm.Get_rank()
+
+   # Stage every analysis input file from -p directly into the current
+   # working directory (SU2_PY), so the analysis runs here exactly as it did
+   # before -p existed. Everything the solver generates along the way (vtk,
+   # solid_load, restart files, etc.) is left here too. Only at the end are
+   # the history/summary outputs collected into FD_FSI_analysis, alongside a
+   # clean copy of the testcase inputs.
+   root_folder = os.getcwd()
+   source_folder = os.path.abspath(options.path)
+
+   if myid == 0:
+      run_command('cp -r ' + source_folder + '/. ' + root_folder + '/',
+                  'Pulling testcase files from ' + source_folder, False)
+
+   comm.barrier()
+
+   # --- Determine the nominal AoA from the staged config (FIXED_CL_MODE is
+   # checked once, inside Sens()) ---
+   FSI_config = io(str(options.filename))
+   CFD_ConFile = FSI_config['SU2_CONFIG']
+
+   AOA_nominal = float(readConfig(CFD_ConFile, 'AOA'))
+
+   # AoA perturbation steps [deg], additive (NOT a fraction of AOA_nominal: a
+   # relative/multiplicative perturbation such as (1+delta)*AOA_nominal would
+   # vanish whenever AOA_nominal == 0.0)
+   delta = [ 0.02, 0.01, 0.001]
+
+   results = []
+   summary_filename = "Sensitivity_FD_AoA_centered.txt"
+   history_filenames = []
+
+   if myid == 0:
+      outfile = open(summary_filename, "w")
+      outfile.write("=" * 80 + "\n")
+      outfile.write("  CENTERED FINITE DIFFERENCE SENSITIVITY ANALYSIS\n")
+      outfile.write("=" * 80 + "\n")
+      outfile.write("  Nominal AoA [deg] = {:16.12f}\n".format(AOA_nominal))
+      outfile.write("=" * 80 + "\n\n")
+      outfile.flush()
+
+   for i in range(len(delta)):
+
+      delta_used = delta[i]
+
+      if myid == 0:
+         outfile.write("-" * 80 + "\n")
+         outfile.write("  Step {:d}/{:d} | delta (AoA) [deg] = {:12.8e}\n".format(
+                        i + 1, len(delta), delta_used))
+         outfile.write("-" * 80 + "\n")
+         outfile.flush()
+
+      # --- Plus perturbation ---
+      perturbed_AoA_plus = AOA_nominal + delta_used
+      if myid == 0:
+         outfile.write("  AoA+  = {:16.12f}\n".format(perturbed_AoA_plus))
+         outfile.flush()
+
+      cl_plus, drag_plus, Js_plus = Sens(options, perturbed_AoA_plus)
+
+      if myid == 0:
+         outfile.write("  Cl+  = {:16.12f}\n".format(cl_plus))
+         outfile.write("  Cd+  = {:16.12f}\n".format(drag_plus))
+         outfile.write("  Js+  = {:16.12f}\n".format(Js_plus))
+         outfile.flush()
+         plus_filename = "historyFSI_AoA_DH_" + str(delta_used) + "_plus.dat"
+         os.rename("historyFSI.dat", plus_filename)
+         history_filenames.append(plus_filename)
+
+      # --- Minus perturbation ---
+      perturbed_AoA_minus = AOA_nominal - delta_used
+      if myid == 0:
+         outfile.write("  AoA-  = {:16.12f}\n".format(perturbed_AoA_minus))
+         outfile.flush()
+
+      cl_minus, drag_minus, Js_minus = Sens(options, perturbed_AoA_minus)
+
+      if myid == 0:
+         outfile.write("  Cl-  = {:16.12f}\n".format(cl_minus))
+         outfile.write("  Cd-  = {:16.12f}\n".format(drag_minus))
+         outfile.write("  Js-  = {:16.12f}\n".format(Js_minus))
+         outfile.flush()
+         minus_filename = "historyFSI_AoA_DH_" + str(delta_used) + "_minus.dat"
+         os.rename("historyFSI.dat", minus_filename)
+         history_filenames.append(minus_filename)
+
+      # --- Sensitivities --- (delta_used is the absolute AoA step [deg], so the
+      # centered-difference denominator is simply 2*delta_used, not 2*delta_used*AOA_nominal)
+      Cl_sens = (cl_plus - cl_minus) / (2 * delta_used)
+      Cd_sens = (drag_plus - drag_minus) / (2 * delta_used)
+      Js_sens = (Js_plus - Js_minus) / (2 * delta_used)
+
+      if myid == 0:
+         outfile.write("  dCl/dAoA = {:25.22f}\n".format(Cl_sens))
+         outfile.write("  dCd/dAoA = {:25.22f}\n".format(Cd_sens))
+         outfile.write("  dJs/dAoA = {:25.22f}\n".format(Js_sens))
+         outfile.write("\n")
+         outfile.flush()
+
+      results.append((delta_used, cl_plus, cl_minus, drag_plus, drag_minus, Js_plus, Js_minus,
+                       Cl_sens, Cd_sens, Js_sens))
+
+   if myid == 0:
+      # --- Summary table ---
+      outfile.write("\n")
+      outfile.write("=" * 80 + "\n")
+      outfile.write("  SUMMARY\n")
+      outfile.write("=" * 80 + "\n")
+      outfile.write("  {:>12s}  {:>25s}  {:>25s}  {:>25s}\n".format(
+                    "delta", "dCl/dAoA", "dCd/dAoA", "dJs/dAoA"))
+      outfile.write("  " + "-" * 100 + "\n")
+
+      for (delta_used, cl_p, cl_m, cd_p, cd_m, js_p, js_m, cl_s, cd_s, js_s) in results:
+         outfile.write("  {:12.8e}  {:25.22f}  {:25.22f}  {:25.22f}\n".format(
+                       delta_used, cl_s, cd_s, js_s))
+
+      outfile.write("=" * 80 + "\n")
+      outfile.close()
+
+      # --- Collect final results into FD_FSI_analysis --- #
+      fd_folder = os.path.join(root_folder, 'FD_FSI_analysis')
+      testcase_folder = os.path.join(fd_folder, 'testcase')
+
+      if os.path.isdir(fd_folder):
+         run_command('rm -r ' + fd_folder, 'Remove old FD_FSI_analysis folder', False)
+      run_command('mkdir ' + fd_folder, 'Create FD_FSI_analysis folder', False)
+      run_command('mkdir ' + testcase_folder, 'Create testcase folder', False)
+      run_command('cp -r ' + source_folder + '/. ' + testcase_folder + '/',
+                  'Copying clean testcase files into FD_FSI_analysis', False)
+
+      for fname in [summary_filename] + history_filenames:
+         run_command('mv ' + os.path.join(root_folder, fname) + ' ' + os.path.join(fd_folder, fname),
+                     'Moving ' + fname + ' into FD_FSI_analysis', False)
+
+   return
+# -------------------------------------------------------------------
+#  Run Main Program
+# -------------------------------------------------------------------
+
+# --- This is only accessed if running from command prompt --- #
+if __name__ == '__main__':
+    main()
