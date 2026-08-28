@@ -122,7 +122,15 @@ def run_command(Command, Tool, Output, Output_file = '' ):
     return return_code
 
 
-def UpdateConfig(ConfigFileName, param, value):   
+def MakeDir(folder, Tool):
+    """
+    Creates the given folder (absolute path) via mkdir.
+    """
+    command = 'mkdir ' + folder
+    run_command(command, Tool, False)
+
+
+def UpdateConfig(ConfigFileName, param, value):
     """
     This function updates the input param of the given ConfigFileName with the new value
     """ 

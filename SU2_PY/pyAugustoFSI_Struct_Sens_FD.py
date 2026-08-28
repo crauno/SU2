@@ -70,7 +70,7 @@ import argparse
 
 from SU2_FSI.FSI_config import FSIConfig as io       # imports FSI config tools
 from SU2_FSI import PrimalInterface as FSI # imports FSI python tools
-from SU2_FSI.FSI_tools import run_command, readConfig
+from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir
 import pyAugustoInterface as pyAugustoInterface
 import pyMLSInterface as Spline_Module
 from augusto_functions_toolbox import CheckSMDAOtype
@@ -450,8 +450,8 @@ def main():
 
       if os.path.isdir(fd_folder):
          run_command('rm -r ' + fd_folder, 'Remove old FD_FSI_analysis folder', False)
-      run_command('mkdir ' + fd_folder, 'Create FD_FSI_analysis folder', False)
-      run_command('mkdir ' + testcase_folder, 'Create testcase folder', False)
+      MakeDir(fd_folder, 'Create FD_FSI_analysis folder')
+      MakeDir(testcase_folder, 'Create testcase folder')
       run_command('cp -r ' + source_folder + '/. ' + testcase_folder + '/',
                   'Copying clean testcase files into FD_FSI_analysis', False)
 

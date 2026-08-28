@@ -35,7 +35,7 @@ from math import pow, factorial
 import time, os, sys
 from SU2_FSI.FSI_config import FSIConfig as FSIConfig
 from SU2_FSI import FSI_design
-from SU2_FSI.FSI_tools import run_command, readConfig, PullingPrimalAdjointFiles, PullRestartFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP
+from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, PullingPrimalAdjointFiles, PullRestartFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP
 from SU2_FSI.FSI_design import Design
 from SU2_FSI.FSI_tools import  readConfig
 from structopt.pystructopt.pyoptlib.struct_config import OptConfig as StructOptConfig
@@ -345,18 +345,14 @@ class Project:
     
     def create_design_folder(self):
 
-        command = 'mkdir ' + self.folder + '/DESIGNS'
-
-        # Executes shell command
-        run_command(command, 'Create design folder', False)
+        MakeDir(self.folder + '/DESIGNS', 'Create design folder')
 
 
     def create_testcase_folder(self):
 
         self.testcase_folder = self.folder + '/DESIGNS/testcase'
 
-        command = 'mkdir ' + self.testcase_folder
-        run_command(command, 'Create testcase folder', False)
+        MakeDir(self.testcase_folder, 'Create testcase folder')
 
         # Stage all the analysis input files (config, mesh, AUGUSTO configs, etc.)
         command = 'cp -r ' + self.source_folder + '/. ' + self.testcase_folder + '/'
@@ -404,10 +400,7 @@ class Project:
         
         # create design folder
         self.design_folder = self.folder + '/DESIGNS/' + 'DSN_'+ str(int(self.design_iter)).zfill(self.magnord_design)
-        command = 'mkdir ' + self.design_folder
-
-        # Executes shell command
-        run_command(command, 'Creating design ' + str(int(self.design_iter)).zfill(self.magnord_design) + ' directory', False)  
+        MakeDir(self.design_folder, 'Creating design ' + str(int(self.design_iter)).zfill(self.magnord_design) + ' directory')
             
         print('InitializeNew Design x_in = {}'.format(x_in))    
         # initialize and append new design object    
@@ -427,9 +420,7 @@ class Project:
             
         # create folder for analysis
         self.deform_folder = self.design_folder + '/DEFORM'
-        command = 'mkdir ' + self.deform_folder        
-        # Executes shell command
-        run_command(command, 'Creating deform directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)   
+        MakeDir(self.deform_folder, 'Creating deform directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design))
            
         # pull config deformation file
         config_deform = self.testcase_folder + '/' + self.config['CONFIG_DEF']
@@ -454,9 +445,7 @@ class Project:
             
            # creating folder for analysis
            self.geo_folder = self.design_folder + '/GEO'
-           command = 'mkdir ' + self.geo_folder        
-           # Executing shell command
-           run_command(command, 'Creating GEO directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)      
+           MakeDir(self.geo_folder, 'Creating GEO directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design))
            
            # pulling geo deformation file
            config_geo = self.testcase_folder + '/' + self.config['CONFIG_GEO']
@@ -477,8 +466,7 @@ class Project:
 
            # creating folder for analysis
            self.primal_folder = self.design_folder + '/Primal'
-           command = 'mkdir ' + self.primal_folder   
-           run_command(command, 'Creating Primal directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)           
+           MakeDir(self.primal_folder, 'Creating Primal directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design))
             
            PullingPrimalAdjointFiles(self.testcase_folder, self.primal_folder, self.configFSIPrimal, self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
            # pulling mesh file 
@@ -497,8 +485,7 @@ class Project:
        
        # creating folder for analysis
        self.adjoint_folder = self.design_folder + '/Adjoint'
-       command = 'mkdir ' + self.adjoint_folder   
-       run_command(command, 'Creating Adjoint directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)   
+       MakeDir(self.adjoint_folder, 'Creating Adjoint directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design))
        
        PullingPrimalAdjointFiles(self.testcase_folder, self.adjoint_folder, self.configFSIAdjoint, self.configFSIAdjoint['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
 
@@ -631,8 +618,7 @@ class Project:
             current_adj_folder = self.structProject.design_folder_adjoint + '/' + self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i].split('.')[0]
             self.structProject.constr_subfolders_adjoint.append(current_adj_folder)
 
-            command = 'mkdir ' + current_adj_folder    
-            run_command(command, 'Creating subdirectory for constraint ' + self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], False)
+            MakeDir(current_adj_folder, 'Creating subdirectory for constraint ' + self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i])
  
             # pull files for analysis (includes the adjoint config itself)
             PullingPrimalAdjointFiles(self.testcase_folder, current_adj_folder, self.configFSIAdjoint, self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], self.pyInterfaceFile)
