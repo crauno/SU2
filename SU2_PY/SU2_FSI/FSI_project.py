@@ -35,7 +35,7 @@ from math import pow, factorial
 import time, os, sys
 from SU2_FSI.FSI_config import FSIConfig as FSIConfig
 from SU2_FSI import FSI_design
-from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, PullingPrimalAdjointFiles, PullRestartFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP
+from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, CopyFile, PullingPrimalAdjointFiles, PullRestartFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP
 from SU2_FSI.FSI_design import Design
 from SU2_FSI.FSI_tools import  readConfig
 from structopt.pystructopt.pyoptlib.struct_config import OptConfig as StructOptConfig
@@ -424,8 +424,7 @@ class Project:
            
         # pull config deformation file
         config_deform = self.testcase_folder + '/' + self.config['CONFIG_DEF']
-        command = 'cp ' + config_deform + ' ' + self.deform_folder + '/'
-        run_command(command, 'Pulling deformation config', False)
+        CopyFile(config_deform, self.deform_folder + '/', 'Pulling deformation config')
 
         # creating a symbolic link to original meshfile
         mesh_filename = readConfig(config_deform, 'MESH_FILENAME')
@@ -449,8 +448,7 @@ class Project:
            
            # pulling geo deformation file
            config_geo = self.testcase_folder + '/' + self.config['CONFIG_GEO']
-           command = 'cp ' + config_geo + ' ' + self.geo_folder + '/'
-           run_command(command, 'Pulling geo config', False)     
+           CopyFile(config_geo, self.geo_folder + '/', 'Pulling geo config')
            # pulling mesh file 
            self.SetMesh(self.geo_folder)
            

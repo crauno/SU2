@@ -130,6 +130,17 @@ def MakeDir(folder, Tool):
     run_command(command, Tool, False)
 
 
+def CopyFile(source, destination, Tool):
+    """
+    Copies source (absolute path to a file) to destination, via cp. destination
+    can be a folder (keeping the source filename) or a full file path (to also
+    rename it), matching plain cp's own behaviour. Not for recursive/directory
+    copies (no -r) -- use run_command directly for those.
+    """
+    command = 'cp ' + source + ' ' + destination
+    run_command(command, Tool, False)
+
+
 def UpdateConfig(ConfigFileName, param, value):
     """
     This function updates the input param of the given ConfigFileName with the new value
@@ -387,25 +398,16 @@ def ReadGeoConstraintGradients( geo_folder,ConsList,n_dv, sign ):
 def PullingPrimalAdjointFiles(source_folder, dest_folder, configFSI, configAUGUSTO, pyInterfaceFile):
 
        # pulling primal files
-       command = []
-       # 0: the FSI-level config itself (CONFIG_PRIMAL/CONFIG_ADJOINT), whichever
+       # the FSI-level config itself (CONFIG_PRIMAL/CONFIG_ADJOINT), whichever
        # file configFSI was parsed from
-       command.append('cp ' + configFSI.ConfigFileName + ' ' + dest_folder + '/')
-       # 1
-       config = source_folder + '/' + configFSI['SU2_CONFIG']
-       command.append('cp ' + config + ' ' + dest_folder + '/')
-       # 2
-       config = source_folder + '/' + configFSI['MLS_CONFIG_FILE_NAME']
-       command.append('cp ' + config + ' ' + dest_folder + '/')
-       # 3
-       config = source_folder + '/' + pyInterfaceFile
-       command.append('cp ' + config + ' ' + dest_folder + '/')  
+       CopyFile(configFSI.ConfigFileName, dest_folder + '/', 'Pulling FSI config')
+       CopyFile(source_folder + '/' + configFSI['SU2_CONFIG'], dest_folder + '/', 'Pulling CFD config')
+       CopyFile(source_folder + '/' + configFSI['MLS_CONFIG_FILE_NAME'], dest_folder + '/', 'Pulling MLS config')
+       CopyFile(source_folder + '/' + pyInterfaceFile, dest_folder + '/', 'Pulling interface nodes file')
        # creating a symbolic link to numpy spline matric which doesn't change
        spline = source_folder + '/' + 'Spline.npy'
-       command.append('ln -s ' + spline + ' ' + dest_folder + '/' + 'Spline.npy')      
-       for i in range(len(command)):
-          run_command(command[i], 'Pulling primal config file ' + str(i) , False) 
-          
+       run_command('ln -s ' + spline + ' ' + dest_folder + '/' + 'Spline.npy', 'Linking spline matrix', False)
+
        # pulling files for Augusto
        pyAugustoMesh = readConfig(source_folder + '/' + configAUGUSTO, 'INPUT_FILENAME')
        pyAugustoSmdao = readConfig(source_folder + '/' + configAUGUSTO, 'SMDAO_FILENAME')
@@ -415,24 +417,17 @@ def PullingPrimalAdjointFiles(source_folder, dest_folder, configFSI, configAUGUS
 def PullRestartFiles(primal_folder, dest_folder):
 
        # pulling restart files from the primal run as the Adjoint's solution files
-       command = []
 
-       # pyBeam
-       orig_file = primal_folder + '/' + 'restart.pyAugusto'
-       dest_file = dest_folder + '/' + 'solution.pyAugusto'
-       command.append('cp ' + orig_file + ' ' + dest_file)
+       # pyAugusto
+       CopyFile(primal_folder + '/' + 'restart.pyAugusto', dest_folder + '/' + 'solution.pyAugusto',
+                'Pulling pyAugusto solution file')
 
        # SU2
-       orig_file = primal_folder + '/' + 'restart_flow.dat'
-       dest_file = dest_folder + '/' + 'solution_flow.dat'
-       command.append('cp ' + orig_file + ' ' + dest_file)
+       CopyFile(primal_folder + '/' + 'restart_flow.dat', dest_folder + '/' + 'solution_flow.dat',
+                'Pulling flow solution file')
 
        # flow.meta
-       orig_file = primal_folder + '/' + 'flow.meta'
-       command.append('cp ' + orig_file + ' ' + dest_folder + '/')
-
-       for i in range(len(command)):
-          run_command(command[i], 'Pulling solution file ' + str(i) , False)
+       CopyFile(primal_folder + '/' + 'flow.meta', dest_folder + '/', 'Pulling flow.meta')
 
 
 def ReadPointInversion(configDef,MeshFile):

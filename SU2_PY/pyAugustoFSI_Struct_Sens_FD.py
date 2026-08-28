@@ -70,7 +70,7 @@ import argparse
 
 from SU2_FSI.FSI_config import FSIConfig as io       # imports FSI config tools
 from SU2_FSI import PrimalInterface as FSI # imports FSI python tools
-from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir
+from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, CopyFile
 import pyAugustoInterface as pyAugustoInterface
 import pyMLSInterface as Spline_Module
 from augusto_functions_toolbox import CheckSMDAOtype
@@ -225,8 +225,7 @@ def Sens(options, dvID, perturbed_DV):
         for resp_cfg in options.responses:
 
             if myid == rootProcess:
-                run_command('cp restart.pyAugusto solution.pyAugusto',
-                            'Pulling FSI restart for ' + resp_cfg, False)
+                CopyFile('restart.pyAugusto', 'solution.pyAugusto', 'Pulling FSI restart for ' + resp_cfg)
             if have_MPI:
                 comm.barrier()
 
