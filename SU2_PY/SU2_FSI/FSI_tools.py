@@ -380,6 +380,9 @@ def PullingPrimalAdjointFiles(source_folder, dest_folder, configFSI, configAUGUS
 
        # pulling primal files
        command = []
+       # 0: the FSI-level config itself (CONFIG_PRIMAL/CONFIG_ADJOINT), whichever
+       # file configFSI was parsed from
+       command.append('cp ' + configFSI.ConfigFileName + ' ' + dest_folder + '/')
        # 1
        config = source_folder + '/' + configFSI['SU2_CONFIG']
        command.append('cp ' + config + ' ' + dest_folder + '/')

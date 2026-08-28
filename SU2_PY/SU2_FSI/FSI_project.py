@@ -480,11 +480,6 @@ class Project:
            command = 'mkdir ' + self.primal_folder   
            run_command(command, 'Creating Primal directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)           
             
-           # pulling primal config
-           config_input = self.testcase_folder + '/' + self.config['CONFIG_PRIMAL']
-           command = 'cp ' + config_input + ' ' + self.primal_folder + '/'
-           run_command(command, 'Pulling primal config', False)
-
            PullingPrimalAdjointFiles(self.testcase_folder, self.primal_folder, self.configFSIPrimal, self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
            # pulling mesh file 
            self.SetMesh(self.primal_folder)  
@@ -505,12 +500,6 @@ class Project:
        command = 'mkdir ' + self.adjoint_folder   
        run_command(command, 'Creating Adjoint directory for design ' + str(int(self.design_iter)).zfill(self.magnord_design), False)   
        
-       # pulling adjoint config
-       config_input = self.testcase_folder + '/' + self.config['CONFIG_ADJOINT']
-       command = 'cp ' + config_input + ' ' + self.adjoint_folder + '/'
-       run_command(command, 'Pulling Adjoint config', False)
-
-
        PullingPrimalAdjointFiles(self.testcase_folder, self.adjoint_folder, self.configFSIAdjoint, self.configFSIAdjoint['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
 
        # pulling mesh file 
@@ -645,13 +634,7 @@ class Project:
             command = 'mkdir ' + current_adj_folder    
             run_command(command, 'Creating subdirectory for constraint ' + self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], False)
  
-       
-            # pull adjoint config
-            config_input = self.testcase_folder + '/' + self.config['CONFIG_ADJOINT']
-            command = 'cp ' + config_input + ' ' + current_adj_folder + '/'
-            run_command(command, 'Pulling Adjoint config', False)
-
-            # pull files for analysis
+            # pull files for analysis (includes the adjoint config itself)
             PullingPrimalAdjointFiles(self.testcase_folder, current_adj_folder, self.configFSIAdjoint, self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], self.pyInterfaceFile)
 
             # pulling mesh file 
