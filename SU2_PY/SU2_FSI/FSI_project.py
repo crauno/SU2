@@ -177,7 +177,6 @@ class Project:
         elif self.opt_mode == "STRUCT":
             print('Optimisation case: STRUCT objective / STRUCT design variables')
 
-            primal_flow_config = self.testcase_folder + '/' + self.configFSIPrimal['SU2_CONFIG']
             adjoint_flow_config = self.testcase_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
 
             # FIXED_CL_MODE: only the adjoint config must be NO -- the fixed-CL correction is
@@ -189,14 +188,14 @@ class Project:
                           ' when OPT_MODE = STRUCT (the fixed-CL correction is applied by the'
                           ' python orchestrator, not by SU2 s own trim driver). Found: ' + fixed_cl_mode)
 
-            # OBJECTIVE_FUNCTION must be LIFT in both, so the shared templates are ready for
-            # the python orchestrator to seed OBJECTIVE_WEIGHT per-role at runtime.
-            for flow_config in [primal_flow_config, adjoint_flow_config]:
-
-                objective_function = readConfig(flow_config, 'OBJECTIVE_FUNCTION', False)
-                if objective_function != 'LIFT':
-                    sys.exit('OBJECTIVE_FUNCTION must be LIFT in ' + flow_config +
-                              ' when OPT_MODE = STRUCT. Found: ' + objective_function)
+            # OBJECTIVE_FUNCTION must be LIFT so the shared adjoint template is ready for the
+            # python orchestrator to seed OBJECTIVE_WEIGHT per-role at runtime. Not checked on
+            # the primal config: OBJECTIVE_FUNCTION is never read during MATH_PROBLEM=DIRECT
+            # (Evaluate_ObjFunc is only called from the discrete-adjoint drivers), so it's inert there.
+            objective_function = readConfig(adjoint_flow_config, 'OBJECTIVE_FUNCTION', False)
+            if objective_function != 'LIFT':
+                sys.exit('OBJECTIVE_FUNCTION must be LIFT in ' + adjoint_flow_config +
+                          ' when OPT_MODE = STRUCT. Found: ' + objective_function)
 
 
     def obj_f(self,dvs):
