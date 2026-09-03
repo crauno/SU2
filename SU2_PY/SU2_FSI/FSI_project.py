@@ -35,7 +35,7 @@ from math import pow, factorial
 import time, os, sys
 from SU2_FSI.FSI_config import FSIConfig as FSIConfig
 from SU2_FSI import FSI_design
-from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, CopyFile, PullingPrimalAdjointFiles, PullRestartFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP
+from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, CopyFile, UpdateConfig, PullingPrimalAdjointFiles, PullRestartFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP
 from SU2_FSI.FSI_design import Design
 from SU2_FSI.FSI_tools import  readConfig
 from structopt.pystructopt.pyoptlib.struct_config import OptConfig as StructOptConfig
@@ -153,25 +153,14 @@ class Project:
 
         """
         Identifies which of the optimisation cases is being run (based on
-        OPT_MODE and, for OPT_MODE = STRUCT, the SU2 adjoint OBJECTIVE_WEIGHT)
-        and validates the configuration for that case.
+        OPT_MODE) and validates the configuration for that case.
 
-        The objective scaling is handled entirely on the python side
-        (obj_scale, global_factor), so OBJECTIVE_WEIGHT in the SU2 adjoint
-        config is only ever allowed to be 1.0 (or absent/commented out, which
-        defaults to 1.0) or 0.0:
-
-        AERO   (aero objective, aero design variables): OBJECTIVE_WEIGHT must
-               be 1.0 (or absent).
-
-        STRUCT (structural design variables):
-               - OBJECTIVE_WEIGHT = 1.0 (or absent) -> aero objective
-                 differentiated with respect to structural design variables.
-               - OBJECTIVE_WEIGHT = 0.0 -> structural objective
-                 differentiated with respect to structural design variables.
-
-        Any other OBJECTIVE_WEIGHT value raises an error and stops the
-        optimisation.
+        OBJECTIVE_WEIGHT is not checked here: it is written directly by the
+        Python orchestrator into each per-role copy of the shared adjoint
+        config at runtime (0.0 for the numerator run, 1.0 for the denominator
+        run, W for the fixed-CL-corrected run), so whatever static value sits
+        in the template is unconditionally overwritten before every analysis
+        and carries nothing worth validating upfront.
         """
 
         if self.opt_mode not in ["AERO", "STRUCT"]:
@@ -182,35 +171,32 @@ class Project:
         print('  Optimisation case summary')
         print('==============================================================')
 
-        adjoint_flow_config = self.testcase_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
-        weight_line = readConfig(adjoint_flow_config, 'OBJECTIVE_WEIGHT', False)
-
-        if weight_line == 'NO':
-            weights = [1.0]
-        else:
-            weights = [float(w) for w in weight_line.replace(',', ' ').split()]
-
         if self.opt_mode == "AERO":
-
-            if any(w != 1.0 for w in weights):
-                sys.exit('OBJECTIVE_WEIGHT in ' + adjoint_flow_config +
-                          ' must be 1.0 (or absent/commented out) when OPT_MODE = AERO.'
-                          ' Found: ' + weight_line)
-
             print('Optimisation case: AERO objective / AERO design variables')
 
         elif self.opt_mode == "STRUCT":
+            print('Optimisation case: STRUCT objective / STRUCT design variables')
 
-            if all(w == 1.0 for w in weights):
-                print('Optimisation case: AERO objective / STRUCT design variables')
+            primal_flow_config = self.testcase_folder + '/' + self.configFSIPrimal['SU2_CONFIG']
+            adjoint_flow_config = self.testcase_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
 
-            elif all(w == 0.0 for w in weights):
-                print('Optimisation case: STRUCT objective / STRUCT design variables')
+            # FIXED_CL_MODE: only the adjoint config must be NO -- the fixed-CL correction is
+            # applied by the python orchestrator, not by SU2's own trim driver. The primal is
+            # free to be YES (a real trimmed design point) or NO (a fixed-AoA case).
+            fixed_cl_mode = readConfig(adjoint_flow_config, 'FIXED_CL_MODE', False)
+            if fixed_cl_mode != 'NO':
+                sys.exit('FIXED_CL_MODE must be NO in ' + adjoint_flow_config +
+                          ' when OPT_MODE = STRUCT (the fixed-CL correction is applied by the'
+                          ' python orchestrator, not by SU2 s own trim driver). Found: ' + fixed_cl_mode)
 
-            else:
-                sys.exit('OBJECTIVE_WEIGHT in ' + adjoint_flow_config +
-                          ' must be either 1.0 (or absent/commented out, for an AERO objective) or 0.0'
-                          ' (for a STRUCT objective) when OPT_MODE = STRUCT. Found: ' + weight_line)
+            # OBJECTIVE_FUNCTION must be LIFT in both, so the shared templates are ready for
+            # the python orchestrator to seed OBJECTIVE_WEIGHT per-role at runtime.
+            for flow_config in [primal_flow_config, adjoint_flow_config]:
+
+                objective_function = readConfig(flow_config, 'OBJECTIVE_FUNCTION', False)
+                if objective_function != 'LIFT':
+                    sys.exit('OBJECTIVE_FUNCTION must be LIFT in ' + flow_config +
+                              ' when OPT_MODE = STRUCT. Found: ' + objective_function)
 
 
     def obj_f(self,dvs):
@@ -601,12 +587,52 @@ class Project:
 
 
 
+    def ComputeLiftCoeffSensitivity(self):
+
+       """
+       Solves the shared dC_L/dAoA adjoint (the denominator L_A of
+       W = sigma_A/L_A, used by every constraint's fixed-CL correction).
+       No structural response is seeded here (-c NONE): the flow objective
+       is seeded with OBJECTIVE_FUNCTION=LIFT, OBJECTIVE_WEIGHT=1.0.
+       """
+
+       self.structProject.cl_sensitivity_folder = self.structProject.design_folder_adjoint + '/CL_sensitivity'
+
+       MakeDir(self.structProject.cl_sensitivity_folder, 'Creating subdirectory for CL sensitivity')
+
+       # pull files for analysis (includes the adjoint config itself); using the
+       # base FSI AUGUSTO config since no structural response is seeded here
+       PullingPrimalAdjointFiles(self.testcase_folder, self.structProject.cl_sensitivity_folder, self.configFSIAdjoint, self.configFSIAdjoint['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
+
+       # pulling mesh file
+       self.SetMesh(self.structProject.cl_sensitivity_folder)
+
+       # pulling restart for pyAugusto and SU2 and flow.vtk
+       if self._design[self.design_iter].primal == True:
+
+          PullRestartFiles(self.primal_folder, self.structProject.cl_sensitivity_folder)
+
+       else:
+         print('Primal not yet available, can t pull solutions for Adjoint....')
+         sys.exit()
+
+       # seed OBJECTIVE_WEIGHT = 1.0 (OBJECTIVE_FUNCTION = LIFT already enforced by CheckOptCase)
+       adj_config_file = self.structProject.cl_sensitivity_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
+       UpdateConfig(adj_config_file, 'OBJECTIVE_WEIGHT', '1.0')
+
+       # Running adjoint (-c NONE -> no structural response seeded)
+       self._design[self.design_iter].FSIAdjoint(self.structProject.cl_sensitivity_folder, None)
+
+
     def con_struct_dcieq_normalized(self):
 
        """
        Solve the coupled adjoint problem for strutural optimisation constraint
-       """          
-      
+       """
+
+       # solve the shared CL-sensitivity adjoint needed by every constraint's W
+       self.ComputeLiftCoeffSensitivity()
+
        # create adjoint constraint subfolders and pull the needed files
        self.structProject.constr_subfolders_adjoint = []
 

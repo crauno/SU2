@@ -143,11 +143,14 @@ def CopyFile(source, destination, Tool):
 
 def UpdateConfig(ConfigFileName, param, value):
     """
-    This function updates the input param of the given ConfigFileName with the new value
-    """ 
+    This function updates the input param of the given ConfigFileName with the new value.
+    If param isn't already present in the file, a new line for it is appended
+    (e.g. OBJECTIVE_WEIGHT, which SU2 configs normally omit and leave to its own default).
+    """
+    found = False
     configfile2 = open(ConfigFileName + '_temp',"w")
     with open(ConfigFileName, 'r') as configfile:
-      while 1:          
+      while 1:
         line = configfile.readline()
         string = line
         if not line:
@@ -156,9 +159,9 @@ def UpdateConfig(ConfigFileName, param, value):
         # remove line returns
         line = line.strip('\r\n')
         # make sure it has useful data
-        if (not "=" in line) or (line[0] == '%'):  
+        if (not "=" in line) or (line[0] == '%'):
            configfile2.write(string)
-        else: 
+        else:
            # split across equal sign
            line = line.split("=",1)
            this_param = line[0].strip()
@@ -166,23 +169,28 @@ def UpdateConfig(ConfigFileName, param, value):
 
            #float values
            if this_param == param:
-              if this_param == "DV_VALUE":            
+              found = True
+              if this_param == "DV_VALUE":
                     dv_string = ('%s' % ', '.join(map(str, value)))
                     stringalt = 'DV_VALUE = '+ dv_string + '   \r\n'
-                    configfile2.write(stringalt)    
-                    
+                    configfile2.write(stringalt)
+
               else:
                     stringalt = this_param + ' = ' + value + '   \r\n'
-                    configfile2.write(stringalt) 
+                    configfile2.write(stringalt)
            else:
               configfile2.write(string)
-                
-                    
-    configfile.close()    
+
+
+    configfile.close()
+
+    if not found:
+       configfile2.write(param + ' = ' + str(value) + '   \r\n')
+
     configfile2.close()
     # the file is now replaced
     os.remove(ConfigFileName)
-    os.rename(ConfigFileName + '_temp', ConfigFileName)                    
+    os.rename(ConfigFileName + '_temp', ConfigFileName)
 
 
 def DeformMesh(deform_folder, config):

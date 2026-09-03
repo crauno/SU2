@@ -127,8 +127,11 @@ def main():
             #SolidSolver = pyBeamInterface.pyBeamADSolver(CSD_ConFile)
             SolidSolver = pyAugustoInterface.pyAugustoADSolver(AUG_ConFile, INTERF_file, comm)
 
-            if options.opt_mode == "STRUCT" :
-               
+            # Seed a structural response only when we were actually handed one to seed (-c).
+            # STRUCT-mode optimizations also run response-agnostic adjoints (e.g. the shared
+            # CL-sensitivity analysis, -c NONE) that must NOT seed any response.
+            if options.opt_mode == "STRUCT" and options.filename_constr != "NONE" :
+
                SolidSolver.setIsStructResponseTrue()
                
 
