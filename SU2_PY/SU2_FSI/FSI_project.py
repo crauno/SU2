@@ -623,6 +623,53 @@ class Project:
        self._design[self.design_iter].FSIAdjoint(self.structProject.cl_sensitivity_folder, None)
 
 
+    def ComputeStructRespSensitivity_FixedAoA(self, i):
+
+       """
+       Solves constraint i's numerator adjoint (sigma_A,i = dJs_i/dAoA, and the
+       fixed-AoA structural-DV gradient G_AoA,i), inside a FixedAoA_sensitivity
+       subfolder of that constraint's own adjoint folder. The structural response
+       is registered and seeded (-c AUGUSTO_CONFIG_CONSTR[i]); the flow objective
+       contributes nothing (OBJECTIVE_WEIGHT=0.0), so it doesn't contaminate
+       either quantity read out of this run.
+
+       Assumes the constraint's own adjoint folder already exists (created by
+       the caller).
+       """
+
+       augusto_constr_cfg = self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i]
+
+       # constraint's own adjoint folder (e.g. Adjoint/crm_stress), already created by the caller
+       current_adj_folder = self.structProject.design_folder_adjoint + '/' + augusto_constr_cfg.split('.')[0]
+
+       # nested subfolder for this specific (fixed-AoA) analysis
+       fixed_aoa_folder = current_adj_folder + '/FixedAoA_sensitivity'
+       MakeDir(fixed_aoa_folder, 'Creating subdirectory for fixed-AoA sensitivity of constraint ' + augusto_constr_cfg)
+
+       # pull files for analysis (includes the adjoint config itself)
+       PullingPrimalAdjointFiles(self.testcase_folder, fixed_aoa_folder, self.configFSIAdjoint, augusto_constr_cfg, self.pyInterfaceFile)
+
+       # pulling mesh file
+       self.SetMesh(fixed_aoa_folder)
+
+       # pulling restart for pyAugusto and SU2 and flow.vtk
+       if self._design[self.design_iter].primal == True:
+
+          PullRestartFiles(self.primal_folder, fixed_aoa_folder)
+
+       else:
+         print('Primal not yet available, can t pull solutions for Adjoint....')
+         sys.exit()
+
+       # seed OBJECTIVE_WEIGHT = 0.0 (flow objective contributes nothing; the
+       # structural response, seeded below via -c, is the only thing differentiated)
+       adj_config_file = fixed_aoa_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
+       UpdateConfig(adj_config_file, 'OBJECTIVE_WEIGHT', '0.0')
+
+       # Running adjoint (-c <constraint config> -> structural response seeded)
+       self._design[self.design_iter].FSIAdjoint(fixed_aoa_folder, augusto_constr_cfg)
+
+
     def con_struct_dcieq_normalized(self):
 
        """
@@ -642,7 +689,10 @@ class Project:
             self.structProject.constr_subfolders_adjoint.append(current_adj_folder)
 
             MakeDir(current_adj_folder, 'Creating subdirectory for constraint ' + self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i])
- 
+
+            # solve constraint i's fixed-AoA sensitivity (sigma_A,i, needed for W_i), in its own subfolder
+            self.ComputeStructRespSensitivity_FixedAoA(i)
+
             # pull files for analysis (includes the adjoint config itself)
             PullingPrimalAdjointFiles(self.testcase_folder, current_adj_folder, self.configFSIAdjoint, self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], self.pyInterfaceFile)
 
@@ -660,8 +710,6 @@ class Project:
 
             # Running adjoint
             self._design[self.design_iter].FSIAdjoint(current_adj_folder, self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i])
-
-       
 
        # pull non normalized gradient of constraint inequality
        c_dieq, global_factor = self.structProject._design[self.design_iter].pull_c_dieq(self.structProject.constr_subfolders_adjoint)
