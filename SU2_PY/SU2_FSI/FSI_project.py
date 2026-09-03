@@ -31,11 +31,11 @@
 
 import copy
 import numpy as np
-from math import pow, factorial
+from math import pow, factorial, pi
 import time, os, sys
 from SU2_FSI.FSI_config import FSIConfig as FSIConfig
 from SU2_FSI import FSI_design
-from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, CopyFile, UpdateConfig, PullingPrimalAdjointFiles, PullRestartFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP
+from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, CopyFile, UpdateConfig, PullingPrimalAdjointFiles, PullRestartFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP, ReadSensAoA, ReadPrimalCD
 from SU2_FSI.FSI_design import Design
 from SU2_FSI.FSI_tools import  readConfig
 from structopt.pystructopt.pyoptlib.struct_config import OptConfig as StructOptConfig
@@ -593,34 +593,50 @@ class Project:
        W = sigma_A/L_A, used by every constraint's fixed-CL correction).
        No structural response is seeded here (-c NONE): the flow objective
        is seeded with OBJECTIVE_FUNCTION=LIFT, OBJECTIVE_WEIGHT=1.0.
+
+       Returns L_A = dC_L/dAoA, corrected for the missing explicit rotation
+       term in SU2's raw Sens_AoA (dCD/dAoA and dCL/dAoA are each missing the
+       explicit d(rotation)/dAoA piece, worth +CL*(pi/180) for CD and
+       -CD*(pi/180) for CL -- see su2_sens_aoa_rotation_bug memory).
        """
 
-       self.structProject.cl_sensitivity_folder = self.structProject.design_folder_adjoint + '/CL_sensitivity'
+       cl_sensitivity_folder = self.structProject.design_folder_adjoint + '/CL_sensitivity'
 
-       MakeDir(self.structProject.cl_sensitivity_folder, 'Creating subdirectory for CL sensitivity')
+       MakeDir(cl_sensitivity_folder, 'Creating subdirectory for CL sensitivity')
 
        # pull files for analysis (includes the adjoint config itself); using the
        # base FSI AUGUSTO config since no structural response is seeded here
-       PullingPrimalAdjointFiles(self.testcase_folder, self.structProject.cl_sensitivity_folder, self.configFSIAdjoint, self.configFSIAdjoint['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
+       PullingPrimalAdjointFiles(self.testcase_folder, cl_sensitivity_folder, self.configFSIAdjoint, self.configFSIAdjoint['AUGUSTO_CONFIG_FSI'], self.pyInterfaceFile)
 
        # pulling mesh file
-       self.SetMesh(self.structProject.cl_sensitivity_folder)
+       self.SetMesh(cl_sensitivity_folder)
 
        # pulling restart for pyAugusto and SU2 and flow.vtk
        if self._design[self.design_iter].primal == True:
 
-          PullRestartFiles(self.primal_folder, self.structProject.cl_sensitivity_folder)
+          PullRestartFiles(self.primal_folder, cl_sensitivity_folder)
 
        else:
          print('Primal not yet available, can t pull solutions for Adjoint....')
          sys.exit()
 
        # seed OBJECTIVE_WEIGHT = 1.0 (OBJECTIVE_FUNCTION = LIFT already enforced by CheckOptCase)
-       adj_config_file = self.structProject.cl_sensitivity_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
+       adj_config_file = cl_sensitivity_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
        UpdateConfig(adj_config_file, 'OBJECTIVE_WEIGHT', '1.0')
 
        # Running adjoint (-c NONE -> no structural response seeded)
-       self._design[self.design_iter].FSIAdjoint(self.structProject.cl_sensitivity_folder, None)
+       self._design[self.design_iter].FSIAdjoint(cl_sensitivity_folder, None)
+
+       # raw dC_L/dAoA, missing the explicit rotation term
+       dCl_dAoA_raw = ReadSensAoA(cl_sensitivity_folder + '/history.csv')
+
+       # primal's converged CD, needed for the rotation-term correction
+       CD_primal = ReadPrimalCD(self.primal_folder + '/historyFSI.dat')
+
+       # corrected L_A = dC_L/dAoA
+       dCl_dAoA = dCl_dAoA_raw - CD_primal * (pi / 180.0)
+
+       return dCl_dAoA
 
 
     def ComputeStructRespSensitivity_FixedAoA(self, i):
@@ -634,7 +650,7 @@ class Project:
        either quantity read out of this run.
 
        Assumes the constraint's own adjoint folder already exists (created by
-       the caller).
+       the caller). Returns sigma_A,i = dJs_i/dAoA (the numerator of W_i).
        """
 
        augusto_constr_cfg = self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i]
@@ -669,6 +685,11 @@ class Project:
        # Running adjoint (-c <constraint config> -> structural response seeded)
        self._design[self.design_iter].FSIAdjoint(fixed_aoa_folder, augusto_constr_cfg)
 
+       # return dJs/dAoA
+       dJs_dAoA = ReadSensAoA(fixed_aoa_folder + '/history.csv')
+
+       return dJs_dAoA
+
 
     def con_struct_dcieq_normalized(self):
 
@@ -677,7 +698,7 @@ class Project:
        """
 
        # solve the shared CL-sensitivity adjoint needed by every constraint's W
-       self.ComputeLiftCoeffSensitivity()
+       dCl_dAoA = self.ComputeLiftCoeffSensitivity()
 
        # create adjoint constraint subfolders and pull the needed files
        self.structProject.constr_subfolders_adjoint = []
@@ -690,8 +711,8 @@ class Project:
 
             MakeDir(current_adj_folder, 'Creating subdirectory for constraint ' + self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i])
 
-            # solve constraint i's fixed-AoA sensitivity (sigma_A,i, needed for W_i), in its own subfolder
-            self.ComputeStructRespSensitivity_FixedAoA(i)
+            # solve constraint i's fixed-AoA sensitivity (dJsi_dAoA, needed for W_i), in its own subfolder
+            dJsi_dAoA = self.ComputeStructRespSensitivity_FixedAoA(i)
 
             # pull files for analysis (includes the adjoint config itself)
             PullingPrimalAdjointFiles(self.testcase_folder, current_adj_folder, self.configFSIAdjoint, self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], self.pyInterfaceFile)

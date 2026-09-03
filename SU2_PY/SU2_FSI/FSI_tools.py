@@ -32,7 +32,7 @@
 import os, sys, shutil
 import subprocess
 import numpy as np
-from math import pow, factorial
+from math import pow, factorial, pi
 import scipy.io
 import csv
 from structopt.pystructopt.pyoptlib.struct_tools import PullAugustoFiles
@@ -513,10 +513,62 @@ def readBoundarySensitivities(SensFile):
         a =   [float(line[4]), float(line[5]), float(line[6]) ]
         GridSensitivities_arr.append(a)
         
-    GridSensitivities = np.array(GridSensitivities_arr)  
-    
+    GridSensitivities = np.array(GridSensitivities_arr)
+
     return GridSensitivities
-          
+
+
+def ReadSensAoA(history_file):
+    """
+    Reads Sens_AoA from an SU2 coupled adjoint history.csv file: finds the
+    Sens_AoA column by name in the header row, and returns its value from the
+    last data row. history.csv accumulates every inner iteration of every
+    outer "Adjoint FSI iteration" as one flat, append-only file, so the last
+    row is the most converged value logged over the whole coupled run.
+    """
+    with open(history_file, 'r') as f:
+        header = [c.strip().strip('"') for c in f.readline().split(',')]
+
+        if 'Sens_AoA' not in header:
+            sys.exit('ERROR: could not find Sens_AoA column in ' + history_file)
+        sens_aoa_col = header.index('Sens_AoA')
+
+        last_row = None
+        for line in f:
+            line = line.strip()
+            if line:
+                last_row = line
+
+    if last_row is None:
+        sys.exit('ERROR: no data rows found in ' + history_file)
+
+    return float(last_row.split(',')[sens_aoa_col].strip())
+
+
+def ReadPrimalCD(historyFSI_file):
+    """
+    Reads the converged CD from a primal's historyFSI.dat (tab-separated,
+    header "FF(X) ... FS(Z) CD CL"): finds the CD column by name in the
+    header row, and returns its value from the last (converged) data row.
+    """
+    with open(historyFSI_file, 'r') as f:
+        header = [c.strip() for c in f.readline().split('\t')]
+
+        if 'CD' not in header:
+            sys.exit('ERROR: could not find CD column in ' + historyFSI_file)
+        cd_col = header.index('CD')
+
+        last_row = None
+        for line in f:
+            line = line.strip()
+            if line:
+                last_row = line
+
+    if last_row is None:
+        sys.exit('ERROR: no data rows found in ' + historyFSI_file)
+
+    return float(last_row.split('\t')[cd_col].strip())
+
 def ChainRule(adj_folder,FFD_indexes, PointInv,ffd_degree):    
     """ 
     Chain rule to evaluate sensitivity of obj_f with respect to the FFD box control points
