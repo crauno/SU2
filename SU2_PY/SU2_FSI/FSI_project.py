@@ -35,7 +35,7 @@ from math import pow, factorial, pi
 import time, os, sys
 from SU2_FSI.FSI_config import FSIConfig as FSIConfig
 from SU2_FSI import FSI_design
-from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, CopyFile, UpdateConfig, PullingPrimalAdjointFiles, PullRestartFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP, ReadSensAoA, ReadPrimalCD
+from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, CopyFile, UpdateConfig, PullingPrimalAdjointFiles, PullRestartFiles, readDVParam, ReadPointInversion, WriteSolution, Fix_FFD_CP, ReadSensAoA, ReadPrimalCD, ReadTrimmedAoA
 from SU2_FSI.FSI_design import Design
 from SU2_FSI.FSI_tools import  readConfig
 from structopt.pystructopt.pyoptlib.struct_config import OptConfig as StructOptConfig
@@ -620,19 +620,11 @@ class Project:
 
        adj_config_file = cl_sensitivity_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
 
-       # propagate the primal's trimmed AoA (guarded: flow.meta is only written
-       # at all -- let alone with an AOA= line -- if the primal ran
-       # FIXED_CL_MODE=YES; WriteAdditionalFiles gates the call to
-       # WriteMetaData on config->GetFixed_CL_Mode(), CFlowOutput.cpp:950-953.
-       # Nothing to propagate otherwise, since the adjoint's own static AOA
-       # already matches the primal's by construction when neither one trims)
-       flow_meta_file = cl_sensitivity_folder + '/flow.meta'
-       primal_AoA = readConfig(flow_meta_file, 'AOA', False) if os.path.isfile(flow_meta_file) else 'NO'
-       if primal_AoA == 'NO':
-           primal_AoA = None
-       else:
+       # propagate the primal's trimmed AoA (None when the primal did not trim,
+       # in which case there is nothing to propagate -- see ReadTrimmedAoA)
+       primal_AoA = ReadTrimmedAoA(cl_sensitivity_folder + '/flow.meta')
+       if primal_AoA is not None:
            UpdateConfig(adj_config_file, 'AOA', primal_AoA)
-           primal_AoA = float(primal_AoA)
 
        # seed OBJECTIVE_WEIGHT = 1.0 (OBJECTIVE_FUNCTION = LIFT already enforced by CheckOptCase)
        UpdateConfig(adj_config_file, 'OBJECTIVE_WEIGHT', '1.0')
@@ -689,11 +681,10 @@ class Project:
 
        adj_config_file = fixed_aoa_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
 
-       # propagate the primal's trimmed AoA (guarded: flow.meta is only written
-       # at all if the primal ran FIXED_CL_MODE=YES; nothing to do otherwise)
-       flow_meta_file = fixed_aoa_folder + '/flow.meta'
-       primal_AoA = readConfig(flow_meta_file, 'AOA', False) if os.path.isfile(flow_meta_file) else 'NO'
-       if primal_AoA != 'NO':
+       # propagate the primal's trimmed AoA (None when the primal did not trim,
+       # in which case there is nothing to propagate -- see ReadTrimmedAoA)
+       primal_AoA = ReadTrimmedAoA(fixed_aoa_folder + '/flow.meta')
+       if primal_AoA is not None:
            UpdateConfig(adj_config_file, 'AOA', primal_AoA)
 
        # seed OBJECTIVE_WEIGHT = 0.0 (flow objective contributes nothing; the
@@ -738,11 +729,10 @@ class Project:
 
        adj_config_file = current_adj_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
 
-       # propagate the primal's trimmed AoA (guarded: flow.meta is only written
-       # at all if the primal ran FIXED_CL_MODE=YES; nothing to do otherwise)
-       flow_meta_file = current_adj_folder + '/flow.meta'
-       primal_AoA = readConfig(flow_meta_file, 'AOA', False) if os.path.isfile(flow_meta_file) else 'NO'
-       if primal_AoA != 'NO':
+       # propagate the primal's trimmed AoA (None when the primal did not trim,
+       # in which case there is nothing to propagate -- see ReadTrimmedAoA)
+       primal_AoA = ReadTrimmedAoA(current_adj_folder + '/flow.meta')
+       if primal_AoA is not None:
            UpdateConfig(adj_config_file, 'AOA', primal_AoA)
 
        # seed OBJECTIVE_WEIGHT = -W_i (OBJECTIVE_FUNCTION = LIFT already enforced by CheckOptCase)

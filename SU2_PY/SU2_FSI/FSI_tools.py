@@ -176,7 +176,7 @@ def UpdateConfig(ConfigFileName, param, value):
                     configfile2.write(stringalt)
 
               else:
-                    stringalt = this_param + ' = ' + value + '   \r\n'
+                    stringalt = this_param + ' = ' + str(value) + '   \r\n'
                     configfile2.write(stringalt)
            else:
               configfile2.write(string)
@@ -569,7 +569,33 @@ def ReadPrimalCD(historyFSI_file):
 
     return float(last_row.split('\t')[cd_col].strip())
 
-def ChainRule(adj_folder,FFD_indexes, PointInv,ffd_degree):    
+
+def ReadTrimmedAoA(flow_meta_file):
+    """
+    Reads the trimmed AoA (degrees) a primal converged to, from its flow.meta.
+    Returns it as a float, or None when it is not available.
+
+    None covers both ways it can be missing, which need not be distinguished:
+    SU2 writes flow.meta at all only when FIXED_CL_MODE (or FIXED_CM_MODE) is
+    on -- CFlowOutput::WriteAdditionalFiles gates the WriteMetaData call on it,
+    CFlowOutput.cpp:950-953 -- and writes the AOA= line inside it only under
+    FIXED_CL_MODE. A primal that did not trim therefore leaves nothing to
+    propagate, which is correct rather than an error: the adjoint's own static
+    AOA already matches the primal's by construction in that case.
+
+    None is returned rather than False or 'NO' because AOA= 0.0 is a legitimate
+    value: a caller writing "if AoA:" would silently discard it, whereas
+    "if AoA is not None:" cannot.
+    """
+    if not os.path.isfile(flow_meta_file):
+        return None
+
+    AoA = readConfig(flow_meta_file, 'AOA', False)
+
+    return None if AoA == 'NO' else float(AoA)
+
+
+def ChainRule(adj_folder,FFD_indexes, PointInv,ffd_degree):
     """ 
     Chain rule to evaluate sensitivity of obj_f with respect to the FFD box control points
     """    
