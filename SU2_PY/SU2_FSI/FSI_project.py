@@ -594,10 +594,13 @@ class Project:
        No structural response is seeded here (-c NONE): the flow objective
        is seeded with OBJECTIVE_FUNCTION=LIFT, OBJECTIVE_WEIGHT=1.0.
 
-       Returns L_A = dC_L/dAoA, corrected for the missing explicit rotation
-       term in SU2's raw Sens_AoA (dCD/dAoA and dCL/dAoA are each missing the
-       explicit d(rotation)/dAoA piece, worth +CL*(pi/180) for CD and
-       -CD*(pi/180) for CL -- see su2_sens_aoa_rotation_bug memory).
+       Returns (L_A, primal_AoA): L_A = dC_L/dAoA, corrected for the missing
+       explicit rotation term in SU2's raw Sens_AoA (dCD/dAoA and dCL/dAoA are
+       each missing the explicit d(rotation)/dAoA piece, worth +CL*(pi/180)
+       for CD and -CD*(pi/180) for CL -- see su2_sens_aoa_rotation_bug
+       memory). primal_AoA is the primal's trimmed AoA read from flow.meta
+       (None if the primal ran FIXED_CL_MODE=NO, i.e. flow.meta has no AOA=
+       line at all).
        """
 
        cl_sensitivity_folder = self.structProject.design_folder_adjoint + '/CL_sensitivity'
@@ -620,8 +623,23 @@ class Project:
          print('Primal not yet available, can t pull solutions for Adjoint....')
          sys.exit()
 
-       # seed OBJECTIVE_WEIGHT = 1.0 (OBJECTIVE_FUNCTION = LIFT already enforced by CheckOptCase)
        adj_config_file = cl_sensitivity_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
+
+       # propagate the primal's trimmed AoA (guarded: flow.meta is only written
+       # at all -- let alone with an AOA= line -- if the primal ran
+       # FIXED_CL_MODE=YES; WriteAdditionalFiles gates the call to
+       # WriteMetaData on config->GetFixed_CL_Mode(), CFlowOutput.cpp:950-953.
+       # Nothing to propagate otherwise, since the adjoint's own static AOA
+       # already matches the primal's by construction when neither one trims)
+       flow_meta_file = cl_sensitivity_folder + '/flow.meta'
+       primal_AoA = readConfig(flow_meta_file, 'AOA', False) if os.path.isfile(flow_meta_file) else 'NO'
+       if primal_AoA == 'NO':
+           primal_AoA = None
+       else:
+           UpdateConfig(adj_config_file, 'AOA', primal_AoA)
+           primal_AoA = float(primal_AoA)
+
+       # seed OBJECTIVE_WEIGHT = 1.0 (OBJECTIVE_FUNCTION = LIFT already enforced by CheckOptCase)
        UpdateConfig(adj_config_file, 'OBJECTIVE_WEIGHT', '1.0')
 
        # Running adjoint (-c NONE -> no structural response seeded)
@@ -636,7 +654,7 @@ class Project:
        # corrected L_A = dC_L/dAoA
        dCl_dAoA = dCl_dAoA_raw - CD_primal * (pi / 180.0)
 
-       return dCl_dAoA
+       return dCl_dAoA, primal_AoA
 
 
     def ComputeStructRespSensitivity_FixedAoA(self, i):
@@ -677,9 +695,17 @@ class Project:
          print('Primal not yet available, can t pull solutions for Adjoint....')
          sys.exit()
 
+       adj_config_file = fixed_aoa_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
+
+       # propagate the primal's trimmed AoA (guarded: flow.meta is only written
+       # at all if the primal ran FIXED_CL_MODE=YES; nothing to do otherwise)
+       flow_meta_file = fixed_aoa_folder + '/flow.meta'
+       primal_AoA = readConfig(flow_meta_file, 'AOA', False) if os.path.isfile(flow_meta_file) else 'NO'
+       if primal_AoA != 'NO':
+           UpdateConfig(adj_config_file, 'AOA', primal_AoA)
+
        # seed OBJECTIVE_WEIGHT = 0.0 (flow objective contributes nothing; the
        # structural response, seeded below via -c, is the only thing differentiated)
-       adj_config_file = fixed_aoa_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
        UpdateConfig(adj_config_file, 'OBJECTIVE_WEIGHT', '0.0')
 
        # Running adjoint (-c <constraint config> -> structural response seeded)
@@ -691,6 +717,54 @@ class Project:
        return dJs_dAoA
 
 
+    def ComputeStructRespSensitivity_FixedCl(self, i, W_i):
+
+       """
+       Solves constraint i's fixed-CL corrected adjoint -- the actual
+       constraint gradient at fixed CL, G_CL,i. Runs directly in the
+       constraint's own adjoint folder (already created by the caller).
+       Seeds OBJECTIVE_FUNCTION=LIFT (already enforced by CheckOptCase) with
+       OBJECTIVE_WEIGHT=-W_i, alongside the structural response (-c
+       AUGUSTO_CONFIG_CONSTR[i]): because the discrete adjoint's RHS is linear
+       in the seed, this makes the run converge to exactly G_CL,i.
+       """
+
+       augusto_constr_cfg = self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i]
+
+       # constraint's own adjoint folder (e.g. Adjoint/crm_stress), already created by the caller
+       current_adj_folder = self.structProject.design_folder_adjoint + '/' + augusto_constr_cfg.split('.')[0]
+
+       # pull files for analysis (includes the adjoint config itself)
+       PullingPrimalAdjointFiles(self.testcase_folder, current_adj_folder, self.configFSIAdjoint, augusto_constr_cfg, self.pyInterfaceFile)
+
+       # pulling mesh file
+       self.SetMesh(current_adj_folder)
+
+       # pulling restart for pyAugusto and SU2 and flow.vtk
+       if self._design[self.design_iter].primal == True:
+
+          PullRestartFiles(self.primal_folder, current_adj_folder)
+
+       else:
+         print('Primal not yet available, can t pull solutions for Adjoint....')
+         sys.exit()
+
+       adj_config_file = current_adj_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
+
+       # propagate the primal's trimmed AoA (guarded: flow.meta is only written
+       # at all if the primal ran FIXED_CL_MODE=YES; nothing to do otherwise)
+       flow_meta_file = current_adj_folder + '/flow.meta'
+       primal_AoA = readConfig(flow_meta_file, 'AOA', False) if os.path.isfile(flow_meta_file) else 'NO'
+       if primal_AoA != 'NO':
+           UpdateConfig(adj_config_file, 'AOA', primal_AoA)
+
+       # seed OBJECTIVE_WEIGHT = -W_i (OBJECTIVE_FUNCTION = LIFT already enforced by CheckOptCase)
+       UpdateConfig(adj_config_file, 'OBJECTIVE_WEIGHT', str(-W_i))
+
+       # Running adjoint (-c <constraint config> -> structural response seeded)
+       self._design[self.design_iter].FSIAdjoint(current_adj_folder, augusto_constr_cfg)
+
+
     def con_struct_dcieq_normalized(self):
 
        """
@@ -698,10 +772,12 @@ class Project:
        """
 
        # solve the shared CL-sensitivity adjoint needed by every constraint's W
-       dCl_dAoA = self.ComputeLiftCoeffSensitivity()
+       dCl_dAoA, primal_AoA = self.ComputeLiftCoeffSensitivity()
 
        # create adjoint constraint subfolders and pull the needed files
        self.structProject.constr_subfolders_adjoint = []
+       dJsi_dAoA_list = []
+       W_list = []
 
        for i in range(len(self.structProject.config['AUGUSTO_CONFIG_CONSTR'])):
 
@@ -714,23 +790,33 @@ class Project:
             # solve constraint i's fixed-AoA sensitivity (dJsi_dAoA, needed for W_i), in its own subfolder
             dJsi_dAoA = self.ComputeStructRespSensitivity_FixedAoA(i)
 
-            # pull files for analysis (includes the adjoint config itself)
-            PullingPrimalAdjointFiles(self.testcase_folder, current_adj_folder, self.configFSIAdjoint, self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], self.pyInterfaceFile)
+            # W_i = sigma_A,i / L_A
+            W_i = dJsi_dAoA / dCl_dAoA
+            dJsi_dAoA_list.append(dJsi_dAoA)
+            W_list.append(W_i)
 
-            # pulling mesh file 
-            self.SetMesh(current_adj_folder)         
-       
-            # pulling restart for pyAugusto and SU2 and flow.vtk
-            if self._design[self.design_iter].primal == True:
+            # solve constraint i's fixed-CL corrected adjoint (the actual constraint gradient)
+            self.ComputeStructRespSensitivity_FixedCl(i, W_i)
 
-               PullRestartFiles(self.primal_folder, current_adj_folder)
-
-            else:
-              print('Primal not yet available, can t pull solutions for Adjoint....')
-              sys.exit()
-
-            # Running adjoint
-            self._design[self.design_iter].FSIAdjoint(current_adj_folder, self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i])
+       # log dCl_dAoA and, per constraint, dJs_dAoA/W_i -- one file per design point
+       summary_file = self.structProject.design_folder_adjoint + '/Sensitivity_FixedCL_summary.txt'
+       summary = open(summary_file, 'w')
+       summary.write('=' * 80 + '\n')
+       summary.write('  FIXED-CL CORRECTION SUMMARY\n')
+       summary.write('=' * 80 + '\n')
+       summary.write('  dCl_dAoA (L_A, shared) = {:.10e}\n'.format(dCl_dAoA))
+       if primal_AoA is not None:
+           summary.write('  Primal trimmed AoA (from flow.meta) = {:.10f} deg\n'.format(primal_AoA))
+       else:
+           summary.write('  Primal trimmed AoA (from flow.meta) = N/A (primal FIXED_CL_MODE=NO)\n')
+       summary.write('=' * 80 + '\n\n')
+       summary.write('  {:<30s}  {:>20s}  {:>20s}\n'.format('Constraint', 'dJs_dAoA (sigma_A)', 'W_i'))
+       summary.write('  ' + '-' * 74 + '\n')
+       for i in range(len(self.structProject.config['AUGUSTO_CONFIG_CONSTR'])):
+           summary.write('  {:<30s}  {:>20.10e}  {:>20.10e}\n'.format(
+                         self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], dJsi_dAoA_list[i], W_list[i]))
+       summary.write('=' * 80 + '\n')
+       summary.close()
 
        # pull non normalized gradient of constraint inequality
        c_dieq, global_factor = self.structProject._design[self.design_iter].pull_c_dieq(self.structProject.constr_subfolders_adjoint)
