@@ -615,13 +615,8 @@ class Project:
        self.SetMesh(cl_sensitivity_folder)
 
        # pulling restart for pyAugusto and SU2 and flow.vtk
-       if self._design[self.design_iter].primal == True:
-
-          PullRestartFiles(self.primal_folder, cl_sensitivity_folder)
-
-       else:
-         print('Primal not yet available, can t pull solutions for Adjoint....')
-         sys.exit()
+       # (the primal is checked once, by the caller con_struct_dcieq_normalized)
+       PullRestartFiles(self.primal_folder, cl_sensitivity_folder)
 
        adj_config_file = cl_sensitivity_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
 
@@ -654,7 +649,9 @@ class Project:
        # corrected L_A = dC_L/dAoA
        dCl_dAoA = dCl_dAoA_raw - CD_primal * (pi / 180.0)
 
-       return dCl_dAoA, primal_AoA
+       # CD_primal is returned too: the same rotation term is needed again to
+       # correct the composite objective's own Sens_AoA in the corrected runs
+       return dCl_dAoA, primal_AoA, CD_primal
 
 
     def ComputeStructRespSensitivity_FixedAoA(self, i):
@@ -687,13 +684,8 @@ class Project:
        self.SetMesh(fixed_aoa_folder)
 
        # pulling restart for pyAugusto and SU2 and flow.vtk
-       if self._design[self.design_iter].primal == True:
-
-          PullRestartFiles(self.primal_folder, fixed_aoa_folder)
-
-       else:
-         print('Primal not yet available, can t pull solutions for Adjoint....')
-         sys.exit()
+       # (the primal is checked once, by the caller con_struct_dcieq_normalized)
+       PullRestartFiles(self.primal_folder, fixed_aoa_folder)
 
        adj_config_file = fixed_aoa_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
 
@@ -741,13 +733,8 @@ class Project:
        self.SetMesh(current_adj_folder)
 
        # pulling restart for pyAugusto and SU2 and flow.vtk
-       if self._design[self.design_iter].primal == True:
-
-          PullRestartFiles(self.primal_folder, current_adj_folder)
-
-       else:
-         print('Primal not yet available, can t pull solutions for Adjoint....')
-         sys.exit()
+       # (the primal is checked once, by the caller con_struct_dcieq_normalized)
+       PullRestartFiles(self.primal_folder, current_adj_folder)
 
        adj_config_file = current_adj_folder + '/' + self.configFSIAdjoint['SU2_CONFIG']
 
@@ -764,6 +751,13 @@ class Project:
        # Running adjoint (-c <constraint config> -> structural response seeded)
        self._design[self.design_iter].FSIAdjoint(current_adj_folder, augusto_constr_cfg)
 
+       # Sens_AoA of the composite objective J = Js - W_i*CL. W_i is chosen so
+       # that dJ/dAoA = 0, so this should come out ~0 -- but as reported by SU2
+       # it still carries the rotation-term defect, weighted by the -W_i sitting
+       # on the CL part (the Js part is unaffected). Returned raw; the caller
+       # applies the correction and logs both.
+       return ReadSensAoA(current_adj_folder + '/history.csv')
+
 
     def con_struct_dcieq_normalized(self):
 
@@ -771,13 +765,23 @@ class Project:
        Solve the coupled adjoint problem for strutural optimisation constraint
        """
 
+       # Every adjoint below pulls the primal's restart files, so the primal has
+       # to be available before any of them start. Checked once here rather than
+       # inside each of the three Compute* functions, which are only ever called
+       # from this loop.
+       if self._design[self.design_iter].primal != True:
+          sys.exit('Primal not yet available, can t pull solutions for Adjoint....')
+
        # solve the shared CL-sensitivity adjoint needed by every constraint's W
-       dCl_dAoA, primal_AoA = self.ComputeLiftCoeffSensitivity()
+       dCl_dAoA, primal_AoA, CD_primal = self.ComputeLiftCoeffSensitivity()
 
        # create adjoint constraint subfolders and pull the needed files
        self.structProject.constr_subfolders_adjoint = []
+       
        dJsi_dAoA_list = []
        W_list = []
+       SensAoA_J_raw_list = []
+       SensAoA_J_corr_list = []
 
        for i in range(len(self.structProject.config['AUGUSTO_CONFIG_CONSTR'])):
 
@@ -796,7 +800,15 @@ class Project:
             W_list.append(W_i)
 
             # solve constraint i's fixed-CL corrected adjoint (the actual constraint gradient)
-            self.ComputeStructRespSensitivity_FixedCl(i, W_i)
+            SensAoA_J_raw = self.ComputeStructRespSensitivity_FixedCl(i, W_i)
+
+            # dJ/dAoA of the composite J = Js - W_i*CL, which is zero by
+            # construction. SU2 reports it with the rotation term missing from
+            # the CL part only, which enters with weight -W_i, so the whole
+            # correction is +W_i*CD*(pi/180) -- nothing from the Js part.
+            SensAoA_J_corr = SensAoA_J_raw + W_i * CD_primal * (pi / 180.0)
+            SensAoA_J_raw_list.append(SensAoA_J_raw)
+            SensAoA_J_corr_list.append(SensAoA_J_corr)
 
        # log dCl_dAoA and, per constraint, dJs_dAoA/W_i -- one file per design point
        summary_file = self.structProject.design_folder_adjoint + '/Sensitivity_FixedCL_summary.txt'
@@ -805,6 +817,7 @@ class Project:
        summary.write('  FIXED-CL CORRECTION SUMMARY\n')
        summary.write('=' * 80 + '\n')
        summary.write('  dCl_dAoA (L_A, shared) = {:.10e}\n'.format(dCl_dAoA))
+       summary.write('  CD_primal              = {:.10e}\n'.format(CD_primal))
        if primal_AoA is not None:
            summary.write('  Primal trimmed AoA (from flow.meta) = {:.10f} deg\n'.format(primal_AoA))
        else:
@@ -815,6 +828,24 @@ class Project:
        for i in range(len(self.structProject.config['AUGUSTO_CONFIG_CONSTR'])):
            summary.write('  {:<30s}  {:>20.10e}  {:>20.10e}\n'.format(
                          self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i], dJsi_dAoA_list[i], W_list[i]))
+       summary.write('=' * 80 + '\n\n')
+
+       # Sens_AoA of the composite objective J = Js - W_i*CL, which W_i is
+       # chosen to null. Both the value SU2 reports and the same value with the
+       # rotation term restored are logged: the correction is +W_i*CD*(pi/180),
+       # carrying the weight of the CL part, since only CL is built through the
+       # wind-axis rotation and Js contributes nothing to the defect. The
+       # corrected column is the one that should sit near zero -- compare it
+       # against dJs_dAoA above, which is what it cancels.
+       summary.write('  COMPOSITE OBJECTIVE Sens_AoA  (J = Js - W*CL, expected dJ/dAoA = 0)\n')
+       summary.write('  corrected = raw + W*CD*(pi/180)\n\n')
+       summary.write('  {:<30s}  {:>20s}  {:>20s}\n'.format(
+                     'Constraint', 'Sens_AoA raw', 'Sens_AoA corrected'))
+       summary.write('  ' + '-' * 74 + '\n')
+       for i in range(len(self.structProject.config['AUGUSTO_CONFIG_CONSTR'])):
+           summary.write('  {:<30s}  {:>20.10e}  {:>20.10e}\n'.format(
+                         self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i],
+                         SensAoA_J_raw_list[i], SensAoA_J_corr_list[i]))
        summary.write('=' * 80 + '\n')
        summary.close()
 
