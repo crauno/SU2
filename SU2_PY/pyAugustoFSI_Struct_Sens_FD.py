@@ -70,7 +70,7 @@ import argparse
 
 from SU2_FSI.FSI_config import FSIConfig as io       # imports FSI config tools
 from SU2_FSI import PrimalInterface as FSI # imports FSI python tools
-from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, CopyFile
+from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, ReadTrimmedAoA
 import pyAugustoInterface as pyAugustoInterface
 import pyMLSInterface as Spline_Module
 from augusto_functions_toolbox import CheckSMDAOtype
@@ -205,6 +205,12 @@ def Sens(options, dvID, perturbed_DV):
 
     cl, cd = FSIInterface.SteadyFSI(FSI_config, FluidSolver, SolidSolver, MLS, None)
 
+    # --- Trimmed AoA this run converged to. In FIXED_CL_MODE it is the whole
+    # point of the perturbation: CL is pinned to TARGET_CL and the AoA moves
+    # instead, so dAoA/dDV is the physical response and dCL/dDV should come out
+    # ~0. Read it before the next perturbation overwrites flow.meta. --- #
+    trimmed_AoA = ReadTrimmedAoA('flow.meta')
+
     # --- Evaluate every requested response on the FSI-converged structural
     # state. Each response gets its own standalone CAugusto instance, fed the
     # just-converged restart.pyAugusto (copied to the hardcoded "solution.pyAugusto"
@@ -225,7 +231,7 @@ def Sens(options, dvID, perturbed_DV):
         for resp_cfg in options.responses:
 
             if myid == rootProcess:
-                CopyFile('restart.pyAugusto', 'solution.pyAugusto', 'Pulling FSI restart for ' + resp_cfg)
+                shutil.copy('restart.pyAugusto', 'solution.pyAugusto')
             if have_MPI:
                 comm.barrier()
 
@@ -256,7 +262,7 @@ def Sens(options, dvID, perturbed_DV):
     if have_MPI:
        comm.barrier()
 
-    return cd, responses
+    return cd, cl, trimmed_AoA, responses
 
 
 # -------------------------------------------------------------------
@@ -323,10 +329,9 @@ def main():
 
    comm.barrier()
 
-   delta = [0.01, 0.001, 0.0001, 0.00001]
-   
+   delta = [0.01, 0.005, 0.002, 0.001, 0.0005]
    DV_ids = 20
-   DV_values = 0.02 
+   DV_values = 0.02
 
    results = []
    summary_filename = "Sensitivity_FD_node_DV_" + str(DV_ids) + "_centered.txt"
@@ -365,10 +370,13 @@ def main():
          outfile.write("  DV+  = {:16.12f}\n".format(perturbed_DV_plus))
          outfile.flush()
 
-      drag_plus, responses_plus = Sens(options, DV_ids, perturbed_DV_plus)
+      drag_plus, lift_plus, aoa_plus, responses_plus = Sens(options, DV_ids, perturbed_DV_plus)
 
       if myid == 0:
          outfile.write("  Cd+  = {:16.12f}\n".format(drag_plus))
+         outfile.write("  Cl+  = {:16.12f}\n".format(lift_plus))
+         outfile.write("  AoA+ = {}\n".format(
+                       "{:16.12f}".format(aoa_plus) if aoa_plus is not None else "(not trimmed)"))
          for r in options.responses:
             outfile.write("  R[{}]+  = {:16.12f}\n".format(r, responses_plus[r]))
          outfile.write("\n\n")
@@ -389,10 +397,13 @@ def main():
          outfile.write("  DV-  = {:16.12f}\n".format(perturbed_DV_minus))
          outfile.flush()
 
-      drag_minus, responses_minus = Sens(options, DV_ids, perturbed_DV_minus)
+      drag_minus, lift_minus, aoa_minus, responses_minus = Sens(options, DV_ids, perturbed_DV_minus)
 
       if myid == 0:
          outfile.write("  Cd-  = {:16.12f}\n".format(drag_minus))
+         outfile.write("  Cl-  = {:16.12f}\n".format(lift_minus))
+         outfile.write("  AoA- = {}\n".format(
+                       "{:16.12f}".format(aoa_minus) if aoa_minus is not None else "(not trimmed)"))
          for r in options.responses:
             outfile.write("  R[{}]-  = {:16.12f}\n".format(r, responses_minus[r]))
          outfile.write("\n\n")
@@ -409,17 +420,26 @@ def main():
 
       # --- Sensitivities ---
       Cd_sens = (drag_plus - drag_minus) / (2 * delta_used * DV_values)
+      Cl_sens = (lift_plus - lift_minus) / (2 * delta_used * DV_values)
+      # In FIXED_CL_MODE, AoA is what actually responds to the perturbation.
+      # dCl/dDV ~ 0 is then the check that the trim really engaged; if it does
+      # not, the run has silently degenerated into a fixed-AoA finite difference.
+      AoA_sens = (None if (aoa_plus is None or aoa_minus is None)
+                  else (aoa_plus - aoa_minus) / (2 * delta_used * DV_values))
       response_sens = {r: (responses_plus[r] - responses_minus[r]) / (2 * delta_used * DV_values)
                         for r in options.responses}
 
       if myid == 0:
-         outfile.write("  dCd/dDV = {:25.22f}\n".format(Cd_sens))
+         outfile.write("  dCd/dDV  = {:25.22f}\n".format(Cd_sens))
+         outfile.write("  dCl/dDV  = {:25.22e}   (should be ~0 in FIXED_CL_MODE)\n".format(Cl_sens))
+         outfile.write("  dAoA/dDV = {}\n".format(
+                       "{:25.22e}".format(AoA_sens) if AoA_sens is not None else "(not trimmed)"))
          for r in options.responses:
             outfile.write("  d({})/dDV = {:25.22e}\n".format(r, response_sens[r]))
          outfile.write("\n")
          outfile.flush()
 
-      results.append((delta_used, drag_plus, drag_minus, Cd_sens, response_sens))
+      results.append((delta_used, drag_plus, drag_minus, Cd_sens, Cl_sens, AoA_sens, response_sens))
 
    if myid == 0:
       # --- Summary table (one column per response, labelled by its config file) --- #
@@ -428,14 +448,17 @@ def main():
       outfile.write("  SUMMARY\n")
       outfile.write("=" * 80 + "\n")
 
-      header = "  {:>12s}  {:>16s}  {:>16s}  {:>25s}".format("delta", "Cd+", "Cd-", "dCd/dDV")
+      header = "  {:>12s}  {:>16s}  {:>16s}  {:>25s}  {:>16s}  {:>16s}".format(
+               "delta", "Cd+", "Cd-", "dCd/dDV", "dCl/dDV", "dAoA/dDV")
       for r in options.responses:
          header += "  {:>{w}s}".format("d(" + r + ")/dDV", w=response_col_width[r])
       outfile.write(header + "\n")
       outfile.write("  " + "-" * (len(header) - 2) + "\n")
 
-      for (delta_used, cd_p, cd_m, cd_s, response_sens) in results:
-         row = "  {:12.8e}  {:16.12f}  {:16.12f}  {:25.22f}".format(delta_used, cd_p, cd_m, cd_s)
+      for (delta_used, cd_p, cd_m, cd_s, cl_s, aoa_s, response_sens) in results:
+         row = "  {:12.8e}  {:16.12f}  {:16.12f}  {:25.22f}  {:16.8e}  {:>16s}".format(
+               delta_used, cd_p, cd_m, cd_s, cl_s,
+               "{:16.8e}".format(aoa_s) if aoa_s is not None else "(not trimmed)")
          for r in options.responses:
             row += "  {:{w}.16e}".format(response_sens[r], w=response_col_width[r])
          outfile.write(row + "\n")

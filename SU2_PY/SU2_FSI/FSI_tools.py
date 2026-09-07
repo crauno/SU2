@@ -130,17 +130,6 @@ def MakeDir(folder, Tool):
     run_command(command, Tool, False)
 
 
-def CopyFile(source, destination, Tool):
-    """
-    Copies source (absolute path to a file) to destination, via cp. destination
-    can be a folder (keeping the source filename) or a full file path (to also
-    rename it), matching plain cp's own behaviour. Not for recursive/directory
-    copies (no -r) -- use run_command directly for those.
-    """
-    command = 'cp ' + source + ' ' + destination
-    run_command(command, Tool, False)
-
-
 def UpdateConfig(ConfigFileName, param, value):
     """
     This function updates the input param of the given ConfigFileName with the new value.
@@ -408,10 +397,10 @@ def PullingPrimalAdjointFiles(source_folder, dest_folder, configFSI, configAUGUS
        # pulling primal files
        # the FSI-level config itself (CONFIG_PRIMAL/CONFIG_ADJOINT), whichever
        # file configFSI was parsed from
-       CopyFile(configFSI.ConfigFileName, dest_folder + '/', 'Pulling FSI config')
-       CopyFile(source_folder + '/' + configFSI['SU2_CONFIG'], dest_folder + '/', 'Pulling CFD config')
-       CopyFile(source_folder + '/' + configFSI['MLS_CONFIG_FILE_NAME'], dest_folder + '/', 'Pulling MLS config')
-       CopyFile(source_folder + '/' + pyInterfaceFile, dest_folder + '/', 'Pulling interface nodes file')
+       shutil.copy(configFSI.ConfigFileName, dest_folder + '/')
+       shutil.copy(source_folder + '/' + configFSI['SU2_CONFIG'], dest_folder + '/')
+       shutil.copy(source_folder + '/' + configFSI['MLS_CONFIG_FILE_NAME'], dest_folder + '/')
+       shutil.copy(source_folder + '/' + pyInterfaceFile, dest_folder + '/')
        # creating a symbolic link to numpy spline matric which doesn't change
        spline = source_folder + '/' + 'Spline.npy'
        run_command('ln -s ' + spline + ' ' + dest_folder + '/' + 'Spline.npy', 'Linking spline matrix', False)
@@ -427,15 +416,17 @@ def PullRestartFiles(primal_folder, dest_folder):
        # pulling restart files from the primal run as the Adjoint's solution files
 
        # pyAugusto
-       CopyFile(primal_folder + '/' + 'restart.pyAugusto', dest_folder + '/' + 'solution.pyAugusto',
-                'Pulling pyAugusto solution file')
+       shutil.copy(primal_folder + '/' + 'restart.pyAugusto', dest_folder + '/' + 'solution.pyAugusto')
 
        # SU2
-       CopyFile(primal_folder + '/' + 'restart_flow.dat', dest_folder + '/' + 'solution_flow.dat',
-                'Pulling flow solution file')
+       shutil.copy(primal_folder + '/' + 'restart_flow.dat', dest_folder + '/' + 'solution_flow.dat')
 
-       # flow.meta
-       CopyFile(primal_folder + '/' + 'flow.meta', dest_folder + '/', 'Pulling flow.meta')
+       # flow.meta -- guarded, unlike the two above: SU2 only writes it when the
+       # primal ran FIXED_CL_MODE (or FIXED_CM_MODE), so its absence is the
+       # normal case for an untrimmed primal and not an error to raise on.
+       flow_meta = primal_folder + '/' + 'flow.meta'
+       if os.path.isfile(flow_meta):
+          shutil.copy(flow_meta, dest_folder + '/')
 
 
 def ReadPointInversion(configDef,MeshFile):
