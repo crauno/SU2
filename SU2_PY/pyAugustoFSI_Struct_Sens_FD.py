@@ -232,6 +232,9 @@ def Sens(options, dvID, perturbed_DV):
 
             if myid == rootProcess:
                 shutil.copy('restart.pyAugusto', 'solution.pyAugusto')
+                # FSI loads, needed by the buckling constraint on the deformed configuration
+                if os.path.isfile('restart_loads.pyAugusto'):
+                    shutil.copy('restart_loads.pyAugusto', 'solution_loads.pyAugusto')
             if have_MPI:
                 comm.barrier()
 
@@ -329,9 +332,14 @@ def main():
 
    comm.barrier()
 
-   delta = [0.01, 0.005, 0.002, 0.001, 0.0005]
-   DV_ids = 20
-   DV_values = 0.02
+   #delta = [0.01, 0.005, 0.002, 0.001, 0.0005]
+   #DV_ids = 20
+   #DV_values = 0.02
+
+   # Poisson's ratio of material 1 (DV 106 = MAT 1 POISSON in every smdao file of aerotests/qcrm_nl)
+   delta = [0.1, 0.05, 0.01, 0.005, 0.001]
+   DV_ids = 106
+   DV_values = 0.31279
 
    results = []
    summary_filename = "Sensitivity_FD_node_DV_" + str(DV_ids) + "_centered.txt"

@@ -418,6 +418,13 @@ def PullRestartFiles(primal_folder, dest_folder):
        # pyAugusto
        shutil.copy(primal_folder + '/' + 'restart.pyAugusto', dest_folder + '/' + 'solution.pyAugusto')
 
+       # pyAugusto FSI loads (restart_loads.pyAugusto, written by the FSI primal since the buckling constraint on the
+       # deformed configuration was added): needed by the buckling constraint to rebuild its reference load step.
+       # Guarded because primal runs made with older AUGUSTO versions do not write it.
+       loads_file = primal_folder + '/' + 'restart_loads.pyAugusto'
+       if os.path.isfile(loads_file):
+          shutil.copy(loads_file, dest_folder + '/' + 'solution_loads.pyAugusto')
+
        # SU2
        shutil.copy(primal_folder + '/' + 'restart_flow.dat', dest_folder + '/' + 'solution_flow.dat')
 
