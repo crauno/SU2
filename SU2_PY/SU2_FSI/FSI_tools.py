@@ -35,7 +35,7 @@ import numpy as np
 from math import pow, factorial, pi
 import scipy.io
 import csv
-from structopt.pystructopt.pyoptlib.struct_tools import PullAugustoFiles
+from structopt.pystructopt.pyoptlib.struct_tools import PullAugustoFiles, PullAugustoRestartFiles
 
 def SaveSplineMatrix(config):
     """
@@ -416,14 +416,7 @@ def PullRestartFiles(primal_folder, dest_folder):
        # pulling restart files from the primal run as the Adjoint's solution files
 
        # pyAugusto
-       shutil.copy(primal_folder + '/' + 'restart.pyAugusto', dest_folder + '/' + 'solution.pyAugusto')
-
-       # pyAugusto FSI loads (restart_loads.pyAugusto, written by the FSI primal since the buckling constraint on the
-       # deformed configuration was added): needed by the buckling constraint to rebuild its reference load step.
-       # Guarded because primal runs made with older AUGUSTO versions do not write it.
-       loads_file = primal_folder + '/' + 'restart_loads.pyAugusto'
-       if os.path.isfile(loads_file):
-          shutil.copy(loads_file, dest_folder + '/' + 'solution_loads.pyAugusto')
+       PullAugustoRestartFiles(primal_folder, dest_folder)
 
        # SU2
        shutil.copy(primal_folder + '/' + 'restart_flow.dat', dest_folder + '/' + 'solution_flow.dat')

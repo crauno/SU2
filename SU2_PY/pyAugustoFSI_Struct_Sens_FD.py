@@ -71,6 +71,7 @@ import argparse
 from SU2_FSI.FSI_config import FSIConfig as io       # imports FSI config tools
 from SU2_FSI import PrimalInterface as FSI # imports FSI python tools
 from SU2_FSI.FSI_tools import run_command, readConfig, MakeDir, ReadTrimmedAoA
+from structopt.pystructopt.pyoptlib.struct_tools import PullAugustoRestartFiles
 import pyAugustoInterface as pyAugustoInterface
 import pyMLSInterface as Spline_Module
 from augusto_functions_toolbox import CheckSMDAOtype
@@ -231,10 +232,7 @@ def Sens(options, dvID, perturbed_DV):
         for resp_cfg in options.responses:
 
             if myid == rootProcess:
-                shutil.copy('restart.pyAugusto', 'solution.pyAugusto')
-                # FSI loads, needed by the buckling constraint on the deformed configuration
-                if os.path.isfile('restart_loads.pyAugusto'):
-                    shutil.copy('restart_loads.pyAugusto', 'solution_loads.pyAugusto')
+                PullAugustoRestartFiles('.', '.')
             if have_MPI:
                 comm.barrier()
 
