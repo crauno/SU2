@@ -206,13 +206,18 @@ def main():
 
     if myid == rootProcess:
        elapsed_time =  timer.time() - start
-       print('Primal problem elapsed time: ', elapsed_time)
+       print('Adjoint problem elapsed time: ', elapsed_time)
     #return
 
-    # if the coupled adjoint was on a structural response,
-    # print the results on file
+    # print the design-variable derivatives of whatever response was seeded: the
+    # structural one when a response was handed over with -c, the flow objective
+    # otherwise (e.g. the shared CL-sensitivity analysis, run with -c NONE, whose
+    # file the fast fixed-CL correction of FSI_project.py needs). The gradients are
+    # Allreduced in CDriver::ExtractDerivatives, so every rank holds the same
+    # values: write from the root alone, rather than having all of them race on the
+    # same path.
 
-    if options.filename_constr != "NONE":
+    if myid == rootProcess:
        
        # writing sensitivities to file
        dresp = SolidSolver.beam.beam.GetSensitivities()

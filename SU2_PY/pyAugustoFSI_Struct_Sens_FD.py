@@ -335,7 +335,7 @@ def main():
    #DV_values = 0.02
 
    # Poisson's ratio of material 1 (DV 106 = MAT 1 POISSON in every smdao file of aerotests/qcrm_nl)
-   delta = [0.1, 0.05, 0.01, 0.005, 0.001]
+   delta = [0.2, 0.1, 0.05, 0.02, 0.01, 0.001,  0.0001,  0.00001]  
    DV_ids = 106
    DV_values = 0.31279
 

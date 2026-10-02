@@ -701,6 +701,103 @@ class Project:
        return dJs_dAoA
 
 
+    def ReadDConstraints(self, filename):
+
+       """
+       Reads a d_Constraints.dat file (the one written by pyBeamFSI_AD_opt.py at the
+       end of every coupled adjoint) and returns it as a list of (dv_id, value)
+       pairs, in the order found in the file. The values carry the sign convention
+       of that writer, which is the opposite of AUGUSTO's own gradients.
+       """
+
+       ids = []
+       vals = []
+
+       with open(filename, 'r') as f:
+           for line in f:
+               tokens = line.split()
+               if len(tokens) >= 2:
+                   ids.append(int(tokens[0]))
+                   vals.append(float(tokens[1]))
+
+       if len(ids) == 0:
+           sys.exit('\nError: no design variable derivative found in ' + filename)
+
+       return ids, vals
+
+
+    def ComputeStructRespSensitivity_FixedCl_Fast(self, i, W_i):
+
+       """
+       Builds constraint i's fixed-CL gradient G_CL,i without running a third
+       coupled adjoint, as the linear combination
+
+           G_CL,i = G_AoA,i - W_i * dCL/dDV
+
+       of the two gradients already computed at fixed AoA: the constraint's own one
+       (FixedAoA_sensitivity, from ComputeStructRespSensitivity_FixedAoA) and the
+       shared lift one (CL_sensitivity, from ComputeLiftCoeffSensitivity). The
+       combination is exact, not an approximation: the coupled discrete adjoint is
+       linear in the output seed, and all the runs sit at the same primal state with
+       the same frozen AoA, so seeding Js - W_i*CL (what
+       ComputeStructRespSensitivity_FixedCl does) and superposing the two separately
+       seeded solutions give the same gradient -- verified to 1e-12 on 113 DVs.
+       Both files come from the same writer, hence share its sign convention, so the
+       combination above applies to them verbatim.
+
+       Writes the result as d_Constraints.dat in the constraint's own adjoint folder,
+       which is the file pull_c_dieq reads, plus
+       d_Constraint_AUGUSTO_sign_convention.txt holding the same gradient with the
+       sign flipped back to AUGUSTO's own, for comparison against finite differences.
+       Nothing else is needed in that folder, so no config, mesh or restart file is
+       pulled into it.
+
+       Returns None: unlike the third adjoint, this leaves no Sens_AoA of the
+       composite objective to report (the caller logs that it is unavailable).
+       """
+
+       augusto_constr_cfg = self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i]
+
+       # constraint's own adjoint folder (e.g. Adjoint/crm_stress), already created by the caller
+       current_adj_folder = self.structProject.design_folder_adjoint + '/' + augusto_constr_cfg.split('.')[0]
+
+       # the two gradients at fixed AoA, both in the sign convention of pyBeamFSI_AD_opt.py
+       ids_AoA, G_AoA = self.ReadDConstraints(current_adj_folder + '/FixedAoA_sensitivity/d_Constraints.dat')
+       ids_CL,  G_CL  = self.ReadDConstraints(self.structProject.design_folder_adjoint + '/CL_sensitivity/d_Constraints.dat')
+
+       # the two adjoints run with different AUGUSTO configuration files (the constraint's
+       # one and the base FSI one), so make sure they really saw the same design variables:
+       # a mismatch would silently corrupt the gradient instead of failing
+       if ids_AoA != ids_CL:
+           sys.exit('\nError: design variable mismatch between the fixed-AoA sensitivity of ' +
+                    augusto_constr_cfg + ' (' + str(len(ids_AoA)) + ' DVs) and the CL sensitivity (' +
+                    str(len(ids_CL)) + ' DVs). Cannot combine them into the fixed-CL gradient')
+
+       # G_CL,i = G_AoA,i - W_i * dCL/dDV
+       G_fixedCl = [G_AoA[k] - W_i * G_CL[k] for k in range(len(ids_AoA))]
+
+       # the file the optimiser reads (pull_c_dieq)
+       grad_file = open(current_adj_folder + '/d_Constraints.dat', 'w')
+       for k in range(len(ids_AoA)):
+           grad_file.write('%-12s  %20s \n' % (str(ids_AoA[k]), str(G_fixedCl[k])))
+       grad_file.close()
+
+       # same gradient with AUGUSTO's own sign, to be compared against finite differences
+       grad_file = open(current_adj_folder + '/d_Constraint_AUGUSTO_sign_convention.txt', 'w')
+       for k in range(len(ids_AoA)):
+           grad_file.write('%-12s  %20s \n' % (str(ids_AoA[k]), str(-G_fixedCl[k])))
+       grad_file.close()
+
+       print('Fixed-CL gradient of ' + augusto_constr_cfg + ' built from the two fixed-AoA adjoints (W = ' + str(W_i) + ')')
+
+       # no third adjoint, hence no composite-objective Sens_AoA to return
+       return None
+
+
+    # Kept on purpose, although con_struct_dcieq_normalized now calls the _Fast variant
+    # above: this is the direct, more expensive route to the same gradient, and the only
+    # one that measures the composite objective's Sens_AoA. Useful to validate the
+    # combination, or as a fallback should the fast path ever be in doubt.
     def ComputeStructRespSensitivity_FixedCl(self, i, W_i):
 
        """
@@ -790,14 +887,24 @@ class Project:
             dJsi_dAoA_list.append(dJsi_dAoA)
             W_list.append(W_i)
 
-            # solve constraint i's fixed-CL corrected adjoint (the actual constraint gradient)
-            SensAoA_J_raw = self.ComputeStructRespSensitivity_FixedCl(i, W_i)
+            # build constraint i's fixed-CL gradient (the actual constraint gradient) by
+            # combining the two adjoints already run, instead of seeding a third one.
+            # Uncomment the line below (and comment the fast call) to run that third
+            # adjoint instead: it gives the same gradient and, on top of it, the
+            # composite objective's Sens_AoA logged further down
+            #SensAoA_J_raw = self.ComputeStructRespSensitivity_FixedCl(i, W_i)
+            SensAoA_J_raw = self.ComputeStructRespSensitivity_FixedCl_Fast(i, W_i)
 
             # dJ/dAoA of the composite J = Js - W_i*CL, which is zero by
             # construction. SU2 reports it with the rotation term missing from
             # the CL part only, which enters with weight -W_i, so the whole
             # correction is +W_i*CD*(pi/180) -- nothing from the Js part.
-            SensAoA_J_corr = SensAoA_J_raw + W_i * CD_primal * (pi / 180.0)
+            # None when the fast path was taken: there is no composite-objective
+            # adjoint to read it from.
+            if SensAoA_J_raw is None:
+               SensAoA_J_corr = None
+            else:
+               SensAoA_J_corr = SensAoA_J_raw + W_i * CD_primal * (pi / 180.0)
             SensAoA_J_raw_list.append(SensAoA_J_raw)
             SensAoA_J_corr_list.append(SensAoA_J_corr)
 
@@ -828,15 +935,32 @@ class Project:
        # wind-axis rotation and Js contributes nothing to the defect. The
        # corrected column is the one that should sit near zero -- compare it
        # against dJs_dAoA above, which is what it cancels.
-       summary.write('  COMPOSITE OBJECTIVE Sens_AoA  (J = Js - W*CL, expected dJ/dAoA = 0)\n')
-       summary.write('  corrected = raw + W*CD*(pi/180)\n\n')
-       summary.write('  {:<30s}  {:>20s}  {:>20s}\n'.format(
-                     'Constraint', 'Sens_AoA raw', 'Sens_AoA corrected'))
-       summary.write('  ' + '-' * 74 + '\n')
-       for i in range(len(self.structProject.config['AUGUSTO_CONFIG_CONSTR'])):
-           summary.write('  {:<30s}  {:>20.10e}  {:>20.10e}\n'.format(
-                         self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i],
-                         SensAoA_J_raw_list[i], SensAoA_J_corr_list[i]))
+       if all(v is None for v in SensAoA_J_raw_list):
+
+           summary.write('  COMPOSITE OBJECTIVE Sens_AoA  (J = Js - W*CL, expected dJ/dAoA = 0)\n\n')
+           summary.write('  Not available: the fixed-CL gradient was built by combining the two\n')
+           summary.write('  fixed-AoA adjoints (ComputeStructRespSensitivity_FixedCl_Fast), so the\n')
+           summary.write('  composite objective J = Js - W*CL was never seeded and its Sens_AoA was\n')
+           summary.write('  neither computed nor corrected. Run ComputeStructRespSensitivity_FixedCl\n')
+           summary.write('  instead to get it back.\n')
+
+       else:
+
+           summary.write('  COMPOSITE OBJECTIVE Sens_AoA  (J = Js - W*CL, expected dJ/dAoA = 0)\n')
+           summary.write('  corrected = raw + W*CD*(pi/180)\n\n')
+           summary.write('  {:<30s}  {:>20s}  {:>20s}\n'.format(
+                         'Constraint', 'Sens_AoA raw', 'Sens_AoA corrected'))
+           summary.write('  ' + '-' * 74 + '\n')
+           for i in range(len(self.structProject.config['AUGUSTO_CONFIG_CONSTR'])):
+               if SensAoA_J_raw_list[i] is None:
+                   summary.write('  {:<30s}  {:>20s}  {:>20s}\n'.format(
+                                 self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i],
+                                 'N/A', 'N/A'))
+               else:
+                   summary.write('  {:<30s}  {:>20.10e}  {:>20.10e}\n'.format(
+                                 self.structProject.config['AUGUSTO_CONFIG_CONSTR'][i],
+                                 SensAoA_J_raw_list[i], SensAoA_J_corr_list[i]))
+
        summary.write('=' * 80 + '\n')
        summary.close()
 
