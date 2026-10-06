@@ -44,6 +44,7 @@ import pyMLSInterface as Spline_Module
 import pysu2ad as pysu2
 import pyBeam
 import pyAugusto
+from structopt.pystructopt.pyoptlib.struct_tools import PrintGradResponse
 
 # -------------------------------------------------------------------
 #  Main
@@ -222,10 +223,7 @@ def main():
        # writing sensitivities to file
        dresp = SolidSolver.beam.beam.GetSensitivities()
        dv_ids = SolidSolver.beam.beam.GetDVids()
-       obj_file = open("d_Constraints.dat", "w")
-       for i in range(len(dv_ids)):
-          obj_file.write('%-12s  %20s \n' % (str(dv_ids[i]), str(-dresp[i])))
-       obj_file.close()
+       PrintGradResponse("d_Constraints.dat", dv_ids, [-d for d in dresp])
     
 
 
