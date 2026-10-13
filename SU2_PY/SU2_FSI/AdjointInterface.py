@@ -155,6 +155,21 @@ class AdjointInterface:
         self.globalSolidLoadZ = None
 
         self.globalDispSolidAdjointX = None
+        # Displacement adjoint actually SENT to the structural solver at the previous BGS iteration,
+        # i.e. the current iterate of the coupled adjoint fixed point. The under-relaxation must be
+        # built on this and not on the previous raw transfer: relaxing successive raw outputs,
+        # sent_{k+1} = w*A_k + (1-w)*A_{k-1}, is a two-tap average whose error recurrence is second
+        # order, e_{k+1} = w*g*e_k + (1-w)*g*e_{k-1}, with a complex eigenvalue pair of modulus
+        # sqrt((1-w)G) that GROWS with the aeroelastic gain. The proper fixed-point form gives
+        # |lambda| = |1 - w(1+G)|, which shrinks as the structure softens. Same fixed point either way.
+        # The adjoint iteration matrix is the transpose of the primal's, so it has the same spectrum
+        # and the same defect; see PrimalInterface.py for the matching correction.
+        self.sentDispSolidAdjointX = None
+        self.sentDispSolidAdjointY = None
+        self.sentDispSolidAdjointZ = None
+
+        # relative norm of the coupled adjoint interface residual
+        self.FSIResidualAdj = None
         self.globalDispSolidAdjointY = None
         self.globalDispSolidAdjointZ = None
 
@@ -494,6 +509,9 @@ class AdjointInterface:
             self.globalSolidLoadSensZ = np.zeros(self.nSolidInterfaceNodes)
 
             self.globalDispSolidAdjointX = np.zeros(self.nSolidInterfaceNodes)
+            self.sentDispSolidAdjointX = np.zeros(self.nSolidInterfaceNodes)
+            self.sentDispSolidAdjointY = np.zeros(self.nSolidInterfaceNodes)
+            self.sentDispSolidAdjointZ = np.zeros(self.nSolidInterfaceNodes)
             self.globalDispSolidAdjointY = np.zeros(self.nSolidInterfaceNodes)
             self.globalDispSolidAdjointZ = np.zeros(self.nSolidInterfaceNodes)
 
@@ -739,14 +757,27 @@ class AdjointInterface:
             # Recover the relaxation parameter
             relaxParam = float(FSIConfig["RELAX_PARAM"])
 
+            # Interface fixed-point residual of the coupled adjoint, A - sent, measured against what
+            # was sent to the structural solver last time. Zero only at the coupled adjoint solution
+            resX = self.globalDispSolidAdjointX - self.sentDispSolidAdjointX
+            resY = self.globalDispSolidAdjointY - self.sentDispSolidAdjointY
+            resZ = self.globalDispSolidAdjointZ - self.sentDispSolidAdjointZ
+            resNorm = np.sqrt(np.dot(resX, resX) + np.dot(resY, resY) + np.dot(resZ, resZ))
+            adjNorm = np.sqrt(np.dot(self.globalDispSolidAdjointX, self.globalDispSolidAdjointX)
+                            + np.dot(self.globalDispSolidAdjointY, self.globalDispSolidAdjointY)
+                            + np.dot(self.globalDispSolidAdjointZ, self.globalDispSolidAdjointZ))
+            self.FSIResidualAdj = resNorm / adjNorm if adjNorm > 0.0 else resNorm
+
             # For the vertices that belong to the interface
             for iVertex in range(0, self.nSolidInterfaceNodes):
+                # Under-relax the coupled adjoint fixed point: the second term is the adjoint last
+                # SENT to the structural solver, not the previous raw transfer
                 localDispSolidAdjointX[iVertex] = relaxParam * self.globalDispSolidAdjointX[iVertex] + \
-                                                  (1.0 - relaxParam) * self.globalDispSolidAdjointXOld[iVertex]
+                                                  (1.0 - relaxParam) * self.sentDispSolidAdjointX[iVertex]
                 localDispSolidAdjointY[iVertex] = relaxParam * self.globalDispSolidAdjointY[iVertex] + \
-                                                  (1.0 - relaxParam) * self.globalDispSolidAdjointYOld[iVertex]
+                                                  (1.0 - relaxParam) * self.sentDispSolidAdjointY[iVertex]
                 localDispSolidAdjointZ[iVertex] = relaxParam * self.globalDispSolidAdjointZ[iVertex] + \
-                                                  (1.0 - relaxParam) * self.globalDispSolidAdjointZOld[iVertex]
+                                                  (1.0 - relaxParam) * self.sentDispSolidAdjointZ[iVertex]
                 #self.MPIBarrier()                        
                 #self.MPIPrint( "*** adding adj of disp " + str(iVertex + 1) + " ||| " + str( localDispSolidAdjointX[iVertex] ) + "  " + str( localDispSolidAdjointY[iVertex] ) + "   " + str( localDispSolidAdjointZ[iVertex]))
                 #self.MPIBarrier()                        
@@ -761,6 +792,11 @@ class AdjointInterface:
         del localDispFlowAdjointX, localDispFlowAdjointY, localDispFlowAdjointZ
 
         if self.haveSolidSolver:
+            # the values just sent become the current iterate of the coupled adjoint fixed point
+            self.sentDispSolidAdjointX = localDispSolidAdjointX.copy()
+            self.sentDispSolidAdjointY = localDispSolidAdjointY.copy()
+            self.sentDispSolidAdjointZ = localDispSolidAdjointZ.copy()
+
             del localDispSolidAdjointX, localDispSolidAdjointY, localDispSolidAdjointZ
 
 
@@ -872,8 +908,16 @@ class AdjointInterface:
 
         # --- Set some general variables for the steady computation --- #
         nFSIIter = FSIconfig['NB_FSI_ITER']  # maximum number of FSI iteration (for each time step)
+        FSITol   = float(FSIconfig['FSI_TOLERANCE'])   # until now this was only echoed, never tested
+        self.FSIResidualAdj = None
+        FSIAdj_converged = False
 
         if myid is 0:
+           # convergence history of the coupled adjoint, one row per BGS iteration
+           hist_file = open("historyFSI_Adj.dat", "w")
+           hist_file.write("FSI_ITER \t FSI_RES_ADJ \n")
+           hist_file.close()
+
            # starting time counting
            start = timer.time()
            FSI_checkpoint = start
@@ -942,7 +986,29 @@ class AdjointInterface:
                    self.MPIPrint('\n##### Running the adjoint\n')
                    SolidSolver.RunCoupledSensitivityProblem(self.FSIIter)
 
+            # --- convergence of the coupled adjoint fixed point ---
+            # The residual is formed inside transferDisplacementAdjoint_SourceTerm, on whichever ranks
+            # hold the solid solver. Reduce with MAX over a -1 sentinel so every rank decides alike
+            # without assuming which rank that is, and the MPI calls stay collective.
+            # The test is placed AFTER the structural adjoint solve so that the iteration which
+            # triggers it has produced a complete gradient.
+            _res = self.FSIResidualAdj if self.FSIResidualAdj is not None else -1.0
+            if self.have_MPI:
+                _res = self.comm.allreduce(_res, op=self.MPI.MAX)
+            self.FSIResidualAdj = _res
+            self.MPIPrint('\n##### Adjoint interface residual ||A - A_sent|| / ||A|| = {:.6e}   (FSI_TOLERANCE = {:.1e})'.format(self.FSIResidualAdj, FSITol))
+
+            if myid is 0:
+                hist_file = open("historyFSI_Adj.dat", "a")
+                hist_file.write(str(self.FSIIter) + "\t" + str(self.FSIResidualAdj) + "\n")
+                hist_file.close()
+
             self.FSIIter += 1
+
+            if self.FSIResidualAdj < FSITol:
+                FSIAdj_converged = True
+                self.MPIPrint('\n##### Coupled adjoint converged at FSI iteration {} : residual {:.6e} < {:.1e}'.format(self.FSIIter - 1, self.FSIResidualAdj, FSITol))
+                break
 
             # FSI time
             if myid is 0:
@@ -955,7 +1021,12 @@ class AdjointInterface:
         # -- Outputting Displacement Adjoints on the Fluid Boundary
         self.printDisplDisplacementAdjoint(True)
 
-        self.MPIPrint('\nBGS is converged (strong coupling)')
+        if FSIAdj_converged:
+           self.MPIPrint('\nBGS is converged (strong coupling): adjoint residual {:.6e} < FSI_TOLERANCE {:.1e}'.format(self.FSIResidualAdj, FSITol))
+        else:
+           self.MPIPrint('\n##### WARNING: the coupled ADJOINT did NOT reach FSI_TOLERANCE.')
+           self.MPIPrint('#####          {} iterations used, residual {:.6e} against a tolerance of {:.1e}'.format(self.FSIIter, self.FSIResidualAdj if self.FSIResidualAdj is not None else float('nan'), FSITol))
+           self.MPIPrint('#####          The gradients produced here carry that error.')
         self.MPIPrint(' ')
         self.MPIPrint('*************************')
         self.MPIPrint('*  End FSI computation  *')

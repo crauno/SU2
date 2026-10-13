@@ -129,6 +129,29 @@ class Interface:
         self.globalSolidDispYOld = None
         self.globalSolidDispZOld = None
 
+        # Displacement actually SENT to the fluid at the previous BGS iteration, i.e. the current
+        # iterate of the coupled fixed point. The under-relaxation must be built on this and not on
+        # the previous raw structural output: relaxing successive raw outputs,
+        # sent_{k+1} = w*S_k + (1-w)*S_{k-1}, is a two-tap average whose error recurrence is
+        # e_{k+1} = w*g*e_k + (1-w)*g*e_{k-1} with g the aeroelastic gain. For the physical case of
+        # negative feedback (bending -> washout -> less outboard lift, g = -G, G > 0) that pair is
+        # complex with |lambda| = sqrt((1-w)G), which GROWS with the compliance and crosses 1 at
+        # G = 1/(1-w); the proper fixed-point form sent_{k+1} = w*S_k + (1-w)*sent_k gives
+        # |lambda| = |1 - w(1+G)|, which SHRINKS as the structure softens. Same fixed point either way.
+        self.sentSolidDispX = None
+        self.sentSolidDispY = None
+        self.sentSolidDispZ = None
+
+        # Relative norm of the interface fixed-point residual, ||S(F(u)) - u|| / ||S(F(u))||, where
+        # u is the interface displacement sent to the fluid, F is the fluid half of the sweep (MLS
+        # interpolation of u onto the CFD surface, mesh deformation, flow solve, loads interpolated
+        # back through the transposed MLS matrix) and S is the structural half (the geometrically
+        # nonlinear static solve). The coupled equilibrium is the fixed point u* = S(F(u*)).
+        # It is measured over the interface nodes and their three translations only, so it certifies
+        # the convergence of the coupling, not of the interior DoFs or the nodal rotations.
+        self.FSIResidual = None
+        self.FSIResidual0 = None
+
         self.globalFluidLoadX = None
         self.globalFluidLoadY = None
         self.globalFluidLoadZ = None
@@ -485,6 +508,10 @@ class Interface:
             self.globalSolidDispY = np.zeros(self.nSolidInterfaceNodes)
             self.globalSolidDispZ = np.zeros(self.nSolidInterfaceNodes)
 
+            self.sentSolidDispX = np.zeros(self.nSolidInterfaceNodes)
+            self.sentSolidDispY = np.zeros(self.nSolidInterfaceNodes)
+            self.sentSolidDispZ = np.zeros(self.nSolidInterfaceNodes)
+
         #if self.haveSolidSolver:
         #    scipy.io.savemat( './globalFluidIndex.mat', mdict={'globalFluidIndex': self.globalFluidIndex }) 
         #    scipy.io.savemat( './globalFluidCoordinates.mat', mdict={'globalFluidCoordinates': self.globalFluidCoordinates })
@@ -675,10 +702,32 @@ class Interface:
                 self.globalSolidDispY[iVertex] = dispY
                 self.globalSolidDispZ[iVertex] = dispZ
 
-                # Compute the relaxed, interface displacements
-                relaxedSolidDispX[iVertex] = relaxParam * dispX + (1.0 - relaxParam) * self.globalSolidDispXOld[iVertex]
-                relaxedSolidDispY[iVertex] = relaxParam * dispY + (1.0 - relaxParam) * self.globalSolidDispYOld[iVertex]
-                relaxedSolidDispZ[iVertex] = relaxParam * dispZ + (1.0 - relaxParam) * self.globalSolidDispZOld[iVertex]
+                # Under-relax the coupled fixed point: the second term is the displacement last SENT
+                # to the fluid, not the previous raw structural output (see sentSolidDisp* above)
+                relaxedSolidDispX[iVertex] = relaxParam * dispX + (1.0 - relaxParam) * self.sentSolidDispX[iVertex]
+                relaxedSolidDispY[iVertex] = relaxParam * dispY + (1.0 - relaxParam) * self.sentSolidDispY[iVertex]
+                relaxedSolidDispZ[iVertex] = relaxParam * dispZ + (1.0 - relaxParam) * self.sentSolidDispZ[iVertex]
+
+            # Interface fixed-point residual, S(F(u)) - u, measured against what was sent last time.
+            # This is the quantity FSI_TOLERANCE is tested on, and it is zero only at the coupled
+            # equilibrium, so it is a genuine convergence measure and not a step size.
+            # Normalised by ||S(F(u))||, the latest structural output; it and ||u|| coincide at the
+            # fixed point, so the test is unaffected, but note it is not a residual drop from iter 1
+            resX = self.globalSolidDispX - self.sentSolidDispX
+            resY = self.globalSolidDispY - self.sentSolidDispY
+            resZ = self.globalSolidDispZ - self.sentSolidDispZ
+            resNorm  = np.sqrt(np.dot(resX, resX) + np.dot(resY, resY) + np.dot(resZ, resZ))
+            dispNorm = np.sqrt(np.dot(self.globalSolidDispX, self.globalSolidDispX)
+                             + np.dot(self.globalSolidDispY, self.globalSolidDispY)
+                             + np.dot(self.globalSolidDispZ, self.globalSolidDispZ))
+            self.FSIResidual = resNorm / dispNorm if dispNorm > 0.0 else resNorm
+            if self.FSIResidual0 is None:
+                self.FSIResidual0 = self.FSIResidual
+
+            # the new iterate becomes what we are about to send
+            self.sentSolidDispX = relaxedSolidDispX.copy()
+            self.sentSolidDispY = relaxedSolidDispY.copy()
+            self.sentSolidDispZ = relaxedSolidDispZ.copy()
 
         ################################################################################################################
         # --- STEP 2: Interpolate
@@ -806,10 +855,14 @@ class Interface:
 
         # --- Set some general variables for the steady computation --- #
         nFSIIter = FSIconfig['NB_FSI_ITER']  # maximum number of FSI iteration (for each time step)
+        FSITol   = float(FSIconfig['FSI_TOLERANCE'])   # until now this was only echoed, never tested
+        self.FSIResidual  = None
+        self.FSIResidual0 = None
+        FSI_converged = False
 
         if myid is 0:
             hist_file = open("historyFSI.dat", "w")
-            hist_file.write("FF(X) \t FF(Y) \t FF(Z) \t FS(X) \t FS(Y) \t FS(Z) \t CD \t CL \n")
+            hist_file.write("FF(X) \t FF(Y) \t FF(Z) \t FS(X) \t FS(Y) \t FS(Z) \t CD \t CL \t FSI_RES \n")
             hist_file.close()
             # starting time counting
             start = timer.time()
@@ -837,6 +890,21 @@ class Interface:
                 self.MPIPrint('\n##### Transferring displacements\n')
                 self.MPIBarrier()
                 self.transferStructuralDisplacements(FSIconfig, FluidSolver, SolidSolver, MLSSolver)
+
+                # --- convergence of the coupled fixed point ---
+                # The residual is computed inside the transfer, on whichever ranks hold the solid
+                # solver. Reduce with MAX over a -1 sentinel so that every rank takes the same
+                # decision without assuming which rank that is, and the MPI calls stay collective
+                _res = self.FSIResidual if self.FSIResidual is not None else -1.0
+                if self.have_MPI:
+                    _res = self.comm.allreduce(_res, op=self.MPI.MAX)
+                self.FSIResidual = _res
+                self.MPIPrint('\n##### Interface residual ||S(F(u)) - u|| / ||S(F(u))|| = {:.6e}   (FSI_TOLERANCE = {:.1e})'.format(self.FSIResidual, FSITol))
+                if self.FSIResidual < FSITol:
+                    FSI_converged = True
+                    self.MPIPrint('\n##### Coupled fixed point converged at FSI iteration {} : residual {:.6e} < {:.1e}'.format(self.FSIIter, self.FSIResidual, FSITol))
+                    self.MPIPrint('##### The flow solution in hand was obtained with a displacement field that differs from the converged one by less than the tolerance')
+                    break
 
             # mesh checkpoint
             if myid is 0:
@@ -897,7 +965,8 @@ class Interface:
 
                 hist_file = open("historyFSI.dat", "a")
                 hist_file.write(str(FluidSolver.Get_DragCoeff()) + "\t")
-                hist_file.write(str(FluidSolver.Get_LiftCoeff()) + "\n")
+                hist_file.write(str(FluidSolver.Get_LiftCoeff()) + "\t")
+                hist_file.write(str(self.FSIResidual if self.FSIResidual is not None else float('nan')) + "\n")
                 hist_file.close()
 
             if pyBeam_success == False:
@@ -928,7 +997,12 @@ class Interface:
               FluidSolver.Monitor(0)             # Monitor the solver and output solution to file if required
               FluidSolver.Output(0)              # Output the solution to file
 
-           self.MPIPrint('\nBGS is converged (strong coupling)')
+           if FSI_converged:
+              self.MPIPrint('\nBGS is converged (strong coupling): residual {:.6e} < FSI_TOLERANCE {:.1e}'.format(self.FSIResidual, FSITol))
+           else:
+              self.MPIPrint('\n##### WARNING: BGS did NOT reach FSI_TOLERANCE.')
+              self.MPIPrint('#####          {} iterations used, residual {:.6e} against a tolerance of {:.1e}'.format(self.FSIIter, self.FSIResidual if self.FSIResidual is not None else float('nan'), FSITol))
+              self.MPIPrint('#####          Responses and gradients evaluated here carry that error.')
            self.MPIPrint(' ')
            self.MPIPrint('*************************')
            self.MPIPrint('*  End FSI computation  *')
