@@ -170,6 +170,12 @@ class AdjointInterface:
 
         # relative norm of the coupled adjoint interface residual
         self.FSIResidualAdj = None
+
+        # Aitken dynamic relaxation state: the interface residual of the previous sweep and the
+        # factor actually applied. Reset at the start of every SteadyFSI so that each design
+        # starts from the config value rather than inheriting the previous design's estimate
+        self.resAdjPrev = None
+        self.omegaAdj   = None
         self.globalDispSolidAdjointY = None
         self.globalDispSolidAdjointZ = None
 
@@ -768,6 +774,16 @@ class AdjointInterface:
                             + np.dot(self.globalDispSolidAdjointZ, self.globalDispSolidAdjointZ))
             self.FSIResidualAdj = resNorm / adjNorm if adjNorm > 0.0 else resNorm
 
+            # ---------------------------------------------------------------------------------
+            #  AITKEN DYNAMIC RELAXATION
+            #  Comment the single line below out to fall back to the constant RELAX_PARAM.
+            # ---------------------------------------------------------------------------------
+            relaxParam = self.ComputeAitkenRelaxation(resX, resY, resZ, relaxParam)
+            # ---------------------------------------------------------------------------------
+
+            # keep the factor actually applied, whichever branch produced it, for the history file
+            self.omegaAdj = relaxParam
+
             # For the vertices that belong to the interface
             for iVertex in range(0, self.nSolidInterfaceNodes):
                 # Under-relax the coupled adjoint fixed point: the second term is the adjoint last
@@ -798,6 +814,70 @@ class AdjointInterface:
             self.sentDispSolidAdjointZ = localDispSolidAdjointZ.copy()
 
             del localDispSolidAdjointX, localDispSolidAdjointY, localDispSolidAdjointZ
+
+
+    def ComputeAitkenRelaxation(self, resX, resY, resZ, relaxDefault):
+
+        """
+        Aitken dynamic relaxation factor for the coupled adjoint interface iteration.
+
+        Secant estimate of the factor that annihilates the dominant mode, built from the
+        interface residuals r = H(A) - A of the last two sweeps (Irons & Tuck 1969;
+        Kuettler & Wall 2008):
+
+            omega_k = - omega_{k-1} * ( r_{k-1} . (r_k - r_{k-1}) ) / || r_k - r_{k-1} ||^2
+
+        A constant factor cannot serve here. The error of the relaxed iteration decays as
+        lambda = 1 - omega(1 + G) with G the aeroelastic gain, so the scheme is stable only
+        for omega < 2/(1 + G); and G rises design by design as the optimiser removes
+        material. Measured on the shell CRM, omega = 0.6 crossed that limit at one design
+        and omega = 0.45 at the next, in both cases turning the adjoint into a limit cycle
+        with lambda close to -1 and making the gradients useless. The secant estimate
+        follows the drift instead of being overtaken by it.
+
+        Returns relaxDefault on the first sweep, when there is no previous residual, and
+        whenever the estimate cannot be trusted (see the guards below).
+        """
+
+        r = np.concatenate((resX, resY, resZ))
+
+        # first sweep of this design: nothing to difference against
+        if self.resAdjPrev is None or self.omegaAdj is None:
+           self.resAdjPrev = r.copy()
+           return relaxDefault
+
+        rPrev = self.resAdjPrev            # r_{k-1}
+        dr    = r - rPrev                  # r_k - r_{k-1}
+        den   = float(np.dot(dr, dr))
+        rnrm  = float(np.dot(r, r))
+
+        # the current residual becomes the reference for the next sweep
+        self.resAdjPrev = r.copy()
+
+        # Guard against a residual difference that carries no information. Both methods of
+        # this family estimate from differences, so near a noise floor -- which the primal
+        # reaches at ~2e-06 from the trim irreproducibility -- the quotient is dominated by
+        # noise and the estimate must be discarded rather than used
+        if not np.isfinite(den) or den <= 0.0 or den < 1.0e-20 * max(rnrm, 1.0e-300):
+           return self.omegaAdj
+
+        omega = - self.omegaAdj * float(np.dot(rPrev, dr)) / den
+
+        # Clamp. The secant estimate can come out negative or very large when two successive
+        # residuals are nearly parallel, and the whole point here is to stay inside the
+        # stability band, so the upper limit is deliberately not above 1: over-relaxation is
+        # what produced the failures this function exists to prevent. Widen if ever needed
+        omegaMin, omegaMax = 0.05, 1.0
+
+        if not np.isfinite(omega):
+           return self.omegaAdj
+
+        if omega < omegaMin:
+           omega = omegaMin
+        elif omega > omegaMax:
+           omega = omegaMax
+
+        return omega
 
 
     def transferFlowLoadAdjoint(self, FSIConfig, FluidSolver, SolidSolver, MLSSolver):
@@ -910,12 +990,14 @@ class AdjointInterface:
         nFSIIter = FSIconfig['NB_FSI_ITER']  # maximum number of FSI iteration (for each time step)
         FSITol   = float(FSIconfig['FSI_TOLERANCE'])   # until now this was only echoed, never tested
         self.FSIResidualAdj = None
+        self.resAdjPrev = None
+        self.omegaAdj   = None
         FSIAdj_converged = False
 
         if myid is 0:
            # convergence history of the coupled adjoint, one row per BGS iteration
            hist_file = open("historyFSI_Adj.dat", "w")
-           hist_file.write("FSI_ITER \t FSI_RES_ADJ \n")
+           hist_file.write("FSI_ITER \t FSI_RES_ADJ \t OMEGA \n")
            hist_file.close()
 
            # starting time counting
@@ -996,11 +1078,18 @@ class AdjointInterface:
             if self.have_MPI:
                 _res = self.comm.allreduce(_res, op=self.MPI.MAX)
             self.FSIResidualAdj = _res
-            self.MPIPrint('\n##### Adjoint interface residual ||A - A_sent|| / ||A|| = {:.6e}   (FSI_TOLERANCE = {:.1e})'.format(self.FSIResidualAdj, FSITol))
+
+            # the relaxation factor is set only where the solid solver lives, so share it the
+            # same way before it is reported or written
+            _omg = self.omegaAdj if self.omegaAdj is not None else -1.0
+            if self.have_MPI:
+                _omg = self.comm.allreduce(_omg, op=self.MPI.MAX)
+            self.omegaAdj = _omg
+            self.MPIPrint('\n##### Adjoint interface residual ||A - A_sent|| / ||A|| = {:.6e}   omega = {:.4f}   (FSI_TOLERANCE = {:.1e})'.format(self.FSIResidualAdj, self.omegaAdj, FSITol))
 
             if myid is 0:
                 hist_file = open("historyFSI_Adj.dat", "a")
-                hist_file.write(str(self.FSIIter) + "\t" + str(self.FSIResidualAdj) + "\n")
+                hist_file.write(str(self.FSIIter) + "\t" + str(self.FSIResidualAdj) + "\t" + str(self.omegaAdj) + "\n")
                 hist_file.close()
 
             self.FSIIter += 1
