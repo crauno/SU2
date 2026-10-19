@@ -138,15 +138,13 @@ class Project:
     
     def InitStructProject(self):
 
-        if self.opt_mode == "STRUCT":
+        print('Initializing structural project...')
 
-           print('Initializing structural project...')
-
-           structConfig = StructOptConfig(self.folder, self.config['CONFIG_STRUCT_OPT'], self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], self.testcase_folder, self.config['NUMBER_PART'])
+        structConfig = StructOptConfig(self.folder, self.config['CONFIG_STRUCT_OPT'], self.configFSIPrimal['AUGUSTO_CONFIG_FSI'], self.testcase_folder, self.config['NUMBER_PART'])
            
-           self.structProject = StructProject(structConfig, False)
+        self.structProject = StructProject(structConfig, False)
 
-           self.structProject.InitNormalizedVariables()
+        self.structProject.Initialize()
 
 
     def CheckOptCase(self):

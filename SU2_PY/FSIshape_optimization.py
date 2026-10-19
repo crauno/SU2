@@ -120,6 +120,8 @@ def FSIshape_optimization( filename                           ,
        project.InitStructProject()
        xb = project.structProject.xb_norm
        x0 = project.structProject.x0_norm
+       #its  = project.structProject.its 
+       accu = project.structProject.accu 
 
        project.CheckStructuralSetup()
     
@@ -146,9 +148,6 @@ def slsqp(project,x0=None,xb=None,its=100,accu=1e-10,grads=True):
            result - the outputs from scipy.fmin_slsqp
     """
 
-    # Performing spline
-    SaveSplineMatrix(project.config)
-          
     # function handles
     func           = obj_f
     
@@ -188,8 +187,7 @@ def slsqp(project,x0=None,xb=None,its=100,accu=1e-10,grads=True):
     
     
     # number of design variables  (this is read from the DEF input file)
-    n_dv = len(x0)
-    project.n_dv = n_dv
+    project.n_dv = len(x0)
             
     # obj scale
     # I need to look into the Adjoint flow file
@@ -201,18 +199,25 @@ def slsqp(project,x0=None,xb=None,its=100,accu=1e-10,grads=True):
        obj_scale = line[1].strip()
     else:
        obj_scale = float(1) 
+
+    # In STRUCT mode the objective scale is OPT_OBJ_SCALE from config_opt_struct.cfg,
+    # not the aerodynamic OBJECTIVE_FUNCTION suffix read above.
+    if project.opt_mode == "STRUCT":
+       obj_scale = project.structProject.obj_scale
        
     # scale accuracy: The step size for finite-difference derivative estimates.
     eps = 1.0e-04
 
     # optimizer summary
     sys.stdout.write('Sequential Least SQuares Programming (SLSQP) parameters:\n')
-    sys.stdout.write('Number of design variables: ' + ' ( ' + str(n_dv) + ' ) \n' )
+    sys.stdout.write('Number of design variables: ' + ' ( ' + str(project.n_dv) + ' ) \n' )
     sys.stdout.write('Objective function scaling factor: ' + str(obj_scale) + '\n')
     sys.stdout.write('Maximum number of iterations: ' + str(its) + '\n')
     sys.stdout.write('Requested accuracy: ' + str(accu) + '\n')
     sys.stdout.write('Initial guess for the independent variable(s): ' + str(x0) + '\n')
-    #sys.stdout.write('True lower and upper bound for each independent variable: ' + str(xb) + '\n\n')
+
+    # Performing spline
+    SaveSplineMatrix(project.config)
 
     # Run Optimizer
     outputs = fmin_slsqp( x0             = x0             ,
